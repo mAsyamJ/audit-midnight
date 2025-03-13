@@ -9,11 +9,11 @@ import "./interfaces/ITerms.sol";
 contract Terms is ITerms {
     /// CONSTANTS ///
 
-    bytes32 constant public DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
-    bytes32 constant public OFFER_TYPEHASH = keccak256(
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
+    bytes32 public constant OFFER_TYPEHASH = keccak256(
         "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 price)"
     );
-    uint256 constant public WAD = 1 ether;
+    uint256 public constant WAD = 1 ether;
 
     /// STORAGE ///
 
@@ -33,7 +33,9 @@ contract Terms is ITerms {
     {
         _checkOffers(buyOffer, buySig, sellOffer, sellSig);
 
-        uint256 amount = Math.min(buyOffer.assets - consumed[abi.encode(buyOffer)], sellOffer.assets - consumed[abi.encode(sellOffer)]);
+        uint256 amount = Math.min(
+            buyOffer.assets - consumed[abi.encode(buyOffer)], sellOffer.assets - consumed[abi.encode(sellOffer)]
+        );
         require(amount > 0, "No assets to match");
         address buyer = buyOffer.offering;
         address seller = sellOffer.offering;
@@ -58,8 +60,17 @@ contract Terms is ITerms {
         uint256 sellerScaledPrice = sellOffer.price * amount / sellOffer.assets;
         uint256 buyerScaledPrice = buyOffer.price * amount / buyOffer.assets;
 
+        uint256 rest;
+        if (sellerScaledPrice < buyerScaledPrice) {
+            rest = buyerScaledPrice - sellerScaledPrice;
+        } else {
+            rest = 0;
+        }
+
         IERC20(buyOffer.loanToken).transferFrom(buyer, seller, sellerScaledPrice);
-        IERC20(buyOffer.loanToken).transferFrom(buyer, msg.sender, buyerScaledPrice - sellerScaledPrice);
+        if (rest > 0) {
+            IERC20(buyOffer.loanToken).transferFrom(buyer, msg.sender, rest);
+        }
     }
 
     /// @dev Will revert if there is no withdrawable funds.
@@ -94,16 +105,100 @@ contract Terms is ITerms {
         IERC20(collateral).transfer(msg.sender, amount);
     }
 
+    /// @notice Liquidates the given collections `repaidAmounts` of debt asset
+    /// by colleral or seize the given `seizedAssets` of collateral on the given
+    /// `term` of the given `borrower`,
+    /// @dev Either `seizedAssets` or `repaidAmounts` should be empty.
+    /// @param term The term of the bond.
+    /// @param borrower The debtor of the loan.
+    /// @param seizedAssets A collection of amounts of collateral to seize and the collateral index to seize..
+    /// @param repaidShares A collection of amounts of loan asset to repay and the collateral index to seize.
+    /// @param data Arbitrary data to pass to the `onMorphoLiquidate` callback. Pass empty data if not needed.
+    /// @return The list of amounts of assets seized by collateral index.
+    /// @return The list of amounts of assets repaid by collateral index.
+    function liquidate(Term memory term, Limit[] memory seizedAssets, Limit[] memory repaidAmounts, address borrower)
+        external
+        returns (Limit[] memory, Limit[] memory)
+    {
+        require(
+            seizedAssets.length <= term.collaterals.length, "Cannot seize more assets than the the supplied collaterals"
+        );
+        // TODO check that either the user is either seized or repaying amounts.
+        require(seizedAssets.length == repaidAmounts.length, "Incoherent limit arrays");
+        require(!_isHealthy(term, borrower), "Healthy borrower");
+
+        bytes32 id = _id(term);
+
+        // Over approximation
+        uint256 liquidationIncentiveFactor = 1.15e18;
+
+        uint256 totalRepaid;
+        for (uint256 i = 0; i < repaidAmounts.length; i++) {
+            totalRepaid += repaidAmounts[i].amount;
+        }
+
+        // Compute the repaid and seized amounts by collateral index.
+        if (totalRepaid > 0) {
+            for (uint256 i = 0; i < repaidAmounts.length; i++) {
+                Limit memory l;
+                uint256 collateralPrice = IOracle(term.collaterals[repaidAmounts[i].collateralIndex].oracle).price();
+                l.collateralIndex = repaidAmounts[i].collateralIndex;
+                l.amount = (repaidAmounts[i].amount * liquidationIncentiveFactor / WAD) / collateralPrice;
+                seizedAssets[i] = l;
+            }
+        } else {
+            for (uint256 i = 0; i < seizedAssets.length; i++) {
+                Limit memory l;
+                uint256 collateralPrice = IOracle(term.collaterals[seizedAssets[i].collateralIndex].oracle).price();
+                uint256 seizedAssetsQuoted = seizedAssets[i].amount * collateralPrice;
+                l.collateralIndex = repaidAmounts[i].collateralIndex;
+                l.amount = seizedAssetsQuoted * WAD / liquidationIncentiveFactor;
+                totalRepaid += l.amount;
+                repaidAmounts[i] = l;
+            }
+        }
+
+        debtOf[borrower][id] -= totalRepaid;
+        withdrawable[id] += totalRepaid;
+
+        // Transfer the repaid amount.
+        IERC20(term.loanToken).transferFrom(msg.sender, address(this), totalRepaid);
+
+        // Transfer the seized collaterals.
+        for (uint256 i = 0; i < seizedAssets.length; i++) {
+            Limit memory l = seizedAssets[i];
+            address collateral = term.collaterals[l.collateralIndex].token;
+            collateralOf[borrower][_id(term)][collateral] -= l.amount;
+            IERC20(collateral).transfer(msg.sender, l.amount);
+        }
+
+        // Realize bad debt.
+        uint256 totalCollateralQuoted;
+        for (uint256 i = 0; i < term.collaterals.length; i++) {
+            uint256 price = IOracle(term.collaterals[i].oracle).price();
+            uint256 collateralQuoted = collateralOf[borrower][id][term.collaterals[i].token] * price / WAD;
+            totalCollateralQuoted += collateralQuoted;
+        }
+        if (totalCollateralQuoted == 0) {
+            uint256 badDebt = debtOf[borrower][id];
+            withdrawable[id] -= badDebt;
+            debtOf[borrower][id] = 0;
+        }
+        return (seizedAssets, repaidAmounts);
+    }
+
     /// INTERNAL ///
 
     function _id(Term memory term) public pure returns (bytes32) {
         return keccak256(abi.encode(term));
     }
 
-    function _checkOffers(Offer memory buyOffer, Signature memory buySig, Offer memory sellOffer, Signature memory sellSig)
-        internal
-        view
-    {
+    function _checkOffers(
+        Offer memory buyOffer,
+        Signature memory buySig,
+        Offer memory sellOffer,
+        Signature memory sellSig
+    ) internal view {
         // Check consistency.
 
         require(buyOffer.buy && !sellOffer.buy, "Inconsistent lend flags");
