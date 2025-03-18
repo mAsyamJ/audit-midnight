@@ -15,6 +15,8 @@ contract Terms is ITerms {
     );
     uint256 public constant WAD = 1 ether;
 
+    uint256 public constant ORACLE_PRICE_SCALE = 1e36;
+
     /// STORAGE ///
 
     // Terms.
@@ -105,27 +107,21 @@ contract Terms is ITerms {
         IERC20(collateral).transfer(msg.sender, amount);
     }
 
-    /// @notice Liquidates the given collections `repaidAmounts` of debt asset
-    /// by colleral or seize the given `seizedAssets` of collateral on the given
-    /// `term` of the given `borrower`,
-    /// @dev Either `seizedAssets` or `repaidAmounts` should be empty.
+    /// @notice Execute the given collection `seizures` on the given `term` of the given `borrower`.
+    /// @dev On each seizure either `seizedAssets` or `repaidAmounts` should be equal to zero.
     /// @param term The term of the bond.
+    /// @param A collection of amounts of debt to repay or asset to seize with the index of the collateral in the term collaterals.
     /// @param borrower The debtor of the loan.
-    /// @param seizedAssets A collection of amounts of collateral to seize and the collateral index to seize..
-    /// @param repaidShares A collection of amounts of loan asset to repay and the collateral index to seize.
-    /// @param data Arbitrary data to pass to the `onMorphoLiquidate` callback. Pass empty data if not needed.
-    /// @return The list of amounts of assets seized by collateral index.
-    /// @return The list of amounts of assets repaid by collateral index.
-    function liquidate(Term memory term, Limit[] memory seizedAssets, Limit[] memory repaidAmounts, address borrower)
+    /// @param data Arbitrary data to pass to the callback. Pass empty data if not needed.
+    /// @return A collection of the actual amounts of debt repaid or asset seized with the collateral index.
+    function liquidate(Term memory term, Seizure[] memory seizures, address borrower, bytes calldata data)
         external
-        returns (Limit[] memory, Limit[] memory)
+        returns (Seizure[] memory)
     {
         require(
-            seizedAssets.length <= term.collaterals.length, "Cannot seize more assets than the the supplied collaterals"
+            seizures.length <= term.collaterals.length && seizures.length > 0,
+            "Cannot seize more assets than the the supplied collaterals"
         );
-        // TODO check that either the user is either seized or repaying amounts.
-        require(seizedAssets.length == repaidAmounts.length, "Incoherent limit arrays");
-        require(!_isHealthy(term, borrower), "Healthy borrower");
 
         bytes32 id = _id(term);
 
@@ -133,61 +129,89 @@ contract Terms is ITerms {
         uint256 liquidationIncentiveFactor = 1.15e18;
 
         uint256 totalRepaid;
-        for (uint256 i = 0; i < repaidAmounts.length; i++) {
-            totalRepaid += repaidAmounts[i].amount;
+        uint256 totalCollateralQuoted;
+        uint256 maxDebt;
+
+        // Compute the total collateral quoted and borrow capacity.
+        for (uint256 i = 0; i < term.collaterals.length; i++) {
+            uint256 price = IOracle(term.collaterals[i].oracle).price();
+            uint256 collateralQuoted =
+                collateralOf[borrower][id][term.collaterals[i].token] * price / ORACLE_PRICE_SCALE;
+            totalCollateralQuoted += collateralQuoted;
+            maxDebt += collateralQuoted * term.collaterals[i].lltv / WAD;
         }
 
-        // Compute the repaid and seized amounts by collateral index.
-        if (totalRepaid > 0) {
-            for (uint256 i = 0; i < repaidAmounts.length; i++) {
-                Limit memory l;
-                uint256 collateralPrice = IOracle(term.collaterals[repaidAmounts[i].collateralIndex].oracle).price();
-                l.collateralIndex = repaidAmounts[i].collateralIndex;
-                l.amount = (repaidAmounts[i].amount * liquidationIncentiveFactor / WAD) / collateralPrice;
-                seizedAssets[i] = l;
-            }
-        } else {
-            for (uint256 i = 0; i < seizedAssets.length; i++) {
-                Limit memory l;
-                uint256 collateralPrice = IOracle(term.collaterals[seizedAssets[i].collateralIndex].oracle).price();
-                uint256 seizedAssetsQuoted = seizedAssets[i].amount * collateralPrice;
-                l.collateralIndex = repaidAmounts[i].collateralIndex;
-                l.amount = seizedAssetsQuoted * WAD / liquidationIncentiveFactor;
-                totalRepaid += l.amount;
-                repaidAmounts[i] = l;
-            }
+        // Check that position not healthy.
+        require(debtOf[borrower][id] > maxDebt, "Healthy borrower");
+
+        // Compute the repaid and seized amounts by collateral index, remaining collateral and total repaid.
+        for (uint256 i = 0; i < seizures.length; i++) {
+            require(seizures[i].collateralIndex < term.collaterals.length, "INCONSISTENT_INPUT");
+            (uint256 repaidAmount, uint256 seizedAssets, uint256 seizedAssetsQuoted) = _seizeCollateral(
+                term.collaterals[seizures[i].collateralIndex], seizures[i], liquidationIncentiveFactor, borrower
+            );
+            seizures[i].repaidAmount = repaidAmount;
+            seizures[i].seizedAssets = seizedAssets;
+            collateralOf[borrower][_id(term)][term.collaterals[seizures[i].collateralIndex].token] -=
+                seizures[i].seizedAssets;
+            totalRepaid += seizures[i].repaidAmount;
+            totalCollateralQuoted -= seizedAssetsQuoted;
         }
 
         debtOf[borrower][id] -= totalRepaid;
         withdrawable[id] += totalRepaid;
 
-        // Transfer the repaid amount.
-        IERC20(term.loanToken).transferFrom(msg.sender, address(this), totalRepaid);
-
-        // Transfer the seized collaterals.
-        for (uint256 i = 0; i < seizedAssets.length; i++) {
-            Limit memory l = seizedAssets[i];
-            address collateral = term.collaterals[l.collateralIndex].token;
-            collateralOf[borrower][_id(term)][collateral] -= l.amount;
-            IERC20(collateral).transfer(msg.sender, l.amount);
-        }
-
         // Realize bad debt.
-        uint256 totalCollateralQuoted;
-        for (uint256 i = 0; i < term.collaterals.length; i++) {
-            uint256 price = IOracle(term.collaterals[i].oracle).price();
-            uint256 collateralQuoted = collateralOf[borrower][id][term.collaterals[i].token] * price / WAD;
-            totalCollateralQuoted += collateralQuoted;
-        }
         if (totalCollateralQuoted == 0) {
             uint256 badDebt = debtOf[borrower][id];
             withdrawable[id] -= badDebt;
             debtOf[borrower][id] = 0;
         }
-        return (seizedAssets, repaidAmounts);
+
+        // Perform the callback.
+        // TODO: simplify with dedicated signature for callback
+        if (data.length > 0) {
+            bytes memory callbackData = abi.encode(seizures, borrower, msg.sender, data);
+            (bool success, bytes memory returnData) = msg.sender.call(callbackData);
+            if (!success) lowLevelRevert(returnData);
+        }
+
+        IERC20(term.loanToken).transferFrom(msg.sender, address(this), totalRepaid);
+
+        return seizures;
+    }
+
+    function _seizeCollateral(Collateral memory c, Seizure memory s, uint256 lif, address borrower)
+        internal
+        returns (uint256, uint256, uint256)
+    {
+        require(exactlyOneZero(s.seizedAssets, s.repaidAmount), "INCONSISTENT_INPUT");
+        uint256 collateralPrice = IOracle(c.oracle).price();
+        uint256 seizedAssetsQuoted = s.seizedAssets * collateralPrice / ORACLE_PRICE_SCALE;
+        if (s.repaidAmount > 0) {
+            s.seizedAssets = (s.repaidAmount * lif / WAD) * ORACLE_PRICE_SCALE / collateralPrice;
+            seizedAssetsQuoted = s.seizedAssets * collateralPrice / ORACLE_PRICE_SCALE;
+        } else {
+            s.repaidAmount = seizedAssetsQuoted * WAD * ORACLE_PRICE_SCALE / lif;
+        }
+        IERC20(c.token).transfer(msg.sender, s.seizedAssets);
+        return (s.repaidAmount, s.seizedAssets, seizedAssetsQuoted);
     }
 
     /// INTERNAL ///
+
+    // TODO: move to a dedicatedd library
+    function exactlyOneZero(uint256 x, uint256 y) internal pure returns (bool z) {
+        assembly {
+            z := xor(iszero(x), iszero(y))
+        }
+    }
+
+    function lowLevelRevert(bytes memory returnData) internal pure {
+        assembly ("memory-safe") {
+            revert(add(32, returnData), mload(returnData))
+        }
+    }
 
     function _id(Term memory term) public pure returns (bytes32) {
         return keccak256(abi.encode(term));
@@ -245,7 +269,8 @@ contract Terms is ITerms {
             uint256 maxDebt;
             for (uint256 i = 0; i < term.collaterals.length; i++) {
                 uint256 price = IOracle(term.collaterals[i].oracle).price();
-                uint256 collateralQuoted = collateralOf[borrower][id][term.collaterals[i].token] * price / WAD;
+                uint256 collateralQuoted =
+                    collateralOf[borrower][id][term.collaterals[i].token] * price / ORACLE_PRICE_SCALE;
                 maxDebt += collateralQuoted * term.collaterals[i].lltv / WAD;
             }
 

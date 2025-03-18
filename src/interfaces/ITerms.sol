@@ -30,12 +30,14 @@ struct Signature {
     bytes32 s;
 }
 
-struct Limit {
+struct Seizure {
     // Index in the collateral list of the term.
     // TODO use something more robust than indexes.
     uint256 collateralIndex;
-    // Amount in either loan or collateral asset.
-    uint256 amount;
+    // Amount of loan asset to repay.
+    uint256 repaidAmount;
+    // Amount of collater asset to seize.
+    uint256 seizedAssets;
 }
 
 interface ITerms {}
