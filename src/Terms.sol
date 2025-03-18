@@ -9,11 +9,11 @@ import "./interfaces/ITerms.sol";
 contract Terms is ITerms {
     /// CONSTANTS ///
 
-    bytes32 constant public DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
-    bytes32 constant public OFFER_TYPEHASH = keccak256(
+    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
+    bytes32 public constant OFFER_TYPEHASH = keccak256(
         "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 price)"
     );
-    uint256 constant public WAD = 1 ether;
+    uint256 public constant WAD = 1 ether;
 
     /// STORAGE ///
 
@@ -33,7 +33,9 @@ contract Terms is ITerms {
     {
         _checkOffers(buyOffer, buySig, sellOffer, sellSig);
 
-        uint256 amount = Math.min(buyOffer.assets - consumed[abi.encode(buyOffer)], sellOffer.assets - consumed[abi.encode(sellOffer)]);
+        uint256 amount = Math.min(
+            buyOffer.assets - consumed[abi.encode(buyOffer)], sellOffer.assets - consumed[abi.encode(sellOffer)]
+        );
         require(amount > 0, "No assets to match");
         address buyer = buyOffer.offering;
         address seller = sellOffer.offering;
@@ -100,10 +102,12 @@ contract Terms is ITerms {
         return keccak256(abi.encode(term));
     }
 
-    function _checkOffers(Offer memory buyOffer, Signature memory buySig, Offer memory sellOffer, Signature memory sellSig)
-        internal
-        view
-    {
+    function _checkOffers(
+        Offer memory buyOffer,
+        Signature memory buySig,
+        Offer memory sellOffer,
+        Signature memory sellSig
+    ) internal view {
         // Check consistency.
 
         require(buyOffer.buy && !sellOffer.buy, "Inconsistent lend flags");
