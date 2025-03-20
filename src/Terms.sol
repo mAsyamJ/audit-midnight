@@ -15,7 +15,7 @@ contract Terms is ITerms {
     );
     uint256 public constant WAD = 1 ether;
 
-    uint256 public constant ORACLE_PRICE_SCALE = 1e36;
+    uint256 public constant ORACLE_PRICE_SCALE = 1 ether;
 
     /// STORAGE ///
 
@@ -108,9 +108,9 @@ contract Terms is ITerms {
     }
 
     /// @notice Execute the given collection `seizures` on the given `term` of the given `borrower`.
-    /// @dev On each seizure either `seizedAssets` or `repaidAmounts` should be equal to zero.
+    /// @dev On each seizure either `repaidAmounts` or `seizedAssets` should be equal to zero.
     /// @param term The term of the bond.
-    /// @param A collection of amounts of debt to repay or asset to seize with the index of the collateral in the term collaterals.
+    /// @param seizures An array of amounts of debt to repay or assetd to seize with the index of the collateral in the term collaterals.
     /// @param borrower The debtor of the loan.
     /// @param data Arbitrary data to pass to the callback. Pass empty data if not needed.
     /// @return A collection of the actual amounts of debt repaid or asset seized with the collateral index.
@@ -120,7 +120,7 @@ contract Terms is ITerms {
     {
         require(
             seizures.length <= term.collaterals.length && seizures.length > 0,
-            "Cannot seize more assets than the the supplied collaterals"
+            "Cannot seize more assets than the supplied collaterals"
         );
 
         bytes32 id = _id(term);
@@ -148,7 +148,7 @@ contract Terms is ITerms {
         for (uint256 i = 0; i < seizures.length; i++) {
             require(seizures[i].collateralIndex < term.collaterals.length, "INCONSISTENT_INPUT");
             (uint256 repaidAmount, uint256 seizedAssets, uint256 seizedAssetsQuoted) = _seizeCollateral(
-                term.collaterals[seizures[i].collateralIndex], seizures[i], liquidationIncentiveFactor, borrower
+                term.collaterals[seizures[i].collateralIndex], seizures[i], liquidationIncentiveFactor, msg.sender
             );
             seizures[i].repaidAmount = repaidAmount;
             seizures[i].seizedAssets = seizedAssets;
@@ -181,7 +181,7 @@ contract Terms is ITerms {
         return seizures;
     }
 
-    function _seizeCollateral(Collateral memory c, Seizure memory s, uint256 lif, address borrower)
+    function _seizeCollateral(Collateral memory c, Seizure memory s, uint256 lif, address liquidator)
         internal
         returns (uint256, uint256, uint256)
     {
@@ -192,15 +192,16 @@ contract Terms is ITerms {
             s.seizedAssets = (s.repaidAmount * lif / WAD) * ORACLE_PRICE_SCALE / collateralPrice;
             seizedAssetsQuoted = s.seizedAssets * collateralPrice / ORACLE_PRICE_SCALE;
         } else {
+            // TODO: fix rouding
             s.repaidAmount = seizedAssetsQuoted * WAD * ORACLE_PRICE_SCALE / lif;
         }
-        IERC20(c.token).transfer(msg.sender, s.seizedAssets);
+        IERC20(c.token).transfer(liquidator, s.seizedAssets);
         return (s.repaidAmount, s.seizedAssets, seizedAssetsQuoted);
     }
 
     /// INTERNAL ///
 
-    // TODO: move to a dedicatedd library
+    // TODO: move to a dedicated library
     function exactlyOneZero(uint256 x, uint256 y) internal pure returns (bool z) {
         assembly {
             z := xor(iszero(x), iszero(y))
