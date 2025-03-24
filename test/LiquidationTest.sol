@@ -148,79 +148,79 @@ contract LiquidationTest is BaseTest {
         vm.stopPrank();
     }
 
-    function testLiquidation1Collat() public {
+    function testLiquidationN1K1() public {
         execLiquidation(1, 1);
     }
 
-    function testLiquidation2Collats() public {
+    function testLiquidationN2K1() public {
         execLiquidation(1, 2);
     }
 
-    function testLiquidation3Collats() public {
+    function testLiquidationN3K1() public {
         execLiquidation(1, 3);
     }
 
-    function testLiquidation4Collats() public {
+    function testLiquidationN4K1() public {
         execLiquidation(1, 4);
     }
 
-    function testLiquidation5Collats() public {
+    function testLiquidationN5K1() public {
         execLiquidation(1, 5);
     }
 
-    function testLiquidation6Collats() public {
+    function testLiquidationN6K1() public {
         execLiquidation(1, 6);
     }
 
-    function testLiquidation7Collats() public {
+    function testLiquidationN7K1() public {
         execLiquidation(1, 7);
     }
 
-    function testLiquidation8Collats() public {
+    function testLiquidationN8K1() public {
         execLiquidation(1, 8);
     }
 
-    function testLiquidation9Collats() public {
+    function testLiquidationN9K1() public {
         execLiquidation(1, 9);
     }
 
-    function testLiquidation10Collats1() public {
+    function testLiquidationN10K1() public {
         execLiquidation(1, 10);
     }
 
-    function testLiquidation10Collats2() public {
+    function testLiquidationN10K2() public {
         execLiquidation(2, 10);
     }
 
-    function testLiquidation10Collats3() public {
+    function testLiquidationN10K3() public {
         execLiquidation(3, 10);
     }
 
-    function testLiquidation10Collats4() public {
+    function testLiquidationN10K4() public {
         execLiquidation(4, 10);
     }
 
-    function testLiquidation10Collats5() public {
+    function testLiquidationN10K5() public {
         execLiquidation(5, 10);
     }
 
-    function testLiquidation10Collats6() public {
+    function testLiquidationN10K6() public {
         execLiquidation(6, 10);
     }
 
-    function testLiquidation10Collats7() public {
+    function testLiquidationN10K7() public {
         execLiquidation(7, 10);
     }
 
-    function testLiquidation10Collats8() public {
+    function testLiquidationN10K8() public {
         execLiquidation(8, 10);
     }
 
-    function testLiquidation10Collats9() public {
+    function testLiquidationN10K9() public {
         execLiquidation(9, 10);
     }
 
-    function testLiquidation10Collats10() public {
+    function testLiquidationN10K10() public {
         execLiquidation(10, 10);
     }
 }
