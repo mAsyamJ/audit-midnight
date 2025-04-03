@@ -26,7 +26,7 @@ contract Terms is ITerms {
     // Terms.
     mapping(address => mapping(bytes32 => uint256)) public bondSharesOf;
     mapping(address => mapping(bytes32 => uint256)) public debtSharesOf;
-    mapping(bytes32 => uint256) public withdrawableShares;
+    mapping(bytes32 => uint256) public withdrawable;
     mapping(bytes32 => uint256) public totalAssets;
     mapping(bytes32 => uint256) public totalShares;
     mapping(address => mapping(bytes32 => mapping(address => uint256))) public collateralOf;
@@ -86,7 +86,7 @@ contract Terms is ITerms {
         uint256 shares = amount.toSharesUp(totalAssets[id], totalShares[id]);
 
         bondSharesOf[onBehalf][id] -= shares;
-        withdrawableShares[id] -= shares;
+        withdrawable[id] -= amount;
 
         totalShares[id] -= shares;
         totalAssets[id] -= amount;
@@ -99,7 +99,7 @@ contract Terms is ITerms {
 
         uint256 shares = amount.toSharesDown(totalAssets[id], totalShares[id]);
         debtSharesOf[onBehalf][id] -= shares;
-        withdrawableShares[id] += shares;
+        withdrawable[id] += amount;
 
         IERC20(term.loanToken).transferFrom(msg.sender, address(this), amount);
     }
@@ -163,24 +163,22 @@ contract Terms is ITerms {
 
                 collateralOf[borrower][_id(term)][term.collaterals[i].token] -= seizures[i].seizedAssets;
                 totalRepaid += seizures[i].repaidAmount;
-                totalCollateralQuoted -= collateralQuoted - seizedAssetsQuoted;
+                totalCollateralQuoted += collateralQuoted - seizedAssetsQuoted;
             } else {
                 totalCollateralQuoted += collateralQuoted;
             }
         }
 
+        uint256 repaidShares = totalRepaid.toSharesUp(totalAssets[id], totalShares[id]);
+        debtSharesOf[borrower][id] -= repaidShares;
+        withdrawable[id] += totalRepaid;
+
         // Realize bad debt.
         if (totalCollateralQuoted == 0) {
-            uint256 debtShares = debtSharesOf[borrower][id];
-            totalAssets[id] -= (debtShares.toAssetsUp(totalAssets[id], totalShares[id]) - totalRepaid);
+            uint256 badDebtShares = debtSharesOf[borrower][id];
+            totalAssets[id] -= badDebtShares.toAssetsUp(totalAssets[id], totalShares[id]);
             debtSharesOf[borrower][id] = 0;
         }
-
-        uint256 repaidShares = totalRepaid.toSharesUp(totalAssets[id], totalShares[id]);
-        if (totalCollateralQuoted != 0) {
-            debtSharesOf[borrower][id] -= repaidShares;
-        }
-        withdrawableShares[id] += repaidShares;
 
         // Perform the callback.
         // TODO: simplify with dedicated signature for callback
@@ -201,10 +199,6 @@ contract Terms is ITerms {
 
     function debtOf(address owner, bytes32 id) public view returns (uint256) {
         return debtSharesOf[owner][id].toAssetsDown(totalAssets[id], totalShares[id]);
-    }
-
-    function withdrawable(bytes32 id) public view returns (uint256) {
-        return withdrawableShares[id].toAssetsDown(totalAssets[id], totalShares[id]);
     }
 
     /// INTERNAL ///

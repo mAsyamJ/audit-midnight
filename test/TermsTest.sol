@@ -5,8 +5,6 @@ import "./BaseTest.sol";
 
 import {Oracle} from "./helpers/Oracle.sol";
 
-import "../lib/forge-std/src/console.sol";
-
 contract TermsTest is BaseTest {
     ERC20 private loanToken;
     ERC20 private collateralToken;
@@ -133,7 +131,6 @@ contract TermsTest is BaseTest {
 
         vm.prank(liquidator);
         terms.liquidate(term, seizures, borrower, "0x0");
-        console.log("withdrawable shares", terms.withdrawableShares(id));
         assertEq(terms.debtOf(borrower, id), 0);
         assertEq(terms.withdrawable(id), 87);
         assertEq(terms.bondOf(lender, id), 87);
