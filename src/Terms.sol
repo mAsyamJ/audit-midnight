@@ -75,17 +75,8 @@ contract Terms is ITerms {
         uint256 sellerScaledPrice = sellOffer.price * amount / sellOffer.assets;
         uint256 buyerScaledPrice = buyOffer.price * amount / buyOffer.assets;
 
-        uint256 rest;
-        if (sellerScaledPrice < buyerScaledPrice) {
-            rest = buyerScaledPrice - sellerScaledPrice;
-        } else {
-            rest = 0;
-        }
-
         IERC20(buyOffer.loanToken).transferFrom(buyer, seller, sellerScaledPrice);
-        if (rest > 0) {
-            IERC20(buyOffer.loanToken).transferFrom(buyer, msg.sender, rest);
-        }
+        IERC20(buyOffer.loanToken).transferFrom(buyer, msg.sender, buyerScaledPrice - sellerScaledPrice);
     }
 
     /// @dev Will revert if there is no withdrawable funds.
@@ -146,32 +137,35 @@ contract Terms is ITerms {
 
         uint256 totalRepaid;
         uint256 totalCollateralQuoted;
-        uint256 maxDebt;
-
-        // Compute the total collateral quoted and borrow capacity.
-        for (uint256 i = 0; i < term.collaterals.length; i++) {
-            uint256 price = IOracle(term.collaterals[i].oracle).price();
-            uint256 collateralQuoted =
-                collateralOf[borrower][id][term.collaterals[i].token].mulDivDown(price, ORACLE_PRICE_SCALE);
-            totalCollateralQuoted += collateralQuoted;
-            maxDebt += collateralQuoted.wMulDown(term.collaterals[i].lltv);
-        }
 
         // Check that position is not healthy.
-        require(debtSharesOf[borrower][id].toAssetsUp(totalAssets[id], totalShares[id]) > maxDebt, "Healthy borrower");
+        require(!_isHealthy(term, borrower), "Healthy borrower");
 
         // Compute the repaid and seized amounts by collateral index, remaining collateral and total repaid.
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             uint256 collateralPrice = IOracle(term.collaterals[i].oracle).price();
+            uint256 collateralQuoted =
+                collateralOf[borrower][id][term.collaterals[i].token].mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
             if ((seizures[i].repaidAmount + seizures[i].seizedAssets) != 0) {
-                (uint256 repaidAmount, uint256 seizedAssets, uint256 seizedAssetsQuoted) = _seizeCollateral(
-                    term.collaterals[i].token, collateralPrice, seizures[i], liquidationIncentiveFactor, msg.sender
-                );
-                seizures[i].repaidAmount = repaidAmount;
-                seizures[i].seizedAssets = seizedAssets;
+                require(exactlyOneZero(seizures[i].seizedAssets, seizures[i].repaidAmount), "INCONSISTENT_INPUT");
+
+                // Perform the seizure
+                uint256 seizedAssetsQuoted = seizures[i].seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
+                if (seizures[i].seizedAssets > 0) {
+                    seizures[i].repaidAmount = seizedAssetsQuoted.wDivUp(liquidationIncentiveFactor);
+                } else {
+                    seizures[i].seizedAssets = seizures[i].repaidAmount.wMulDown(liquidationIncentiveFactor).mulDivUp(
+                        ORACLE_PRICE_SCALE, collateralPrice
+                    );
+                    seizedAssetsQuoted = seizures[i].seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
+                }
+                IERC20(term.collaterals[i].token).transfer(msg.sender, seizures[i].seizedAssets);
+
                 collateralOf[borrower][_id(term)][term.collaterals[i].token] -= seizures[i].seizedAssets;
                 totalRepaid += seizures[i].repaidAmount;
-                totalCollateralQuoted -= seizedAssetsQuoted;
+                totalCollateralQuoted -= collateralQuoted - seizedAssetsQuoted;
+            } else {
+                totalCollateralQuoted += collateralQuoted;
             }
         }
 
@@ -218,19 +212,7 @@ contract Terms is ITerms {
     function _seizeCollateral(address token, uint256 collateralPrice, Seizure memory s, uint256 lif, address liquidator)
         internal
         returns (uint256, uint256, uint256)
-    {
-        require(exactlyOneZero(s.seizedAssets, s.repaidAmount), "INCONSISTENT_INPUT");
-
-        uint256 seizedAssetsQuoted = s.seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
-        if (s.seizedAssets > 0) {
-            s.repaidAmount = seizedAssetsQuoted.wDivUp(lif);
-        } else {
-            s.seizedAssets = s.repaidAmount.wMulDown(lif).mulDivUp(ORACLE_PRICE_SCALE, collateralPrice);
-            seizedAssetsQuoted = s.seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
-        }
-        IERC20(token).transfer(liquidator, s.seizedAssets);
-        return (s.repaidAmount, s.seizedAssets, seizedAssetsQuoted);
-    }
+    {}
 
     // TODO: move to a dedicated library
     function exactlyOneZero(uint256 x, uint256 y) internal pure returns (bool z) {
