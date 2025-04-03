@@ -24,11 +24,6 @@ struct Offer {
     uint256 price;
 }
 
-struct Market {
-    uint256 totalAssets;
-    uint256 totalShares;
-}
-
 struct Signature {
     uint8 v;
     bytes32 r;
@@ -36,9 +31,6 @@ struct Signature {
 }
 
 struct Seizure {
-    // Index in the collateral list of the term.
-    // TODO use something more robust than indexes.
-    uint256 collateralIndex;
     // Amount of loan asset to repay.
     uint256 repaidAmount;
     // Amount of collater asset to seize.

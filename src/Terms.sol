@@ -27,7 +27,8 @@ contract Terms is ITerms {
     mapping(address => mapping(bytes32 => uint256)) public bondSharesOf;
     mapping(address => mapping(bytes32 => uint256)) public debtSharesOf;
     mapping(bytes32 => uint256) public withdrawableShares;
-    mapping(bytes32 => Market) public market;
+    mapping(bytes32 => uint256) public totalAssets;
+    mapping(bytes32 => uint256) public totalShares;
     mapping(address => mapping(bytes32 => mapping(address => uint256))) public collateralOf;
     // Offers.
     mapping(bytes => uint256) public consumed;
@@ -53,7 +54,7 @@ contract Terms is ITerms {
         Term memory term = Term(sellOffer.loanToken, sellOffer.collaterals, sellOffer.maturity);
         bytes32 id = _id(term);
 
-        uint256 amountShares = amount.toSharesDown(market[id].totalAssets, market[id].totalShares);
+        uint256 amountShares = amount.toSharesDown(totalAssets[id], totalShares[id]);
 
         uint256 repaidShares = Math.min(debtSharesOf[buyer][id], amountShares);
         uint256 boughtShares = amountShares - repaidShares;
@@ -64,10 +65,9 @@ contract Terms is ITerms {
         bondSharesOf[seller][id] -= withdrawnShares;
         debtSharesOf[seller][id] += amountShares - withdrawnShares;
 
-        uint256 boughtAmount =
-            (boughtShares - withdrawnShares).toAssetsDown(market[id].totalAssets, market[id].totalShares);
-        market[id].totalShares += boughtShares - withdrawnShares;
-        market[id].totalAssets += boughtAmount;
+        uint256 boughtAmount = (boughtShares - withdrawnShares).toAssetsDown(totalAssets[id], totalShares[id]);
+        totalShares[id] += boughtShares - withdrawnShares;
+        totalAssets[id] += boughtAmount;
 
         require(debtSharesOf[buyer][id] == 0 || _isHealthy(term, buyer), "Buyer is unhealthy");
         require(debtSharesOf[seller][id] == 0 || _isHealthy(term, seller), "Seller is unhealthy");
@@ -92,13 +92,13 @@ contract Terms is ITerms {
     function withdrawBond(Term memory term, uint256 amount, address onBehalf) external {
         bytes32 id = _id(term);
 
-        uint256 shares = amount.toSharesUp(market[id].totalAssets, market[id].totalShares);
+        uint256 shares = amount.toSharesUp(totalAssets[id], totalShares[id]);
 
         bondSharesOf[onBehalf][id] -= shares;
         withdrawableShares[id] -= shares;
 
-        market[id].totalShares -= shares;
-        market[id].totalAssets -= amount;
+        totalShares[id] -= shares;
+        totalAssets[id] -= amount;
 
         IERC20(term.loanToken).transfer(msg.sender, amount);
     }
@@ -106,7 +106,7 @@ contract Terms is ITerms {
     function repayDebt(Term memory term, uint256 amount, address onBehalf) external {
         bytes32 id = _id(term);
 
-        uint256 shares = amount.toSharesDown(market[id].totalAssets, market[id].totalShares);
+        uint256 shares = amount.toSharesDown(totalAssets[id], totalShares[id]);
         debtSharesOf[onBehalf][id] -= shares;
         withdrawableShares[id] += shares;
 
@@ -137,10 +137,7 @@ contract Terms is ITerms {
         external
         returns (Seizure[] memory)
     {
-        require(
-            seizures.length <= term.collaterals.length && seizures.length > 0,
-            "Cannot seize more assets than the supplied collaterals"
-        );
+        require(seizures.length == term.collaterals.length, "Cannot seize more assets than the supplied collaterals");
 
         bytes32 id = _id(term);
 
@@ -161,34 +158,31 @@ contract Terms is ITerms {
         }
 
         // Check that position is not healthy.
-        require(
-            debtSharesOf[borrower][id].toAssetsUp(market[id].totalAssets, market[id].totalShares) > maxDebt,
-            "Healthy borrower"
-        );
+        require(debtSharesOf[borrower][id].toAssetsUp(totalAssets[id], totalShares[id]) > maxDebt, "Healthy borrower");
 
         // Compute the repaid and seized amounts by collateral index, remaining collateral and total repaid.
-        for (uint256 i = 0; i < seizures.length; i++) {
-            require(seizures[i].collateralIndex < term.collaterals.length, "INCONSISTENT_INPUT");
-            (uint256 repaidAmount, uint256 seizedAssets, uint256 seizedAssetsQuoted) = _seizeCollateral(
-                term.collaterals[seizures[i].collateralIndex], seizures[i], liquidationIncentiveFactor, msg.sender
-            );
-            seizures[i].repaidAmount = repaidAmount;
-            seizures[i].seizedAssets = seizedAssets;
-            collateralOf[borrower][_id(term)][term.collaterals[seizures[i].collateralIndex].token] -=
-                seizures[i].seizedAssets;
-            totalRepaid += seizures[i].repaidAmount;
-            totalCollateralQuoted -= seizedAssetsQuoted;
+        for (uint256 i = 0; i < term.collaterals.length; i++) {
+            uint256 collateralPrice = IOracle(term.collaterals[i].oracle).price();
+            if ((seizures[i].repaidAmount + seizures[i].seizedAssets) != 0) {
+                (uint256 repaidAmount, uint256 seizedAssets, uint256 seizedAssetsQuoted) = _seizeCollateral(
+                    term.collaterals[i].token, collateralPrice, seizures[i], liquidationIncentiveFactor, msg.sender
+                );
+                seizures[i].repaidAmount = repaidAmount;
+                seizures[i].seizedAssets = seizedAssets;
+                collateralOf[borrower][_id(term)][term.collaterals[i].token] -= seizures[i].seizedAssets;
+                totalRepaid += seizures[i].repaidAmount;
+                totalCollateralQuoted -= seizedAssetsQuoted;
+            }
         }
 
         // Realize bad debt.
         if (totalCollateralQuoted == 0) {
             uint256 debtShares = debtSharesOf[borrower][id];
-            market[id].totalAssets -=
-                (debtShares.toAssetsUp(market[id].totalAssets, market[id].totalShares) - totalRepaid);
+            totalAssets[id] -= (debtShares.toAssetsUp(totalAssets[id], totalShares[id]) - totalRepaid);
             debtSharesOf[borrower][id] = 0;
         }
 
-        uint256 repaidShares = totalRepaid.toSharesUp(market[id].totalAssets, market[id].totalShares);
+        uint256 repaidShares = totalRepaid.toSharesUp(totalAssets[id], totalShares[id]);
         if (totalCollateralQuoted != 0) {
             debtSharesOf[borrower][id] -= repaidShares;
         }
@@ -208,25 +202,25 @@ contract Terms is ITerms {
     }
 
     function bondOf(address owner, bytes32 id) public view returns (uint256) {
-        return bondSharesOf[owner][id].toAssetsDown(market[id].totalAssets, market[id].totalShares);
+        return bondSharesOf[owner][id].toAssetsDown(totalAssets[id], totalShares[id]);
     }
 
     function debtOf(address owner, bytes32 id) public view returns (uint256) {
-        return debtSharesOf[owner][id].toAssetsDown(market[id].totalAssets, market[id].totalShares);
+        return debtSharesOf[owner][id].toAssetsDown(totalAssets[id], totalShares[id]);
     }
 
     function withdrawable(bytes32 id) public view returns (uint256) {
-        return withdrawableShares[id].toAssetsDown(market[id].totalAssets, market[id].totalShares);
+        return withdrawableShares[id].toAssetsDown(totalAssets[id], totalShares[id]);
     }
 
     /// INTERNAL ///
 
-    function _seizeCollateral(Collateral memory c, Seizure memory s, uint256 lif, address liquidator)
+    function _seizeCollateral(address token, uint256 collateralPrice, Seizure memory s, uint256 lif, address liquidator)
         internal
         returns (uint256, uint256, uint256)
     {
         require(exactlyOneZero(s.seizedAssets, s.repaidAmount), "INCONSISTENT_INPUT");
-        uint256 collateralPrice = IOracle(c.oracle).price();
+
         uint256 seizedAssetsQuoted = s.seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
         if (s.seizedAssets > 0) {
             s.repaidAmount = seizedAssetsQuoted.wDivUp(lif);
@@ -234,7 +228,7 @@ contract Terms is ITerms {
             s.seizedAssets = s.repaidAmount.wMulDown(lif).mulDivUp(ORACLE_PRICE_SCALE, collateralPrice);
             seizedAssetsQuoted = s.seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
         }
-        IERC20(c.token).transfer(liquidator, s.seizedAssets);
+        IERC20(token).transfer(liquidator, s.seizedAssets);
         return (s.repaidAmount, s.seizedAssets, seizedAssetsQuoted);
     }
 
@@ -313,7 +307,7 @@ contract Terms is ITerms {
                 maxDebt += collateralQuoted.wMulDown(term.collaterals[i].lltv);
             }
 
-            return debtSharesOf[borrower][id].toAssetsUp(market[id].totalAssets, market[id].totalShares) <= maxDebt;
+            return debtSharesOf[borrower][id].toAssetsUp(totalAssets[id], totalShares[id]) <= maxDebt;
         }
     }
 }
