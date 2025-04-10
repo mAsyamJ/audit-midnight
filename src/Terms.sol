@@ -132,19 +132,19 @@ contract Terms is ITerms {
         uint256 liquidationIncentiveFactor = 1.15e18;
 
         uint256 maxDebt;
-        uint256 liquidatableDebt;
+        uint256 repayableDebt;
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             uint256 price = IOracle(term.collaterals[i].oracle).price();
             uint256 collateralQuoted =
                 collateralOf[borrower][id][term.collaterals[i].token].mulDivDown(price, ORACLE_PRICE_SCALE);
             maxDebt += collateralQuoted.wMulDown(term.collaterals[i].lltv);
-            liquidatableDebt += collateralQuoted.wDivDown(liquidationIncentiveFactor);
+            repayableDebt += collateralQuoted.wDivUp(liquidationIncentiveFactor);
         }
         require(debtOf[borrower][id] >= maxDebt, "position is healthy");
 
         uint256 badDebt;
-        if (liquidatableDebt < debtOf[borrower][id]) {
-            badDebt = debtOf[borrower][id] - liquidatableDebt;
+        if (repayableDebt < debtOf[borrower][id]) {
+            badDebt = debtOf[borrower][id] - repayableDebt;
             debtOf[borrower][id] -= badDebt;
             totalAssets[id] -= badDebt;
         }
