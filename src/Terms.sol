@@ -180,12 +180,6 @@ contract Terms is ITerms {
 
     /// INTERNAL ///
 
-    function lowLevelRevert(bytes memory returnData) internal pure {
-        assembly ("memory-safe") {
-            revert(add(32, returnData), mload(returnData))
-        }
-    }
-
     function _id(Term memory term) public pure returns (bytes32) {
         return keccak256(abi.encode(term));
     }
