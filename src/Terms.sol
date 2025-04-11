@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./libraries/Math.sol";
+import "./libraries/UtilsLib.sol";
 import {MathLib, WAD} from "./libraries/MathLib.sol";
 import {SharesMathLib} from "./libraries/SharesMathLib.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/ITerms.sol";
 import "./interfaces/IMorphoLiquidationCallback.sol";
+
+import "../lib/forge-std/src/console.sol";
 
 contract Terms is ITerms {
     using MathLib for uint256;
@@ -42,7 +44,7 @@ contract Terms is ITerms {
     {
         _checkOffers(buyOffer, buySig, sellOffer, sellSig);
 
-        uint256 amount = Math.min(
+        uint256 amount = UtilsLib.min(
             buyOffer.assets - consumed[abi.encode(buyOffer)], sellOffer.assets - consumed[abi.encode(sellOffer)]
         );
         require(amount > 0, "No assets to match");
@@ -55,12 +57,13 @@ contract Terms is ITerms {
         Term memory term = Term(sellOffer.loanToken, sellOffer.collaterals, sellOffer.maturity);
         bytes32 id = _id(term);
 
-        uint256 repaid = Math.min(debtOf[buyer][id], amount);
+        uint256 repaid = UtilsLib.min(debtOf[buyer][id], amount);
         uint256 bought = amount - repaid;
         debtOf[buyer][id] -= repaid;
         bondSharesOf[buyer][id] += bought.toSharesDown(totalAssets[id], totalShares[id]);
 
-        uint256 withdrawn = Math.min(bondSharesOf[seller][id].toAssetsDown(totalAssets[id], totalShares[id]), amount);
+        uint256 withdrawn =
+            UtilsLib.min(bondSharesOf[seller][id].toAssetsDown(totalAssets[id], totalShares[id]), amount);
         bondSharesOf[seller][id] -= withdrawn;
         debtOf[seller][id] += amount - withdrawn;
 
@@ -79,10 +82,12 @@ contract Terms is ITerms {
     }
 
     /// @dev Will revert if there is no withdrawable funds.
-    function withdrawBond(Term memory term, uint256 amount, address onBehalf) external {
+    function withdrawBond(Term memory term, uint256 amount, uint256 shares, address onBehalf) external {
+        require(UtilsLib.exactlyOneZero(amount, shares), "INCONSISTENT_INPUT");
         bytes32 id = _id(term);
 
-        uint256 shares = amount.toSharesUp(totalAssets[id], totalShares[id]);
+        if (amount > 0) shares = amount.toSharesUp(totalAssets[id], totalShares[id]);
+        else amount = shares.toAssetsDown(totalAssets[id], totalShares[id]);
 
         bondSharesOf[onBehalf][id] -= shares;
         withdrawable[id] -= amount;
@@ -133,6 +138,7 @@ contract Terms is ITerms {
 
         uint256 maxDebt;
         uint256 repayableDebt;
+
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             uint256 price = IOracle(term.collaterals[i].oracle).price();
             uint256 collateralQuoted =
@@ -140,21 +146,26 @@ contract Terms is ITerms {
             maxDebt += collateralQuoted.wMulDown(term.collaterals[i].lltv);
             repayableDebt += collateralQuoted.wDivUp(liquidationIncentiveFactor);
         }
+
         require(debtOf[borrower][id] >= maxDebt, "position is healthy");
 
-        uint256 badDebt;
+        // Realize bad debt
         if (repayableDebt < debtOf[borrower][id]) {
-            badDebt = debtOf[borrower][id] - repayableDebt;
+            uint256 badDebt = debtOf[borrower][id] - repayableDebt;
             debtOf[borrower][id] -= badDebt;
             totalAssets[id] -= badDebt;
         }
 
         uint256 totalRepaid;
+
         for (uint256 i = 0; i < term.collaterals.length; i++) {
-            if (seizures[i].seizedAssets + seizures[i].repaidAmount > 0) {
-                require(seizures[i].repaidAmount * seizures[i].seizedAssets == 0, "INCONSISTENT_INPUT");
+            if (seizures[i].repaidAmount + seizures[i].seizedAssets > 0) {
+                require(
+                    UtilsLib.exactlyOneZero(seizures[i].repaidAmount, seizures[i].seizedAssets), "INCONSISTENT_INPUT"
+                );
 
                 uint256 collateralPrice = IOracle(term.collaterals[i].oracle).price();
+
                 if (seizures[i].seizedAssets > 0) {
                     seizures[i].repaidAmount = seizures[i].seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE)
                         .wDivUp(liquidationIncentiveFactor);
@@ -171,7 +182,7 @@ contract Terms is ITerms {
             }
         }
 
-        debtOf[borrower][id] -= totalRepaid; // should it be zero floor sub
+        debtOf[borrower][id] -= totalRepaid;
         withdrawable[id] += totalRepaid;
 
         if (data.length > 0) IMorphoLiquidationCallback(msg.sender).onLiquidate(seizures, borrower, msg.sender, data);

@@ -102,7 +102,7 @@ contract TermsTest is BaseTest {
         testRepay();
 
         vm.prank(lender);
-        terms.withdrawBond(term, 100, lender);
+        terms.withdrawBond(term, 100, 0, lender);
 
         assertEq(terms.bondOf(lender, id), 0);
         assertEq(terms.withdrawable(id), 0);
