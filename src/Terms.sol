@@ -9,8 +9,6 @@ import "./interfaces/IOracle.sol";
 import "./interfaces/ITerms.sol";
 import "./interfaces/IMorphoLiquidationCallback.sol";
 
-import "../lib/forge-std/src/console.sol";
-
 contract Terms is ITerms {
     using MathLib for uint256;
     using SharesMathLib for uint256;
@@ -64,7 +62,7 @@ contract Terms is ITerms {
 
         uint256 withdrawn =
             UtilsLib.min(bondSharesOf[seller][id].toAssetsDown(totalAssets[id], totalShares[id]), amount);
-        bondSharesOf[seller][id] -= withdrawn;
+        bondSharesOf[seller][id] -= withdrawn.toSharesUp(totalAssets[id], totalShares[id]);
         debtOf[seller][id] += amount - withdrawn;
 
         uint256 boughtAmount = (bought - withdrawn);
