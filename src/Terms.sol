@@ -155,15 +155,7 @@ contract Terms is ITerms {
             maxDebt += collateralQuoted.wMulDown(term.collaterals[i].lltv);
             repayableDebt += collateralQuoted.wDivUp(liquidationIncentiveFactor);
         }
-
         require(debtOf[borrower][id] >= maxDebt, "position is healthy");
-
-        // Realize bad debt
-        if (repayableDebt < debtOf[borrower][id]) {
-            uint256 badDebt = debtOf[borrower][id] - repayableDebt;
-            debtOf[borrower][id] -= badDebt;
-            totalAssets[id] -= badDebt;
-        }
 
         uint256 totalRepaid;
 
@@ -179,19 +171,31 @@ contract Terms is ITerms {
                     seizures[i].repaidAmount = seizures[i].seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE)
                         .wDivUp(liquidationIncentiveFactor);
                 } else {
-                    seizures[i].seizedAssets = seizures[i].repaidAmount.wMulDown(liquidationIncentiveFactor).mulDivUp(
+                    seizures[i].seizedAssets = seizures[i].repaidAmount.wMulDown(liquidationIncentiveFactor).mulDivDown(
                         ORACLE_PRICE_SCALE, collateralPrice
                     );
                 }
 
                 totalRepaid += seizures[i].repaidAmount;
                 collateralOf[borrower][id][term.collaterals[i].token] -= seizures[i].seizedAssets;
+                console.log("remaining collat", collateralOf[borrower][id][term.collaterals[i].token]);
 
                 IERC20(term.collaterals[i].token).transfer(msg.sender, seizures[i].seizedAssets);
             }
         }
 
+        uint256 originalDebt = debtOf[borrower][id];
         debtOf[borrower][id] -= totalRepaid;
+
+        // Realize bad debt
+        if (repayableDebt < originalDebt) {
+            // Because roundings are not aligned the effective bad debt is either the remaining debt or the original debt minus the theoretical repayable debt.
+            uint256 badDebt = UtilsLib.min(debtOf[borrower][id], originalDebt - repayableDebt);
+            debtOf[borrower][id] -= badDebt;
+            totalAssets[id] -= badDebt;
+            console.log("debt after bad debt realization ", debtOf[borrower][id]);
+        }
+
         withdrawable[id] += totalRepaid;
 
         if (data.length > 0) IMorphoLiquidationCallback(msg.sender).onLiquidate(seizures, borrower, msg.sender, data);
