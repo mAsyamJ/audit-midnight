@@ -178,7 +178,6 @@ contract Terms is ITerms {
 
                 totalRepaid += seizures[i].repaidAmount;
                 collateralOf[borrower][id][term.collaterals[i].token] -= seizures[i].seizedAssets;
-                console.log("remaining collat", collateralOf[borrower][id][term.collaterals[i].token]);
 
                 IERC20(term.collaterals[i].token).transfer(msg.sender, seizures[i].seizedAssets);
             }
