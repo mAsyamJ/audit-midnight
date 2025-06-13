@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Test, console} from "../lib/forge-std/src/Test.sol";
-import "../src/Terms.sol";
-import {ERC20} from "./helpers/ERC20.sol";
+import "./BaseTest.sol";
+
 import {Oracle} from "./helpers/Oracle.sol";
 
-contract TermsTest is Test {
-    Terms private terms;
+contract TermsTest is BaseTest {
     ERC20 private loanToken;
     ERC20 private collateralToken;
     Oracle private oracle;
@@ -15,15 +13,19 @@ contract TermsTest is Test {
     address private borrower;
     uint256 private lenderSK;
     address private lender;
+    address private liquidator;
     Term private term;
+
     bytes32 private id;
     Collateral[] private collaterals;
+    Seizure[] private seizures;
 
-    function setUp() external {
+    function setUp() public override {
+        super.setUp();
         (borrower, borrowerSK) = makeAddrAndKey("borrower");
         (lender, lenderSK) = makeAddrAndKey("lender");
-        
-        terms = new Terms();
+        liquidator = makeAddr("liquidator");
+
         loanToken = new ERC20("loan", "loan", 1 ether);
         loanToken.transfer(lender, 99);
         loanToken.transfer(borrower, 1);
@@ -31,7 +33,10 @@ contract TermsTest is Test {
         oracle = new Oracle();
 
         collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({token: address(collateralToken), lltv: 1e18, oracle: address(oracle)});
+        collaterals[0] = Collateral({token: address(collateralToken), lltv: 0.75e18, oracle: address(oracle)});
+
+        seizures = new Seizure[](1);
+        seizures[0] = Seizure({repaidAmount: 0, seizedAssets: 134});
 
         term = Term(address(loanToken), collaterals, block.timestamp + 100);
         id = keccak256(abi.encode(term));
@@ -41,7 +46,9 @@ contract TermsTest is Test {
         vm.prank(borrower);
         loanToken.approve(address(terms), type(uint256).max);
         collateralToken.approve(address(terms), type(uint256).max);
-        terms.supplyCollateral(term, address(collateralToken), 1 ether, borrower);
+        terms.supplyCollateral(term, address(collateralToken), 134, borrower);
+        vm.prank(liquidator);
+        loanToken.approve(address(terms), type(uint256).max);
     }
 
     function testMint() public {
@@ -95,7 +102,7 @@ contract TermsTest is Test {
         testRepay();
 
         vm.prank(lender);
-        terms.withdrawBond(term, 100, lender);
+        terms.withdrawBond(term, 100, 0, lender);
 
         assertEq(terms.bondOf(lender, id), 0);
         assertEq(terms.withdrawable(id), 0);
@@ -108,21 +115,26 @@ contract TermsTest is Test {
         testRepay();
 
         vm.prank(borrower);
-        terms.withdrawCollateral(term, address(collateralToken), 1 ether, borrower);
+        terms.withdrawCollateral(term, address(collateralToken), 134, borrower);
 
         assertEq(terms.collateralOf(borrower, id, address(collateralToken)), 0);
 
         assertEq(collateralToken.balanceOf(address(terms)), 0);
-        assertEq(collateralToken.balanceOf(borrower), 1 ether);
+        assertEq(collateralToken.balanceOf(borrower), 134);
     }
 
-    function _signOffer(Offer memory offer, uint256 sk) internal view returns (Signature memory) {
-        bytes32 hashStruct = keccak256(abi.encode(terms.OFFER_TYPEHASH(), offer));
-        bytes32 domainSeparator = keccak256(abi.encode(terms.DOMAIN_TYPEHASH(), block.chainid, address(terms)));
-        bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, hashStruct));
+    function testBadDebt() public {
+        testMint();
 
-        Signature memory sig;
-        (sig.v, sig.r, sig.s) = vm.sign(sk, digest);
-        return sig;
+        loanToken.transfer(liquidator, 1000);
+        Oracle(collaterals[0].oracle).setPrice(0.75e36);
+
+        vm.prank(liquidator);
+        Seizure[] memory ret = terms.liquidate(term, seizures, borrower, hex"");
+        assertEq(terms.debtOf(borrower, id), 0);
+        assertEq(ret[0].repaidAmount, 87);
+        assertEq(terms.withdrawable(id), 87);
+        assertEq(terms.bondOf(lender, id), 87);
+        assertEq(terms.totalAssets(id), 87);
     }
 }

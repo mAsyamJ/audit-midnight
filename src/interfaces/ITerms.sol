@@ -30,4 +30,11 @@ struct Signature {
     bytes32 s;
 }
 
+struct Seizure {
+    // Amount of loan asset to repay.
+    uint256 repaidAmount;
+    // Amount of collater asset to seize.
+    uint256 seizedAssets;
+}
+
 interface ITerms {}
