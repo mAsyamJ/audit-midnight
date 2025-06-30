@@ -57,16 +57,7 @@ contract LiquidationTest is BaseTest {
     }
 
     function mintBond(Collateral[] memory cs) internal {
-        Offer memory lendOffer = Offer({
-            buy: true,
-            offering: lender,
-            assets: 1000,
-            loanToken: address(loanToken),
-            collaterals: cs,
-            maturity: block.timestamp + 100,
-            price: 990
-        });
-
+        Term memory term = Term(address(loanToken), cs, block.timestamp + 100);
         Offer memory borrowOffer = Offer({
             buy: false,
             offering: borrower,
@@ -77,10 +68,9 @@ contract LiquidationTest is BaseTest {
             price: 990
         });
 
-        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
         Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
 
-        terms.MATCH(lendOffer, lendSig, borrowOffer, borrowSig);
+        terms.take(term, 1000, lender, borrowOffer, borrowSig);
     }
 
     function setUp() public override {
