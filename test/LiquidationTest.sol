@@ -23,7 +23,8 @@ contract LiquidationTest is BaseTest {
         ERC20[] memory tokens = new ERC20[](n);
 
         for (uint256 i = 0; i < n; i++) {
-            tokens[i] = new ERC20("collat", "c", 1 ether);
+            tokens[i] = new ERC20("collat", "c");
+            deal(address(tokens[i]), address(this), 1 ether);
         }
 
         tokens = sortTokens(tokens);
@@ -79,9 +80,10 @@ contract LiquidationTest is BaseTest {
         (lender, lenderSK) = makeAddrAndKey("lender");
         liquidator = makeAddr("liquidator");
 
-        loanToken = new ERC20("loan", "loan", 1 ether);
-        loanToken.transfer(lender, 99);
-        loanToken.transfer(borrower, 1);
+        loanToken = new ERC20("loan", "loan");
+        deal(address(loanToken), address(this), type(uint256).max);
+        deal(address(loanToken), address(lender), 99);
+        deal(address(loanToken), address(borrower), 1);
 
         vm.prank(lender);
         loanToken.approve(address(terms), type(uint256).max);

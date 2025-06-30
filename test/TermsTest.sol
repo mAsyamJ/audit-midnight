@@ -13,7 +13,7 @@ contract TermsTest is BaseTest {
     address private borrower;
     uint256 private lenderSK;
     address private lender;
-    address private liquidator;
+    address private liquidator = makeAddr("liquidator");
     Term private term;
 
     bytes32 private id;
@@ -24,13 +24,14 @@ contract TermsTest is BaseTest {
         super.setUp();
         (borrower, borrowerSK) = makeAddrAndKey("borrower");
         (lender, lenderSK) = makeAddrAndKey("lender");
-        liquidator = makeAddr("liquidator");
 
-        terms = new Terms();
-        loanToken = new ERC20("loan", "loan", 1 ether);
-        loanToken.transfer(lender, 99);
-        loanToken.transfer(borrower, 1);
-        collateralToken = new ERC20("collat", "collat", 1 ether);
+        loanToken = new ERC20("loan", "loan");
+        collateralToken = new ERC20("collat", "collat");
+        
+        deal(address(loanToken), address(this), 100);
+        deal(address(loanToken), address(lender), 99);
+        deal(address(loanToken), address(borrower), 1);
+        deal(address(collateralToken), address(this), 134);
         oracle = new Oracle();
 
         collaterals = new Collateral[](1);
@@ -46,10 +47,13 @@ contract TermsTest is BaseTest {
         loanToken.approve(address(terms), type(uint256).max);
         vm.prank(borrower);
         loanToken.approve(address(terms), type(uint256).max);
-        collateralToken.approve(address(terms), type(uint256).max);
-        terms.supplyCollateral(term, address(collateralToken), 134, borrower);
         vm.prank(liquidator);
         loanToken.approve(address(terms), type(uint256).max);
+        vm.prank(address(this));
+        loanToken.approve(address(terms), type(uint256).max);
+
+        collateralToken.approve(address(terms), type(uint256).max);
+        terms.supplyCollateral(term, address(collateralToken), 134, borrower);
     }
 
     function testLend() public {
@@ -90,6 +94,36 @@ contract TermsTest is BaseTest {
 
         assertEq(loanToken.balanceOf(borrower), 100, "borrower balance");
         assertEq(loanToken.balanceOf(lender), 0, "lender balance");
+    }
+
+    function testMatch() public {
+        Offer memory lendOffer = Offer({
+            buy: true,
+            offering: lender,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
+        Offer memory borrowOffer = Offer({
+            buy: false,
+            offering: borrower,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
+
+        terms.take(term, 100, address(this), borrowOffer, borrowSig);
+        terms.take(term, 100, address(this), lendOffer, lendSig);
+
+        assertEq(terms.bondSharesOf(address(this), id), 0, "bond shares");
+        assertEq(terms.debtOf(address(this), id), 0, "debt");
+        assertEq(loanToken.balanceOf(address(this)), 100, "balance");
     }
 
     function testRepay() public {
@@ -135,7 +169,7 @@ contract TermsTest is BaseTest {
     function testBadDebt() public {
         testLend();
 
-        loanToken.transfer(liquidator, 1000);
+        deal(address(loanToken), address(liquidator), 1000);
         Oracle(collaterals[0].oracle).setPrice(0.75e36);
 
         vm.prank(liquidator);
