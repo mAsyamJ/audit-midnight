@@ -43,7 +43,7 @@ invariant sanitySumDebt(bytes32 id)
     sumDebtOf[id] >= 0;
 
 rule satisfyMatch(env e, calldataarg args) {
-    MATCH(e, args);
+    take(e, args);
     satisfy true;
 }
 
