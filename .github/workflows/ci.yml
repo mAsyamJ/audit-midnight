@@ -2,6 +2,8 @@ name: ci
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -32,6 +34,7 @@ jobs:
         with:
           configurations: |-
             certora/Terms.conf
+          solc-versions: 0.8.28
           job-name: "Terms spec"
           certora-key: ${{ secrets.CERTORAKEY }}
         env:
