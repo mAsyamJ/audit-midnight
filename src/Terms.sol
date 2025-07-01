@@ -200,17 +200,17 @@ contract Terms is ITerms {
         require(offer.loanToken == term.loanToken, "Loan tokens do not match");
         require(offer.maturity == term.maturity, "Maturities do not match");
 
+        Collateral[] memory subset = offer.buy ? term.collaterals : offer.collaterals;
+        Collateral[] memory superset = offer.buy ? offer.collaterals : term.collaterals;
+
         uint256 j = 0;
-        for (uint256 i = 0; i < term.collaterals.length; i++) {
+        for (uint256 i = 0; i < subset.length; i++) {
             // Relies on the fact that the collaterals are sorted.
             // Note that we actually never check that.
-            // If they are not, the match could fail.
-            for (; j < offer.collaterals.length; j++) {
-                if (offer.collaterals[j].token == term.collaterals[i].token || j == offer.collaterals.length) break;
-            }
-            require(offer.collaterals[i].token == offer.collaterals[j].token, "Collaterals tokens do not match");
-            require(offer.collaterals[i].lltv <= offer.collaterals[j].lltv, "LLTVs do not match");
-            require(offer.collaterals[i].oracle == offer.collaterals[j].oracle, "Oracles do not match");
+            // If they are not, the matching could fail.
+            for (; superset[j].token != subset[i].token; j++) {}
+            require(superset[j].lltv >= subset[i].lltv, "LLTVs do not match");
+            require(subset[i].oracle == superset[j].oracle, "Oracles do not match");
             j++;
         }
     }

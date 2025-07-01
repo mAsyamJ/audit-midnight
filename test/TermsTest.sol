@@ -207,4 +207,112 @@ contract TermsTest is BaseTest {
         vm.expectRevert("consumed");
         terms.take(term, 100, borrower, lendOffer, lendSig);
     }
+
+    function testTakeLendOfferCollateralMissing() public {
+        collaterals[0].token = address(0);
+
+        Offer memory lendOffer = Offer({
+            buy: true,
+            offering: lender,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
+
+        vm.expectRevert(stdError.indexOOBError);
+        terms.take(term, 100, borrower, lendOffer, lendSig);
+    }
+
+    function testTakeLendOfferLLTVMismatch() public {
+        collaterals[0].lltv = 0.5e18;
+
+        Offer memory lendOffer = Offer({
+            buy: true,
+            offering: lender,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
+
+        vm.expectRevert("LLTVs do not match");
+        terms.take(term, 100, borrower, lendOffer, lendSig);
+    }
+
+    function testTakeLendOfferOraclesMismatch() public {
+        collaterals[0].oracle = address(0);
+
+        Offer memory lendOffer = Offer({
+            buy: true,
+            offering: lender,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
+
+        vm.expectRevert("Oracles do not match");
+        terms.take(term, 100, borrower, lendOffer, lendSig);
+    }
+
+    function testTakeBorrowOfferTooMuchCollaterals() public {
+        collaterals[0].token = address(0);
+
+        Offer memory borrowOffer = Offer({
+            buy: false,
+            offering: borrower,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
+
+        vm.expectRevert(stdError.indexOOBError);
+        terms.take(term, 100, lender, borrowOffer, borrowSig);
+    }
+
+    function testTakeBorrowOfferLLTVMismatch() public {
+        collaterals[0].lltv = 0.99e18;
+
+        Offer memory borrowOffer = Offer({
+            buy: false,
+            offering: borrower,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
+
+        vm.expectRevert("LLTVs do not match");
+        terms.take(term, 100, lender, borrowOffer, borrowSig);
+    }
+
+    function testTakeBorrowOfferOraclesMismatch() public {
+        collaterals[0].oracle = address(0);
+
+        Offer memory borrowOffer = Offer({
+            buy: false,
+            offering: borrower,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
+
+        vm.expectRevert("Oracles do not match");
+        terms.take(term, 100, lender, borrowOffer, borrowSig);
+    }
 }
