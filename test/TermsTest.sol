@@ -180,4 +180,22 @@ contract TermsTest is BaseTest {
         assertEq(terms.bondOf(lender, id), 87);
         assertEq(terms.totalAssets(id), 87);
     }
+
+    function testConsumed() public {
+        Offer memory lendOffer = Offer({
+            buy: true,
+            offering: lender,
+            assets: 100,
+            loanToken: address(loanToken),
+            collaterals: collaterals,
+            maturity: block.timestamp + 100,
+            price: 99
+        });
+        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
+
+        terms.take(term, 100, borrower, lendOffer, lendSig);
+
+        vm.expectRevert("consumed");
+        terms.take(term, 100, borrower, lendOffer, lendSig);
+    }
 }

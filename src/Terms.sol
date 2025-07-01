@@ -44,6 +44,7 @@ contract Terms is ITerms {
         (address buyer, address seller) = offer.buy ? (offer.offering, onBehalf) : (onBehalf, offer.offering);
 
         consumed[abi.encode(offer)] += amount;
+        require(consumed[abi.encode(offer)] <= offer.assets, "consumed");
 
         bytes32 id = _id(term);
 
