@@ -24,7 +24,8 @@ contract LiquidationTest is BaseTest {
         ERC20[] memory tokens = new ERC20[](n);
 
         for (uint256 i = 0; i < n; i++) {
-            tokens[i] = new ERC20("collat", "c", 1 ether);
+            tokens[i] = new ERC20("collat", "c");
+            deal(address(tokens[i]), address(this), 1 ether);
         }
 
         tokens = sortTokens(tokens);
@@ -58,16 +59,7 @@ contract LiquidationTest is BaseTest {
     }
 
     function mintBond(Collateral[] memory cs) internal {
-        Offer memory lendOffer = Offer({
-            buy: true,
-            offering: lender,
-            assets: 1000,
-            loanToken: address(loanToken),
-            collaterals: cs,
-            maturity: block.timestamp + 100,
-            price: 990
-        });
-
+        Term memory term = Term(address(loanToken), cs, block.timestamp + 100);
         Offer memory borrowOffer = Offer({
             buy: false,
             offering: borrower,
@@ -78,10 +70,9 @@ contract LiquidationTest is BaseTest {
             price: 990
         });
 
-        Signature memory lendSig = _signOffer(lendOffer, lenderSK);
         Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
 
-        terms.MATCH(lendOffer, lendSig, borrowOffer, borrowSig);
+        terms.take(term, 1000, lender, borrowOffer, borrowSig);
     }
 
     function setUp() public override {
@@ -90,9 +81,10 @@ contract LiquidationTest is BaseTest {
         (lender, lenderSK) = makeAddrAndKey("lender");
         liquidator = makeAddr("liquidator");
 
-        loanToken = new ERC20("loan", "loan", 1 ether);
-        loanToken.transfer(lender, 99);
-        loanToken.transfer(borrower, 1);
+        loanToken = new ERC20("loan", "loan");
+        deal(address(loanToken), address(this), type(uint256).max);
+        deal(address(loanToken), address(lender), 99);
+        deal(address(loanToken), address(borrower), 1);
 
         vm.prank(lender);
         loanToken.approve(address(terms), type(uint256).max);
