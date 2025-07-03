@@ -22,7 +22,7 @@ struct Offer {
     address loanToken;
     Collateral[] collaterals;
     uint256 maturity;
-    uint256 price;
+    uint256 rate;
 }
 
 struct Signature {

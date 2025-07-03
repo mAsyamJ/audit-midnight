@@ -16,7 +16,7 @@ contract Terms is ITerms {
 
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
     bytes32 public constant OFFER_TYPEHASH = keccak256(
-        "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 price)"
+        "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 rate)"
     );
     uint256 public constant ORACLE_PRICE_SCALE = 1e36;
 
@@ -26,7 +26,7 @@ contract Terms is ITerms {
     mapping(address => mapping(bytes32 => uint256)) public bondSharesOf;
     mapping(address => mapping(bytes32 => uint256)) public debtOf;
     mapping(bytes32 => uint256) public withdrawable;
-    mapping(bytes32 => uint256) public totalAssets;
+    mapping(bytes32 => uint256) public totalBonds;
     mapping(bytes32 => uint256) public totalShares;
     mapping(address => mapping(bytes32 => mapping(address => uint256))) public collateralOf;
     // Offers.
@@ -43,21 +43,21 @@ contract Terms is ITerms {
         _checkSignature(offer, sig);
         _checkOffer(term, offer);
 
-        (address buyer, address seller) = offer.buy ? (offer.offering, onBehalf) : (onBehalf, offer.offering);
+        uint256 timeToMaturity = term.maturity - block.timestamp;
+        uint256 bonds = assets * (1e18 + timeToMaturity * offer.rate) / 1e18;
 
-        uint256 bonds = assets * offer.assets / offer.price;
-
-        consumed[abi.encode(offer)] += bonds;
+        consumed[abi.encode(offer)] += assets;
         require(consumed[abi.encode(offer)] <= offer.assets, "consumed");
 
+        (address buyer, address seller) = offer.buy ? (offer.offering, onBehalf) : (onBehalf, offer.offering);
         bytes32 id = _id(term);
 
         uint256 repaid = UtilsLib.min(debtOf[buyer][id], bonds);
         uint256 bought = bonds - repaid;
-        uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalAssets[id] + 1);
+        uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalBonds[id] + 1);
         uint256 withdrawn =
-            UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalAssets[id] + 1, totalShares[id] + 1), bonds);
-        uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalAssets[id] + 1);
+            UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1), bonds);
+        uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
 
         debtOf[buyer][id] -= repaid;
         bondSharesOf[buyer][id] += boughtShares;
@@ -66,8 +66,8 @@ contract Terms is ITerms {
 
         totalShares[id] += boughtShares;
         totalShares[id] -= withdrawnShares;
-        totalAssets[id] += bought;
-        totalAssets[id] -= withdrawn;
+        totalBonds[id] += bought;
+        totalBonds[id] -= withdrawn;
 
         require(_isHealthy(term, buyer), "Buyer is unhealthy");
         require(_isHealthy(term, seller), "Seller is unhealthy");
@@ -80,14 +80,14 @@ contract Terms is ITerms {
         require(UtilsLib.exactlyOneZero(bonds, shares), "INCONSISTENT_INPUT");
         bytes32 id = _id(term);
 
-        if (bonds > 0) shares = bonds.mulDivUp(totalShares[id] + 1, totalAssets[id] + 1);
-        else bonds = shares.mulDivDown(totalAssets[id] + 1, totalShares[id] + 1);
+        if (bonds > 0) shares = bonds.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
+        else bonds = shares.mulDivDown(totalBonds[id] + 1, totalShares[id] + 1);
 
         bondSharesOf[onBehalf][id] -= shares;
         withdrawable[id] -= bonds;
 
         totalShares[id] -= shares;
-        totalAssets[id] -= bonds;
+        totalBonds[id] -= bonds;
 
         IERC20(term.loanToken).transfer(msg.sender, bonds);
     }
@@ -176,7 +176,7 @@ contract Terms is ITerms {
             // Because roundings are not aligned the effective bad debt is either the remaining debt or the original debt minus the theoretical repayable debt.
             uint256 badDebt = UtilsLib.min(debtOf[borrower][id], originalDebt - repayableDebt);
             debtOf[borrower][id] -= badDebt;
-            totalAssets[id] -= badDebt;
+            totalBonds[id] -= badDebt;
         }
 
         withdrawable[id] += totalRepaid;
@@ -189,7 +189,7 @@ contract Terms is ITerms {
     }
 
     function bondOf(address owner, bytes32 id) public view returns (uint256) {
-        return bondSharesOf[owner][id].mulDivDown(totalAssets[id] + 1, totalShares[id] + 1);
+        return bondSharesOf[owner][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1);
     }
 
     /// INTERNAL ///

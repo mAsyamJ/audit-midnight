@@ -67,7 +67,7 @@ contract LiquidationTest is BaseTest {
             loanToken: address(loanToken),
             collaterals: cs,
             maturity: block.timestamp + 100,
-            price: 990
+            rate: 0.01e18 / 100
         });
 
         Signature memory borrowSig = _signOffer(borrowOffer, borrowerSK);
