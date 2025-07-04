@@ -198,7 +198,7 @@ contract Terms is ITerms {
     /// INTERNAL ///
 
     function _id(Term memory term) public pure returns (bytes32) {
-        return "helloworld";
+        return keccak256(abi.encode(term));
     }
 
     function _checkOffer(Term memory term, Offer memory offer) internal pure {
