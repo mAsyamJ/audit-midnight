@@ -55,7 +55,7 @@ contract OtherFunctionsTest is BaseTest {
         // Note that if this changes the values when the input is in the bounds, it will break withdraw tests.
         bonds = bound(bonds, 0, MAX_TEST_AMOUNT);
         repaid = bound(repaid, 0, bonds);
-        setupBond(bonds);
+        setupBond(term, bonds);
 
         vm.warp(block.timestamp + 99);
 
@@ -109,25 +109,5 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(terms.withdrawable(id), 0, "withdrawable");
         assertEq(loanToken.balanceOf(address(terms)), 0, "balance of terms");
         assertEq(loanToken.balanceOf(lender), shares, "balance of lender");
-    }
-
-    function setupBond(uint256 bonds) internal {
-        deal(address(loanToken), lender, bonds);
-        deal(address(collateralToken1), address(this), 2 * MAX_TEST_AMOUNT);
-
-        terms.supplyCollateral(term, address(term.collaterals[0].token), 2 * MAX_TEST_AMOUNT, borrower);
-        Offer memory borrowOffer = Offer({
-            buy: false,
-            offering: borrower,
-            assets: bonds,
-            loanToken: term.loanToken,
-            collaterals: term.collaterals,
-            maturity: term.maturity,
-            rate: 0,
-            nonce: 0
-        });
-
-        // take `bonds` because the rate is 0.
-        terms.take(term, bonds, lender, borrowOffer, sig(borrowOffer, borrowerSK));
     }
 }

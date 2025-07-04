@@ -64,20 +64,39 @@ abstract contract BaseTest is Test {
         return signature;
     }
 
-    function sortTokens(ERC20[] memory arr) internal pure returns (ERC20[] memory) {
-        uint256 length = arr.length;
-        for (uint256 i = 1; i < length; i++) {
-            bytes20 key = bytes20((address(arr[i])));
-            uint256 j = i - 1;
-            while ((int256(j) >= 0) && (bytes20(address(arr[j])) > key)) {
-                arr[j + 1] = arr[j];
-                if (j == 0) {
-                    break;
-                }
+    function sortCollaterals(Collateral[] memory arr) internal pure returns (Collateral[] memory) {
+        uint256 i = 1;
+        while (i < arr.length) {
+            uint256 j = i;
+            while (j > 0 && bytes20(arr[j].token) < bytes20(arr[j - 1].token)) {
+                Collateral memory temp = arr[j];
+                arr[j] = arr[j - 1];
+                arr[j - 1] = temp;
                 j--;
             }
-            arr[j + (bytes20(address(arr[j])) > key ? 0 : 1)] = ERC20(address(key));
+            i++;
         }
         return arr;
+    }
+
+    function setupBond(Term memory term, uint256 bonds) internal {
+        deal(address(loanToken), lender, bonds);
+        uint256 collateral = (bonds * 1e18 + term.collaterals[0].lltv - 1) / term.collaterals[0].lltv;
+        deal(address(term.collaterals[0].token), address(this), collateral);
+
+        terms.supplyCollateral(term, address(term.collaterals[0].token), collateral, borrower);
+        Offer memory borrowOffer = Offer({
+            buy: false,
+            offering: borrower,
+            assets: bonds,
+            loanToken: term.loanToken,
+            collaterals: term.collaterals,
+            maturity: term.maturity,
+            rate: 0,
+            nonce: 0
+        });
+
+        // take `bonds` because the rate is 0.
+        terms.take(term, bonds, lender, borrowOffer, sig(borrowOffer, borrowerSK));
     }
 }

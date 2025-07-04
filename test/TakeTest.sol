@@ -24,6 +24,7 @@ contract TakeTest is BaseTest {
         collaterals = new Collateral[](2);
         collaterals[0] = Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(oracle)});
         collaterals[1] = Collateral({token: address(collateralToken2), lltv: 0.75e18, oracle: address(oracle)});
+        collaterals = sortCollaterals(collaterals);
 
         term = Term(address(loanToken), collaterals, block.timestamp + 100);
         id = keccak256(abi.encode(term));

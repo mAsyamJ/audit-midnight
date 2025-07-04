@@ -4,201 +4,98 @@ pragma solidity ^0.8.0;
 
 import "./BaseTest.sol";
 
-import {console} from "../lib/forge-std/src/Test.sol";
-
-import {Oracle} from "./helpers/Oracle.sol";
-
 contract LiquidationTest is BaseTest {
-    Term[] private liquidationTerms;
-    Seizure[][] private sN;
-    Seizure[][] private sK;
+    Term internal term;
+    bytes32 internal id;
+    Collateral[] internal collaterals;
 
     function setUp() public override {
         super.setUp();
 
-        deal(address(loanToken), address(this), type(uint256).max);
-        deal(address(loanToken), address(lender), 99);
-        deal(address(loanToken), address(borrower), 1);
+        collaterals = new Collateral[](2);
+        collaterals[0] = Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(oracle)});
+        collaterals[1] = Collateral({token: address(collateralToken2), lltv: 0.75e18, oracle: address(oracle)});
+        collaterals = sortCollaterals(collaterals);
 
-        liquidationTerms = new Term[](10);
-        sN = new Seizure[][](10);
-        sK = new Seizure[][](10);
-
-        for (uint256 i = 0; i < 10; i++) {
-            liquidationTerms[i] = genTerm(i + 1);
-            mintBond(liquidationTerms[i].collaterals);
-            sK[i] = new Seizure[](10);
-            sK[i][0] = Seizure({repaidBonds: 100, seizedAssets: 0});
-            for (uint256 k = 1; k < i + 1; k++) {
-                sK[i][k] = Seizure({repaidBonds: 0, seizedAssets: 93});
-            }
-        }
-
-        for (uint256 i = 0; i < 10; i++) {
-            liquidationTerms[i] = genTerm(i + 1);
-            mintBond(liquidationTerms[i].collaterals);
-            sN[i] = new Seizure[](i + 1);
-            sN[i][0] = Seizure({repaidBonds: 100, seizedAssets: 0});
-            for (uint256 k = 1; k < i + 1; k++) {
-                sN[i][k] = Seizure({repaidBonds: 0, seizedAssets: 0});
-            }
-        }
-
-        vm.warp(block.timestamp + 50);
+        term = Term(address(loanToken), collaterals, block.timestamp + 100);
+        id = keccak256(abi.encode(term));
     }
 
-    function genTerm(uint256 n) internal returns (Term memory) {
-        Collateral[] memory cs = new Collateral[](n);
-        ERC20[] memory tokens = new ERC20[](n);
-
-        for (uint256 i = 0; i < n; i++) {
-            tokens[i] = new ERC20("collat", "c");
-        }
-
-        tokens = sortTokens(tokens);
-
-        for (uint256 i = 0; i < n; i++) {
-            ERC20 collateral = tokens[i];
-            deal(address(collateral), borrower, 1 ether);
-            vm.prank(borrower);
-            collateral.approve(address(terms), type(uint256).max);
-            cs[i] = Collateral({token: address(collateral), lltv: 0.75e18, oracle: address(new Oracle())});
-        }
-
-        Term memory term = Term(address(loanToken), cs, block.timestamp + 100);
-
-        deal(address(loanToken), lender, 1000);
-
-        vm.startPrank(borrower);
-        for (uint256 i = 1; i < n; i++) {
-            terms.supplyCollateral(term, cs[i].token, 100, borrower);
-        }
-        // The collateral in position 0 is used to make the position liquidatable.
-        terms.supplyCollateral(term, cs[0].token, 1400 - (n - 1) * 100, borrower);
-        vm.stopPrank();
-
-        return term;
+    function testLiquidateWrongSeizuresLength() public {
+        vm.expectRevert("should have all collats");
+        terms.liquidate(term, new Seizure[](0), borrower, "");
     }
 
-    function mintBond(Collateral[] memory cs) internal {
-        Term memory term = Term(address(loanToken), cs, block.timestamp + 100);
-        Offer memory borrowOffer = Offer({
-            buy: false,
-            offering: borrower,
-            assets: 1000,
-            loanToken: address(loanToken),
-            collaterals: cs,
-            maturity: block.timestamp + 100,
-            rate: 0.01e18 / 100,
-            nonce: gasleft()
-        });
+    function testLiquidateHealthy() public {
+        setupBond(term, 100);
 
-        terms.take(term, 1000, lender, borrowOffer, sig(borrowOffer, borrowerSK));
+        vm.expectRevert("position is healthy");
+        terms.liquidate(term, new Seizure[](2), borrower, "");
     }
 
-    function execLiquidation(uint256 k, uint256 n) public {
-        loanToken.transfer(liquidator, 1000);
-        Term memory t = liquidationTerms[n - 1];
-        Oracle(t.collaterals[0].oracle).setPrice(0.25e36);
+    function testLiquidateNoOp() public {
+        setupBond(term, 100);
+        oracle.setPrice(0);
 
-        vm.prank(liquidator);
-        uint256 gasBefore;
-        uint256 gasUsed;
-        if (n == 10) {
-            gasBefore = gasleft();
-            terms.liquidate(t, sK[k - 1], borrower, hex"");
-            gasUsed = gasBefore - gasleft();
-        } else {
-            gasBefore = gasleft();
-            terms.liquidate(t, sN[n - 1], borrower, hex"");
-            gasUsed = gasBefore - gasleft();
-        }
-
-        Oracle(t.collaterals[0].oracle).setPrice(1e36);
-        emit log_named_uint("Gas used", gasUsed);
-
-        assertEq(ERC20(t.collaterals[0].token).balanceOf(liquidator), 460);
-        vm.prank(borrower);
-        loanToken.transfer(address(0), loanToken.balanceOf(borrower));
-        vm.stopPrank();
-        vm.prank(liquidator);
-        loanToken.transfer(address(0), loanToken.balanceOf(liquidator));
-        vm.stopPrank();
+        terms.liquidate(term, new Seizure[](2), borrower, "");
     }
 
-    function testLiquidationN1K1() public {
-        execLiquidation(1, 1);
+    function testLiquidateInconsistentInput() public {
+        setupBond(term, 100);
+        oracle.setPrice(0);
+
+        Seizure[] memory seizures = new Seizure[](2);
+        seizures[0] = Seizure({repaidBonds: 1, seizedAssets: 1});
+        seizures[1] = Seizure({repaidBonds: 0, seizedAssets: 100});
+
+        vm.expectRevert("INCONSISTENT_INPUT");
+        terms.liquidate(term, seizures, borrower, "");
     }
 
-    function testLiquidationN2K1() public {
-        execLiquidation(1, 2);
+    function testLiquidateBondsInput() public {
+        // Setup
+        setupBond(term, 100);
+        oracle.setPrice(1e36 - 1);
+        deal(address(loanToken), address(this), 1);
+
+        // Test
+        Seizure[] memory seizures = new Seizure[](2);
+        seizures[0] = Seizure({repaidBonds: 1, seizedAssets: 0});
+        seizures[1] = Seizure({repaidBonds: 0, seizedAssets: 0});
+        terms.liquidate(term, seizures, borrower, "");
+        assertEq(terms.debtOf(borrower, id), 99);
+        assertEq(terms.collateralOf(borrower, id, collaterals[0].token), 133);
+        assertEq(loanToken.balanceOf(address(this)), 0);
     }
 
-    function testLiquidationN3K1() public {
-        execLiquidation(1, 3);
+    function testLiquidateCollateralInput() public {
+        // Setup
+        setupBond(term, 100);
+        oracle.setPrice(1e36 - 1);
+        deal(address(loanToken), address(this), 1);
+
+        // Test
+        Seizure[] memory seizures = new Seizure[](2);
+        seizures[0] = Seizure({repaidBonds: 0, seizedAssets: 1});
+        seizures[1] = Seizure({repaidBonds: 0, seizedAssets: 0});
+        terms.liquidate(term, seizures, borrower, "");
+        assertEq(loanToken.balanceOf(address(this)), 0);
+        assertEq(terms.debtOf(borrower, id), 99);
+        assertEq(terms.collateralOf(borrower, id, collaterals[0].token), 133);
     }
 
-    function testLiquidationN4K1() public {
-        execLiquidation(1, 4);
-    }
+    function testLiquidateBadDebt() public {
+        // Setup
+        setupBond(term, 100);
+        oracle.setPrice(0.5e36);
+        deal(address(loanToken), address(this), 1);
 
-    function testLiquidationN5K1() public {
-        execLiquidation(1, 5);
-    }
-
-    function testLiquidationN6K1() public {
-        execLiquidation(1, 6);
-    }
-
-    function testLiquidationN7K1() public {
-        execLiquidation(1, 7);
-    }
-
-    function testLiquidationN8K1() public {
-        execLiquidation(1, 8);
-    }
-
-    function testLiquidationN9K1() public {
-        execLiquidation(1, 9);
-    }
-
-    function testLiquidationN10K1() public {
-        execLiquidation(1, 10);
-    }
-
-    function testLiquidationN10K2() public {
-        execLiquidation(2, 10);
-    }
-
-    function testLiquidationN10K3() public {
-        execLiquidation(3, 10);
-    }
-
-    function testLiquidationN10K4() public {
-        execLiquidation(4, 10);
-    }
-
-    function testLiquidationN10K5() public {
-        execLiquidation(5, 10);
-    }
-
-    function testLiquidationN10K6() public {
-        execLiquidation(6, 10);
-    }
-
-    function testLiquidationN10K7() public {
-        execLiquidation(7, 10);
-    }
-
-    function testLiquidationN10K8() public {
-        execLiquidation(8, 10);
-    }
-
-    function testLiquidationN10K9() public {
-        execLiquidation(9, 10);
-    }
-
-    function testLiquidationN10K10() public {
-        execLiquidation(10, 10);
+        // Test
+        Seizure[] memory seizures = new Seizure[](2);
+        seizures[0] = Seizure({repaidBonds: 1, seizedAssets: 0});
+        seizures[1] = Seizure({repaidBonds: 0, seizedAssets: 0});
+        terms.liquidate(term, seizures, borrower, "");
+        assertEq(terms.collateralOf(borrower, id, collaterals[0].token), 132);
+        // TODO assert bad debt
     }
 }

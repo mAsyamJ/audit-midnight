@@ -31,7 +31,7 @@ contract MathLibTest is Test {
         d = bound(d, 1, type(uint256).max);
         if (x > 0) y = bound(y, 0, (type(uint256).max - (d - 1)) / x);
 
-        assertEq(MathLib.mulDivUp(x, y, d), (x * y + d - 1) / d, "mulDivUp result mismatch");
+        assertEq(MathLib.mulDivUp(x, y, d), (x * y + (d - 1)) / d, "mulDivUp result mismatch");
     }
 
     function testMulDivUpDivisionByZero(uint256 x, uint256 y) public {

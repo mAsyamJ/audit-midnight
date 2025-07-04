@@ -142,7 +142,7 @@ contract Terms is ITerms {
             maxDebt += collateralQuoted.mulDivDown(term.collaterals[i].lltv, 1e18);
             repayableDebt += collateralQuoted.mulDivUp(1e18, liquidationIncentiveFactor);
         }
-        require(debtOf[borrower][id] >= maxDebt, "position is healthy");
+        require(debtOf[borrower][id] > maxDebt, "position is healthy");
 
         uint256 totalRepaid;
 
@@ -155,7 +155,7 @@ contract Terms is ITerms {
                 uint256 collateralPrice = IOracle(term.collaterals[i].oracle).price();
 
                 if (seizures[i].seizedAssets > 0) {
-                    seizures[i].repaidBonds = seizures[i].seizedAssets.mulDivDown(collateralPrice, ORACLE_PRICE_SCALE)
+                    seizures[i].repaidBonds = seizures[i].seizedAssets.mulDivUp(collateralPrice, ORACLE_PRICE_SCALE)
                         .mulDivUp(1e18, liquidationIncentiveFactor);
                 } else {
                     seizures[i].seizedAssets = seizures[i].repaidBonds.mulDivDown(liquidationIncentiveFactor, 1e18)
