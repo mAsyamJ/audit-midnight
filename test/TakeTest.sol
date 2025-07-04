@@ -6,46 +6,24 @@ import "./BaseTest.sol";
 
 import {Oracle} from "./helpers/Oracle.sol";
 
-contract TermsTest is BaseTest {
-    ERC20 private loanToken;
-    ERC20 private collateralToken;
-    ERC20 private secondCollateralToken;
-    Oracle private oracle;
-    uint256 private borrowerSK;
-    address private borrower;
-    uint256 private lenderSK;
-    address private lender;
-    address private liquidator = makeAddr("liquidator");
-    Term private term;
-    Offer private lendOffer;
-    Offer private borrowOffer;
-
-    bytes32 private id;
-    Collateral[] private collaterals;
-    Seizure[] private seizures;
+contract TakeTest is BaseTest {
+    Term internal term;
+    bytes32 internal id;
+    Collateral[] internal collaterals;
+    Offer internal lendOffer;
+    Offer internal borrowOffer;
 
     function setUp() public override {
         super.setUp();
-        (borrower, borrowerSK) = makeAddrAndKey("borrower");
-        (lender, lenderSK) = makeAddrAndKey("lender");
-
-        loanToken = new ERC20("loan", "loan");
-        collateralToken = new ERC20("collat", "collat");
-        secondCollateralToken = new ERC20("collat2", "collat2");
 
         deal(address(loanToken), address(this), 100);
         deal(address(loanToken), address(lender), 100);
-        deal(address(collateralToken), address(this), 135);
-        deal(address(collateralToken), address(this), type(uint256).max);
-        oracle = new Oracle();
+        deal(address(collateralToken1), address(this), 135);
+        deal(address(collateralToken1), address(this), type(uint256).max);
 
         collaterals = new Collateral[](2);
-        collaterals[0] = Collateral({token: address(collateralToken), lltv: 0.75e18, oracle: address(oracle)});
-        collaterals[1] = Collateral({token: address(secondCollateralToken), lltv: 0.75e18, oracle: address(oracle)});
-
-        seizures = new Seizure[](2);
-        seizures[0] = Seizure({repaidBonds: 0, seizedAssets: 135});
-        seizures[1] = Seizure({repaidBonds: 0, seizedAssets: 0});
+        collaterals[0] = Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(oracle)});
+        collaterals[1] = Collateral({token: address(collateralToken2), lltv: 0.75e18, oracle: address(oracle)});
 
         term = Term(address(loanToken), collaterals, block.timestamp + 100);
         id = keccak256(abi.encode(term));
@@ -72,17 +50,7 @@ contract TermsTest is BaseTest {
             nonce: 0
         });
 
-        vm.prank(lender);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.prank(borrower);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.prank(liquidator);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.prank(address(this));
-        loanToken.approve(address(terms), type(uint256).max);
-
-        collateralToken.approve(address(terms), type(uint256).max);
-        terms.supplyCollateral(term, address(collateralToken), 135, borrower);
+        terms.supplyCollateral(term, address(collateralToken1), 135, borrower);
     }
 
     function testTakePostMaturity(uint256 maturity) public {
@@ -125,60 +93,6 @@ contract TermsTest is BaseTest {
         assertEq(terms.consumed(borrower, 0), 100, "borrower nonce");
     }
 
-    function testRepay() public {
-        testLend();
-
-        vm.warp(block.timestamp + 99);
-
-        deal(address(loanToken), address(borrower), 101);
-
-        vm.prank(borrower);
-        terms.repayDebt(term, 101, borrower);
-
-        assertEq(terms.debtOf(borrower, id), 0);
-        assertEq(terms.withdrawable(id), 101);
-        assertEq(loanToken.balanceOf(address(terms)), 101);
-        assertEq(loanToken.balanceOf(borrower), 0);
-    }
-
-    function testWithdraw() public {
-        testRepay();
-
-        vm.prank(lender);
-        terms.withdrawBond(term, 101, 0, lender);
-
-        assertEq(terms.bondSharesOf(lender, id), 0);
-        assertEq(terms.withdrawable(id), 0);
-        assertEq(loanToken.balanceOf(address(terms)), 0);
-        assertEq(loanToken.balanceOf(lender), 101);
-    }
-
-    function testWithdrawCollateral() public {
-        testRepay();
-
-        vm.prank(borrower);
-        terms.withdrawCollateral(term, address(collateralToken), 135, borrower);
-
-        assertEq(terms.collateralOf(borrower, id, address(collateralToken)), 0);
-        assertEq(collateralToken.balanceOf(address(terms)), 0);
-        assertEq(collateralToken.balanceOf(borrower), 135);
-    }
-
-    function testBadDebt() public {
-        testLend();
-
-        deal(address(loanToken), address(liquidator), 1000);
-        Oracle(collaterals[0].oracle).setPrice(0.75e36);
-
-        vm.prank(liquidator);
-        Seizure[] memory ret = terms.liquidate(term, seizures, borrower, hex"");
-        assertEq(terms.debtOf(borrower, id), 0);
-        assertEq(ret[0].repaidBonds, 88);
-        assertEq(terms.withdrawable(id), 88);
-        assertEq(terms.bondOf(lender, id), 88);
-        assertEq(terms.totalBonds(id), 88);
-    }
-
     function testConsumed() public {
         terms.take(term, 100, borrower, lendOffer, sig(lendOffer, lenderSK));
 
@@ -186,7 +100,7 @@ contract TermsTest is BaseTest {
         terms.take(term, 100, borrower, lendOffer, sig(lendOffer, lenderSK));
     }
 
-    function testPartialFill() public {
+    function testTakePartialFill() public {
         terms.take(term, 50, borrower, lendOffer, sig(lendOffer, lenderSK));
 
         assertEq(terms.consumed(lender, 0), 50);
@@ -199,7 +113,7 @@ contract TermsTest is BaseTest {
         assertEq(terms.consumed(lender, 0), 100);
     }
 
-    function testOCO() public {
+    function testTakeOCO() public {
         Offer memory lendOffer2 = lendOffer;
         lendOffer2.maturity = block.timestamp + 200;
         Term memory term2 = term;
@@ -210,7 +124,7 @@ contract TermsTest is BaseTest {
         vm.expectRevert("consumed");
         terms.take(term2, 31, borrower, lendOffer2, sig(lendOffer2, lenderSK));
 
-        terms.supplyCollateral(term2, address(collateralToken), 134, borrower);
+        terms.supplyCollateral(term2, address(collateralToken1), 134, borrower);
 
         terms.take(term2, 30, borrower, lendOffer2, sig(lendOffer2, lenderSK));
         assertEq(terms.consumed(lender, 0), 100);

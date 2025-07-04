@@ -2,6 +2,8 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 uint256 constant WAD = 1e18;
 
 /// @title MathLib
@@ -31,6 +33,11 @@ library MathLib {
 
     /// @dev Returns (`x` * `y`) / `d` rounded up.
     function mulDivUp(uint256 x, uint256 y, uint256 d) internal pure returns (uint256) {
+        console.log("a");
+        x * y;
+        console.log("b");
+        (x * y + (d - 1));
+        console.log("c");
         return (x * y + (d - 1)) / d;
     }
 }

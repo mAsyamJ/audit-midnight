@@ -192,10 +192,6 @@ contract Terms is ITerms {
         return seizures;
     }
 
-    function bondOf(address owner, bytes32 id) public view returns (uint256) {
-        return bondSharesOf[owner][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1);
-    }
-
     /// INTERNAL ///
 
     function _id(Term memory term) public pure returns (bytes32) {

@@ -4,10 +4,22 @@ pragma solidity ^0.8.0;
 
 import "../lib/forge-std/src/Test.sol";
 import {ERC20} from "./helpers/ERC20.sol";
+import {Oracle} from "./helpers/Oracle.sol";
 import "../src/Terms.sol";
+
+uint256 constant MAX_TEST_AMOUNT = 10e35;
 
 abstract contract BaseTest is Test {
     Terms internal terms;
+    ERC20 internal loanToken;
+    ERC20 internal collateralToken1;
+    ERC20 internal collateralToken2;
+    Oracle internal oracle;
+    uint256 internal borrowerSK;
+    address internal borrower;
+    uint256 internal lenderSK;
+    address internal lender;
+    address internal liquidator = makeAddr("liquidator");
     bytes32 internal offerTypehash; // to avoid calls.
     bytes32 internal domainTypehash; // to avoid calls.
 
@@ -16,6 +28,30 @@ abstract contract BaseTest is Test {
 
         offerTypehash = terms.OFFER_TYPEHASH();
         domainTypehash = terms.DOMAIN_TYPEHASH();
+
+        (borrower, borrowerSK) = makeAddrAndKey("borrower");
+        (lender, lenderSK) = makeAddrAndKey("lender");
+
+        loanToken = new ERC20("loan", "loan");
+        collateralToken1 = new ERC20("collat1", "collat1");
+        collateralToken2 = new ERC20("collat2", "collat2");
+
+        oracle = new Oracle();
+
+        vm.prank(lender);
+        loanToken.approve(address(terms), type(uint256).max);
+        vm.prank(borrower);
+        loanToken.approve(address(terms), type(uint256).max);
+        vm.prank(liquidator);
+        loanToken.approve(address(terms), type(uint256).max);
+
+        loanToken.approve(address(terms), type(uint256).max);
+        collateralToken1.approve(address(terms), type(uint256).max);
+        collateralToken2.approve(address(terms), type(uint256).max);
+    }
+
+    function toId(Term memory term) internal pure returns (bytes32) {
+        return keccak256(abi.encode(term));
     }
 
     function sig(Offer memory offer, uint256 sk) internal view returns (Signature memory) {

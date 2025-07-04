@@ -9,33 +9,16 @@ import {console} from "../lib/forge-std/src/Test.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 
 contract LiquidationTest is BaseTest {
-    ERC20 private loanToken;
-    uint256 private borrowerSK;
-    address private borrower;
-    uint256 private lenderSK;
-    address private lender;
-    address private liquidator = makeAddr("liquidator");
     Term[] private liquidationTerms;
     Seizure[][] private sN;
     Seizure[][] private sK;
 
     function setUp() public override {
         super.setUp();
-        (borrower, borrowerSK) = makeAddrAndKey("borrower");
-        (lender, lenderSK) = makeAddrAndKey("lender");
 
-        loanToken = new ERC20("loan", "loan");
         deal(address(loanToken), address(this), type(uint256).max);
         deal(address(loanToken), address(lender), 99);
         deal(address(loanToken), address(borrower), 1);
-
-        vm.prank(lender);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.prank(borrower);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.prank(liquidator);
-        loanToken.approve(address(terms), type(uint256).max);
-        vm.stopPrank();
 
         liquidationTerms = new Term[](10);
         sN = new Seizure[][](10);
