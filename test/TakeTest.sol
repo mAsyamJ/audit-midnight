@@ -213,7 +213,7 @@ contract TakeTest is BaseTest {
         terms.take(term, 100, borrower, lendOffer, sig(lendOffer, lenderSK));
     }
 
-    function testTakeWrongSignture(Offer memory _offer) public {
+    function testTakeWrongSignature(Offer memory _offer) public {
         vm.assume(keccak256(abi.encode(_offer)) != keccak256(abi.encode(lendOffer)));
         vm.expectRevert("Invalid signature");
         terms.take(term, 100, borrower, lendOffer, sig(_offer, lenderSK));
