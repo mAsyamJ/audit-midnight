@@ -7,7 +7,7 @@ import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import "../src/Terms.sol";
 
-uint256 constant MAX_TEST_AMOUNT = 10e35;
+uint256 constant MAX_TEST_AMOUNT = 1e36;
 
 abstract contract BaseTest is Test {
     Terms internal terms;
