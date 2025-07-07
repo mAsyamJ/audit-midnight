@@ -65,8 +65,7 @@ abstract contract BaseTest is Test {
     }
 
     function sortCollaterals(Collateral[] memory arr) internal pure returns (Collateral[] memory) {
-        uint256 i = 1;
-        while (i < arr.length) {
+        for (uint256 i = 1; i < arr.length; i++) {
             uint256 j = i;
             while (j > 0 && bytes20(arr[j].token) < bytes20(arr[j - 1].token)) {
                 Collateral memory temp = arr[j];
@@ -74,7 +73,6 @@ abstract contract BaseTest is Test {
                 arr[j - 1] = temp;
                 j--;
             }
-            i++;
         }
         return arr;
     }

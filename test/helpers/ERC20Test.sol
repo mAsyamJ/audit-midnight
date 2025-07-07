@@ -32,6 +32,9 @@ contract ERC20Test is Test {
         vm.prank(sender);
         erc20.approve(address(this), amount);
         erc20.transferFrom(sender, recipient, amount);
+        assertEq(erc20.balanceOf(recipient), amount);
+        assertEq(erc20.balanceOf(sender), 0);
+        assertEq(erc20.allowance(sender, address(this)), 0);
     }
 
     function testTransferInsufficientBalance(address recipient, uint256 amount) public {
