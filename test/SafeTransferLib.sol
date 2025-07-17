@@ -13,14 +13,14 @@ contract ERC20WithoutBoolean {
 }
 
 /// @dev Token returning false.
-contract ERC20WithBooleanAlwaysFalse {
+contract ERC20False {
     function transfer(address to, uint256 value) external returns (bool res) {}
     function transferFrom(address from, address to, uint256 value) external returns (bool res) {}
     function approve(address, uint256) external pure returns (bool res) {}
 }
 
 /// @dev Normal token.
-contract ERC20Normal {
+contract ERC20True {    
     fallback() external {
         // return true.
         assembly {
@@ -31,14 +31,14 @@ contract ERC20Normal {
 }
 
 contract SafeERC20LibTest is Test {
-    ERC20Normal public tokenNormal;
+    ERC20True public tokenTrue;
+    ERC20False public tokenFalse;
     ERC20WithoutBoolean public tokenWithoutBoolean;
-    ERC20WithBooleanAlwaysFalse public tokenWithBooleanAlwaysFalse;
 
     function setUp() public {
-        tokenNormal = new ERC20Normal();
+        tokenTrue = new ERC20True();
+        tokenFalse = new ERC20False();
         tokenWithoutBoolean = new ERC20WithoutBoolean();
-        tokenWithBooleanAlwaysFalse = new ERC20WithBooleanAlwaysFalse();
     }
 
     function testSafeTransferNoCode() public {
@@ -53,12 +53,12 @@ contract SafeERC20LibTest is Test {
 
     function testSafeTransferReturnedFalse() public {
         vm.expectRevert("transfer returned false");
-        this.safeTransfer(address(tokenWithBooleanAlwaysFalse), address(1), 1);
+        this.safeTransfer(address(tokenFalse), address(1), 1);
     }
 
     function testSafeTransferNormal(address to, uint256 value) public {
-        vm.expectCall(address(tokenNormal), abi.encodeCall(IERC20.transfer, (to, value)));
-        this.safeTransfer(address(tokenNormal), to, value);
+        vm.expectCall(address(tokenTrue), abi.encodeCall(IERC20.transfer, (to, value)));
+        this.safeTransfer(address(tokenTrue), to, value);
     }
 
     function testSafeTransferNoBoolean(address to, uint256 value) public {
@@ -78,12 +78,12 @@ contract SafeERC20LibTest is Test {
 
     function testSafeTransferFromReturnedFalse() public {
         vm.expectRevert("transferFrom returned false");
-        this.safeTransferFrom(address(tokenWithBooleanAlwaysFalse), address(1), address(1), 1);
+        this.safeTransferFrom(address(tokenFalse), address(1), address(1), 1);
     }
 
     function testSafeTransferFrom(address from, address to, uint256 value) public {
-        vm.expectCall(address(tokenNormal), abi.encodeCall(IERC20.transferFrom, (from, to, value)));
-        this.safeTransferFrom(address(tokenNormal), from, to, value);
+        vm.expectCall(address(tokenTrue), abi.encodeCall(IERC20.transferFrom, (from, to, value)));
+        this.safeTransferFrom(address(tokenTrue), from, to, value);
     }
 
     function testSafeTransferFromNoBoolean(address from, address to, uint256 value) public {
