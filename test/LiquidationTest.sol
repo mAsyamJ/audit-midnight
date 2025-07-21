@@ -32,17 +32,6 @@ contract LiquidationTest is BaseTest {
         id = toId(term);
     }
 
-    function testLiquidateWrongSeizuresOrder() public {
-        setupBond(term, 100);
-        oracle.setPrice(0);
-        Seizure[] memory seizures = new Seizure[](2);
-        seizures[0] = Seizure({collateralIndex: 1, repaidBonds: 0, seizedAssets: 100});
-        seizures[1] = Seizure({collateralIndex: 0, repaidBonds: 0, seizedAssets: 100});
-
-        vm.expectRevert("not in order");
-        terms.liquidate(term, seizures, borrower, "");
-    }
-
     function testLiquidateHealthy() public {
         setupBond(term, 100);
 

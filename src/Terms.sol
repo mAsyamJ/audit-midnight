@@ -146,13 +146,14 @@ contract Terms is ITerms {
             }
         }
 
+        uint256 originalDebt = debtOf[borrower][id];
+        require(originalDebt > maxDebt, "position is healthy");
+
         uint256 totalRepaid;
-        uint256 collateralIndex = type(uint256).max;
         Seizure memory seizure;
-        for (uint256 i = seizures.length; i > 0; i--) {
-            seizure = seizures[i - 1];
-            require(collateralIndex > seizure.collateralIndex, "not in order");
-            collateralIndex = seizure.collateralIndex;
+
+        for (uint256 i = 0; i < seizures.length; i++) {
+            seizure = seizures[i];
             require(UtilsLib.exactlyOneZero(seizure.repaidBonds, seizure.seizedAssets), "INCONSISTENT_INPUT");
 
             if (seizure.seizedAssets > 0) {
@@ -170,22 +171,17 @@ contract Terms is ITerms {
         }
 
         // Realize bad debt
-        {
-            uint256 originalDebt = debtOf[borrower][id];
-            require(originalDebt > maxDebt, "position is healthy");
+        uint256 badDebt;
 
-            uint256 badDebt;
-
-            if (repayableDebt < originalDebt) {
-                // Because roundings are not aligned the effective bad debt is either the remaining debt or the original
-                // debt minus the theoretical repayable debt.
-                badDebt = UtilsLib.min(originalDebt - totalRepaid, originalDebt - repayableDebt);
-                totalBonds[id] -= badDebt;
-            }
-
-            withdrawable[id] += totalRepaid;
-            debtOf[borrower][id] = originalDebt - totalRepaid - badDebt;
+        if (repayableDebt < originalDebt) {
+            // Because roundings are not aligned the effective bad debt is either the remaining debt or the original
+            // debt minus the theoretical repayable debt.
+            badDebt = UtilsLib.min(originalDebt - totalRepaid, originalDebt - repayableDebt);
+            totalBonds[id] -= badDebt;
         }
+
+        withdrawable[id] += totalRepaid;
+        debtOf[borrower][id] = originalDebt - totalRepaid - badDebt;
 
         for (uint256 i = 0; i < seizures.length; i++) {
             seizure = seizures[i];
