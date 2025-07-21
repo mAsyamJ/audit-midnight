@@ -123,7 +123,7 @@ contract Terms is ITerms {
     /// @dev On each seizure either `repaidBonds` or `seizedAssets` should be equal to zero.
     /// @param term The term of the bond.
     /// @param seizures An array of amounts of debt to repay or assets to seize with the index of the collateral in the
-    /// term's collateral assets. Must be sorted by collateral index in increasing order.
+    /// term's collateral assets.
     /// @param borrower The debtor of the loan.
     /// @param data Arbitrary data to pass to the callback. Pass empty data if not needed.
     /// @return A collection of the actual amounts of debt repaid or asset seized with the collateral index.
