@@ -23,7 +23,10 @@ contract ERC20Test is Test {
         deal(address(erc20), address(this), amount);
         erc20.transfer(recipient, amount);
         assertEq(erc20.balanceOf(recipient), amount);
-        assertEq(erc20.balanceOf(address(this)), 0);
+
+        if (recipient != address(this)) {
+            assertEq(erc20.balanceOf(address(this)), 0);
+        }
     }
 
     function testTransferFrom(address sender, address recipient, uint256 amount) public {
@@ -34,7 +37,9 @@ contract ERC20Test is Test {
         erc20.approve(address(this), amount);
         erc20.transferFrom(sender, recipient, amount);
         assertEq(erc20.balanceOf(recipient), amount);
-        assertEq(erc20.balanceOf(sender), 0);
+        if (sender != recipient) {
+            assertEq(erc20.balanceOf(sender), 0);
+        }
         assertEq(erc20.allowance(sender, address(this)), 0);
     }
 
