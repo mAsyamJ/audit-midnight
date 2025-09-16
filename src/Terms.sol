@@ -139,8 +139,9 @@ contract Terms is ITerms {
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             prices[i] = IOracle(term.collaterals[i].oracle).price();
             {
-                address token = term.collaterals[i].token;
-                uint256 collateralQuoted = collateralOf[borrower][id][token].mulDivDown(prices[i], ORACLE_PRICE_SCALE);
+                address collateralToken = term.collaterals[i].token;
+                uint256 collateralQuoted =
+                    collateralOf[borrower][id][collateralToken].mulDivDown(prices[i], ORACLE_PRICE_SCALE);
                 maxDebt += collateralQuoted.mulDivDown(term.collaterals[i].lltv, 1e18);
                 repayableDebt += collateralQuoted.mulDivUp(1e18, LIQUIDATION_INCENTIVE_FACTOR);
             }
@@ -166,8 +167,8 @@ contract Terms is ITerms {
             }
 
             totalRepaid += seizure.repaidBonds;
-            address token = term.collaterals[seizure.collateralIndex].token;
-            collateralOf[borrower][id][token] -= seizure.seizedAssets;
+            address collateralToken = term.collaterals[seizure.collateralIndex].token;
+            collateralOf[borrower][id][collateralToken] -= seizure.seizedAssets;
         }
 
         // Realize bad debt
