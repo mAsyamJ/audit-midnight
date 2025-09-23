@@ -43,22 +43,30 @@ contract Terms is ITerms {
     function take(
         Term memory term,
         uint256 assets,
+        uint256 bonds,
         address onBehalf,
         Offer memory offer,
         Signature memory sig,
         address callbackAddress,
         bytes memory callbackData
     ) public {
+        require(assets * bonds == 0, "inconsistent input");
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.end, "offer expired");
         require(term.maturity >= block.timestamp, "bond maturity");
-        _checkSignature(offer, sig);
-        _checkOffer(term, offer);
+        require(offer.loanToken == term.loanToken, "Loan tokens do not match");
+        require(offer.maturity == term.maturity, "Maturities do not match");
+        require(signatureIsValid(offer, sig), "Invalid signature");
+        _checkCollateralInclusion(term, offer);
 
-        uint256 price = offer.startPrice
-            + (offer.endPrice - offer.startPrice) * (block.timestamp - offer.start) / (offer.end - offer.start);
-        require(price <= 1e18, "price too high");
-        uint256 bonds = assets.mulDivDown(1e18, price);
+        uint256 denominator = offer.end - offer.start;
+        uint256 price = denominator > 0
+            ? offer.startPrice + (offer.endPrice - offer.startPrice) * (block.timestamp - offer.start) / denominator
+            : offer.startPrice;
+
+        // todo check rounding
+        if (assets > 0) bonds = assets.mulDivDown(1e18, price);
+        else assets = bonds.mulDivUp(price, 1e18);
 
         require((consumed[offer.offering][offer.nonce] += assets) <= offer.assets, "consumed");
 
@@ -229,10 +237,7 @@ contract Terms is ITerms {
         return keccak256(abi.encode(term));
     }
 
-    function _checkOffer(Term memory term, Offer memory offer) internal pure {
-        require(offer.loanToken == term.loanToken, "Loan tokens do not match");
-        require(offer.maturity == term.maturity, "Maturities do not match");
-
+    function _checkCollateralInclusion(Term memory term, Offer memory offer) internal pure {
         Collateral[] memory subset = offer.buy ? term.collaterals : offer.collaterals;
         Collateral[] memory superset = offer.buy ? offer.collaterals : term.collaterals;
 
@@ -248,13 +253,12 @@ contract Terms is ITerms {
         }
     }
 
-    function _checkSignature(Offer memory offer, Signature memory signature) internal view {
+    function signatureIsValid(Offer memory offer, Signature memory signature) internal view returns (bool) {
         bytes32 hashStruct = keccak256(abi.encode(OFFER_TYPEHASH, offer));
         bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_TYPEHASH, block.chainid, address(this)));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, hashStruct));
         address signatory = ecrecover(digest, signature.v, signature.r, signature.s);
-
-        require(signatory != address(0) && offer.offering == signatory, "Invalid signature");
+        return signatory != address(0) && offer.offering == signatory;
     }
 
     function _isHealthy(Term memory term, address borrower) internal view returns (bool) {
