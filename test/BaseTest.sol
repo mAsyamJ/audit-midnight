@@ -94,9 +94,10 @@ abstract contract BaseTest is Test {
             loanToken: term.loanToken,
             collaterals: term.collaterals,
             maturity: block.timestamp + 100,
-            offerStart: block.timestamp,
-            offerExpiry: block.timestamp + 200,
-            rate: 0,
+            start: block.timestamp,
+            end: block.timestamp + 1,
+            startPrice: 1 ether,
+            endPrice: 1 ether,
             nonce: 0,
             callbackAddress: address(0),
             callbackData: ""

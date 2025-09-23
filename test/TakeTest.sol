@@ -40,8 +40,10 @@ contract TakeTest is BaseTest {
         lendOffer.assets = 100;
         lendOffer.loanToken = address(loanToken);
         lendOffer.maturity = block.timestamp + 100;
-        lendOffer.offerExpiry = block.timestamp + 200;
-        lendOffer.rate = 0.01e18 / 100;
+        lendOffer.start = block.timestamp;
+        lendOffer.end = block.timestamp + 200;
+        lendOffer.startPrice = 0.99 ether;
+        lendOffer.endPrice = 0.99 ether;
         lendOffer.nonce = 0;
 
         for (uint256 i = 0; i < collaterals.length; i++) {
@@ -53,8 +55,9 @@ contract TakeTest is BaseTest {
         borrowOffer.assets = 100;
         borrowOffer.loanToken = address(loanToken);
         borrowOffer.maturity = block.timestamp + 100;
-        borrowOffer.offerExpiry = block.timestamp + 200;
-        borrowOffer.rate = 0.01e18 / 100;
+        borrowOffer.end = block.timestamp + 200;
+        borrowOffer.startPrice = 0.99 ether;
+        borrowOffer.endPrice = 0.99 ether;
         borrowOffer.nonce = 0;
 
         for (uint256 i = 0; i < collaterals.length; i++) {
@@ -68,7 +71,7 @@ contract TakeTest is BaseTest {
         maturity = bound(maturity, 0, block.timestamp - 1);
         term.maturity = maturity;
         Offer memory offer;
-        offer.offerExpiry = block.timestamp;
+        offer.end = block.timestamp;
         Signature memory sig;
         vm.expectRevert("bond maturity");
         terms.take(term, 100, lender, offer, sig, address(0), hex"");
@@ -207,7 +210,7 @@ contract TakeTest is BaseTest {
     function testTakeOCO() public {
         Offer memory lendOffer2 = lendOffer;
         lendOffer2.maturity = block.timestamp + 200;
-        lendOffer2.offerExpiry = block.timestamp + 200;
+        lendOffer2.end = block.timestamp + 200;
         Term memory term2 = term;
         term2.maturity = block.timestamp + 200;
 
@@ -349,7 +352,7 @@ contract TakeTest is BaseTest {
     function testTakeOfferWrongLoanToken(address _loanToken) public {
         vm.assume(_loanToken != address(loanToken));
         lendOffer.loanToken = _loanToken;
-        lendOffer.offerExpiry = block.timestamp + 200;
+        lendOffer.end = block.timestamp + 200;
         vm.expectRevert("Loan tokens do not match");
         terms.take(term, 100, borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
     }
@@ -357,7 +360,7 @@ contract TakeTest is BaseTest {
     function testTakeOfferWrongMaturity(uint256 _maturity) public {
         vm.assume(_maturity != term.maturity);
         lendOffer.maturity = _maturity;
-        lendOffer.offerExpiry = block.timestamp + 200;
+        lendOffer.end = block.timestamp + 200;
         vm.expectRevert("Maturities do not match");
         terms.take(term, 100, borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
     }
