@@ -125,7 +125,9 @@ contract Terms is ITerms {
             ICallbacks(buyerCallbackAddress).onTake(term, buyer, buyerAssets, buyerCallbackData);
         }
 
-        SafeTransferLib.safeTransferFrom(offer.loanToken, buyer, tradingFeeRecipient[offer.loanToken],buyerAssets - sellerAssets);
+        SafeTransferLib.safeTransferFrom(
+            offer.loanToken, buyer, tradingFeeRecipient[offer.loanToken], buyerAssets - sellerAssets
+        );
         SafeTransferLib.safeTransferFrom(offer.loanToken, buyer, seller, sellerAssets);
 
         if (sellerCallbackAddress != address(0)) {

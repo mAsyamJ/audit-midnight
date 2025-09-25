@@ -200,7 +200,7 @@ contract TakeTest is BaseTest {
         assertEq(terms.consumed(lender, 0), 50);
 
         vm.expectRevert("consumed");
-        terms.take(term, 51, 0, 0,borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
+        terms.take(term, 51, 0, 0, borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
 
         terms.take(term, 50, 0, 0, borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
 
