@@ -95,7 +95,7 @@ abstract contract BaseTest is Test {
             collaterals: term.collaterals,
             maturity: block.timestamp + 100,
             start: block.timestamp,
-            end: block.timestamp + 1,
+            end: block.timestamp,
             startPrice: 1 ether,
             endPrice: 1 ether,
             nonce: 0,
@@ -103,7 +103,7 @@ abstract contract BaseTest is Test {
             callbackData: ""
         });
 
-        // take `bonds` because the rate is 0.
-        terms.take(term, bonds, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        // take `bonds` assets because the rate is 0.
+        terms.take(term, bonds, 0, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
     }
 }
