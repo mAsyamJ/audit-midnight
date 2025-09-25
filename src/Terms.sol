@@ -16,7 +16,7 @@ contract Terms is ITerms {
 
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
     bytes32 public constant OFFER_TYPEHASH = keccak256(
-        "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 start,uint256 end,uint256 startPrice,uint256 endPrice,uint256 nonce)"
+        "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 start,uint256 expiry,uint256 startPrice,uint256 expiryPrice,uint256 nonce)"
     );
     uint256 public constant ORACLE_PRICE_SCALE = 1e36;
     uint256 public constant LIQUIDATION_INCENTIVE_FACTOR = 1.15e18;
@@ -52,16 +52,16 @@ contract Terms is ITerms {
     ) public {
         require(assets * bonds == 0, "inconsistent input");
         require(block.timestamp >= offer.start, "offer not started");
-        require(block.timestamp <= offer.end, "offer expired");
+        require(block.timestamp <= offer.expiry, "offer expired");
         require(term.maturity >= block.timestamp, "bond maturity");
         require(offer.loanToken == term.loanToken, "Loan tokens do not match");
         require(offer.maturity == term.maturity, "Maturities do not match");
         require(signatureIsValid(offer, sig), "Invalid signature");
         _checkCollateralInclusion(term, offer);
 
-        uint256 denominator = offer.end - offer.start;
+        uint256 denominator = offer.expiry - offer.start;
         uint256 price = denominator > 0
-            ? offer.startPrice + (offer.endPrice - offer.startPrice) * (block.timestamp - offer.start) / denominator
+            ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start) / denominator
             : offer.startPrice;
 
         // todo check rounding

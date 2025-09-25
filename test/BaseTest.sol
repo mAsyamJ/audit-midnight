@@ -95,9 +95,9 @@ abstract contract BaseTest is Test {
             collaterals: term.collaterals,
             maturity: block.timestamp + 100,
             start: block.timestamp,
-            end: block.timestamp,
+            expiry: block.timestamp,
             startPrice: 1 ether,
-            endPrice: 1 ether,
+            expiryPrice: 1 ether,
             nonce: 0,
             callbackAddress: address(0),
             callbackData: ""

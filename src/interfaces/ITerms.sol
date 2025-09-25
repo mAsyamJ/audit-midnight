@@ -23,9 +23,9 @@ struct Offer {
     Collateral[] collaterals;
     uint256 maturity;
     uint256 start;
-    uint256 end;
+    uint256 expiry;
     uint256 startPrice;
-    uint256 endPrice;
+    uint256 expiryPrice;
     uint256 nonce;
     address callbackAddress;
     bytes callbackData;
