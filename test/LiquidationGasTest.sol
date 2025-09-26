@@ -53,16 +53,17 @@ contract LiquidationTest is BaseTest {
             assets: maxDebt,
             loanToken: term.loanToken,
             collaterals: term.collaterals,
-            offerStart: block.timestamp,
-            offerExpiry: block.timestamp + 100,
+            start: block.timestamp,
+            expiry: block.timestamp + 100,
+            startPrice: 1e18,
+            expiryPrice: 1e18,
             maturity: block.timestamp + 100,
-            rate: 0,
             nonce: 0,
             callbackAddress: address(0),
             callbackData: ""
         });
 
-        terms.take(term, maxDebt, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        terms.take(term, 0, maxDebt, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
 
         // Setup liquidation
         for (uint256 i = 0; i < numCollaterals; i++) {

@@ -128,15 +128,16 @@ abstract contract BaseTest is Test {
             loanToken: term.loanToken,
             collaterals: term.collaterals,
             maturity: block.timestamp + 100,
-            offerStart: block.timestamp,
-            offerExpiry: block.timestamp + 200,
-            rate: 0,
+            start: block.timestamp,
+            expiry: block.timestamp + 200,
+            startPrice: 1e18,
+            expiryPrice: 1e18,
             nonce: 0,
             callbackAddress: address(0),
             callbackData: ""
         });
 
         // take `bonds` because the rate is 0.
-        terms.take(term, bonds, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        terms.take(term, 0, bonds, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
     }
 }
