@@ -64,8 +64,9 @@ contract Terms is ITerms {
         address takerCallbackAddress,
         bytes memory takerCallbackData
     ) public {
-        uint256 sum = buyerAssets + sellerAssets + bonds;
-        require(sum == buyerAssets || sum == sellerAssets || sum == bonds, "inconsistent input");
+        require(
+            (buyerAssets == 0 ? 1 : 0) + (sellerAssets == 0 ? 1 : 0) + (bonds == 0 ? 1 : 0) >= 2, "inconsistent input"
+        );
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
         require(term.maturity >= block.timestamp, "bond maturity");
