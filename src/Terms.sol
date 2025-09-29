@@ -43,14 +43,17 @@ contract Terms is ITerms {
     function take(
         Term memory term,
         uint256 assets,
-        uint256 bonds,
+        uint256 bondsUnits,
+        uint256 bondsShares,
         address taker,
         Offer memory offer,
         Signature memory sig,
         address takerCallbackAddress,
         bytes memory takerCallbackData
     ) public {
-        require(assets == 0 || bonds == 0, "inconsistent input");
+        bytes32 id = _id(term);
+        uint256 countNonZero = assets > 0 ? 1 : 0 + (bondsUnits > 0 ? 1 : 0) + (bondsShares > 0 ? 1 : 0);
+        require(countNonZero <= 1, "inconsistent input");
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
         require(term.maturity >= block.timestamp, "bond maturity");
@@ -75,31 +78,33 @@ contract Terms is ITerms {
             ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start) / offerDuration
             : offer.startPrice;
 
-        if (assets > 0) bonds = assets.mulDivDown(1e18, price);
-        else assets = bonds.mulDivDown(price, 1e18);
+        if (assets > 0) {
+            bondsUnits = assets.mulDivDown(1e18, price);
+        } else if (bondsUnits > 0) {
+            assets = bondsUnits.mulDivDown(price, 1e18);
+        } else {
+            bondsUnits = bondsShares.mulDivDown(totalBonds[id] + 1, totalShares[id] + 1);
+            assets = bondsUnits.mulDivDown(price, 1e18);
+        }
 
         require((consumed[offer.offering][offer.nonce] += assets) <= offer.assets, "consumed");
 
-        bytes32 id = _id(term);
+        uint256 repaid = UtilsLib.min(debtOf[buyer][id], bondsUnits);
+        uint256 bought = bondsUnits - repaid;
+        uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalBonds[id] + 1);
+        uint256 withdrawn =
+            UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1), bondsUnits);
+        uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
 
-        {
-            uint256 repaid = UtilsLib.min(debtOf[buyer][id], bonds);
-            uint256 bought = bonds - repaid;
-            uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalBonds[id] + 1);
-            uint256 withdrawn =
-                UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1), bonds);
-            uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
+        debtOf[buyer][id] -= repaid;
+        bondSharesOf[buyer][id] += boughtShares;
+        bondSharesOf[seller][id] -= withdrawnShares;
+        debtOf[seller][id] += bondsUnits - withdrawn;
 
-            debtOf[buyer][id] -= repaid;
-            bondSharesOf[buyer][id] += boughtShares;
-            bondSharesOf[seller][id] -= withdrawnShares;
-            debtOf[seller][id] += bonds - withdrawn;
-
-            totalShares[id] += boughtShares;
-            totalShares[id] -= withdrawnShares;
-            totalBonds[id] += bought;
-            totalBonds[id] -= withdrawn;
-        }
+        totalShares[id] += boughtShares;
+        totalShares[id] -= withdrawnShares;
+        totalBonds[id] += bought;
+        totalBonds[id] -= withdrawn;
 
         if (buyerCallbackAddress != address(0)) {
             ICallbacks(buyerCallbackAddress).onTake(term, buyer, assets, buyerCallbackData);
