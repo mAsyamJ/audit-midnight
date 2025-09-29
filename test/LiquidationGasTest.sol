@@ -63,7 +63,7 @@ contract LiquidationTest is BaseTest {
             callbackData: ""
         });
 
-        terms.take(term, 0, maxDebt, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        terms.take(term, 0, maxDebt, 0, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
 
         // Setup liquidation
         for (uint256 i = 0; i < numCollaterals; i++) {
