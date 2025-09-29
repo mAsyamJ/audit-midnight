@@ -178,7 +178,7 @@ contract Terms is ITerms {
                 maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE).mulDivDown(
                     term.collaterals[i].lltv, 1e18
                 );
-                repayableDebt += collateralAmount.mulDivUp(prices[i], ORACLE_PRICE_SCALE).mulDivDown(
+                repayableDebt += collateralAmount.mulDivUp(prices[i], ORACLE_PRICE_SCALE).mulDivUp(
                     1e18, LIQUIDATION_INCENTIVE_FACTOR
                 );
             }
