@@ -36,7 +36,7 @@ contract Terms is ITerms {
     mapping(address user => mapping(uint256 nonce => uint256)) public consumed;
 
     /// @dev Cut on interest at each trade.
-    mapping(address loanToken => uint256) public tradingFeePct;
+    mapping(address loanToken => uint256) public tradingFee;
     mapping(address loanToken => address) public tradingFeeRecipient;
 
     /// @dev Contract owner for administrative functions.
@@ -94,15 +94,15 @@ contract Terms is ITerms {
 
         if (buyerAssets > 0) {
             bonds = buyerAssets.mulDivDown(1e18, price);
-            sellerAssets = buyerAssets - (bonds - buyerAssets).mulDivDown(tradingFeePct[term.loanToken], 1e18);
+            sellerAssets = buyerAssets - (bonds - buyerAssets).mulDivDown(tradingFee[term.loanToken], 1e18);
         } else if (sellerAssets > 0) {
             buyerAssets = sellerAssets.mulDivDown(
-                1e18, 1e18 + tradingFeePct[term.loanToken] - tradingFeePct[term.loanToken].mulDivDown(1e18, price)
+                1e18, 1e18 + tradingFee[term.loanToken] - tradingFee[term.loanToken].mulDivDown(1e18, price)
             );
             bonds = buyerAssets.mulDivDown(1e18, price);
         } else {
             buyerAssets = bonds.mulDivDown(price, 1e18);
-            sellerAssets = buyerAssets - (bonds - buyerAssets).mulDivDown(tradingFeePct[term.loanToken], 1e18);
+            sellerAssets = buyerAssets - (bonds - buyerAssets).mulDivDown(tradingFee[term.loanToken], 1e18);
         }
 
         require(
@@ -269,10 +269,10 @@ contract Terms is ITerms {
         owner = newOwner;
     }
 
-    function setTradingFee(address loanToken, uint256 feePct) external {
+    function setTradingFee(address loanToken, uint256 fee) external {
         require(msg.sender == owner, "Only owner");
-        require(feePct <= 1e18, "Fee too high");
-        tradingFeePct[loanToken] = feePct;
+        require(fee <= 1e18, "Fee too high");
+        tradingFee[loanToken] = fee;
     }
 
     function setTradingFeeRecipient(address loanToken, address recipient) external {

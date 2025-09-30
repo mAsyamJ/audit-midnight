@@ -71,21 +71,21 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testTradingFeeSetup() public view {
-        assertEq(terms.tradingFeePct(address(loanToken)), 0.05e18, "trading fee percentage");
+        assertEq(terms.tradingFee(address(loanToken)), 0.05e18, "trading fee percentage");
         assertEq(terms.tradingFeeRecipient(address(loanToken)), feeRecipient, "fee recipient");
     }
 
     function testBuyerAssetsWithFee() public {
         uint256 buyerAssets = 100 ether;
         uint256 price = 0.9 ether;
-        uint256 feePct = 0.05e18;
+        uint256 fee = 0.05e18;
 
         borrowOffer.startPrice = price;
         borrowOffer.expiryPrice = price;
 
         // other formula to arrive to the same result.
         uint256 expectedBonds = buyerAssets * 1e18 / price;
-        uint256 expectedFee = (expectedBonds - buyerAssets).mulDivDown(feePct, 1e18);
+        uint256 expectedFee = (expectedBonds - buyerAssets).mulDivDown(fee, 1e18);
         uint256 expectedSellerAssets = buyerAssets - expectedFee;
 
         uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);
@@ -103,12 +103,12 @@ contract TradingFeeTest is BaseTest {
     function testSellerAssetsWithFee() public {
         uint256 sellerAssets = 90 ether;
         uint256 price = 0.9 ether;
-        uint256 feePct = 0.05e18;
+        uint256 fee = 0.05e18;
 
         borrowOffer.startPrice = price;
         borrowOffer.expiryPrice = price;
 
-        uint256 expectedBuyerAssets = sellerAssets.mulDivDown(1e18, 1e18 + feePct - feePct.mulDivDown(1e18, price));
+        uint256 expectedBuyerAssets = sellerAssets.mulDivDown(1e18, 1e18 + fee - fee.mulDivDown(1e18, price));
         uint256 expectedBonds = expectedBuyerAssets.mulDivDown(1e18, price);
         uint256 expectedFee = expectedBuyerAssets - sellerAssets;
 
@@ -126,13 +126,13 @@ contract TradingFeeTest is BaseTest {
     function testBondsWithFee() public {
         uint256 bonds = 100 ether;
         uint256 price = 0.9 ether;
-        uint256 feePct = 0.05e18;
+        uint256 fee = 0.05e18;
 
         borrowOffer.startPrice = price;
         borrowOffer.expiryPrice = price;
 
         uint256 expectedBuyerAssets = bonds * price / 1e18;
-        uint256 expectedFee = (bonds - expectedBuyerAssets).mulDivDown(feePct, 1e18);
+        uint256 expectedFee = (bonds - expectedBuyerAssets).mulDivDown(fee, 1e18);
         uint256 expectedSellerAssets = expectedBuyerAssets - expectedFee;
 
         uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);

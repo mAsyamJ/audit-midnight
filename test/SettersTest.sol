@@ -21,10 +21,10 @@ contract SettersTest is BaseTest {
         terms.setOwner(makeAddr("newOwner"));
     }
 
-    function testSetTradingFeeSuccess(uint256 feePct) public {
-        vm.assume(feePct <= 1e18);
-        terms.setTradingFee(address(loanToken), feePct);
-        assertEq(terms.tradingFeePct(address(loanToken)), feePct);
+    function testSetTradingFeeSuccess(uint256 fee) public {
+        vm.assume(fee <= 1e18);
+        terms.setTradingFee(address(loanToken), fee);
+        assertEq(terms.tradingFee(address(loanToken)), fee);
     }
 
     function testSetTradingFeeOnlyOwner(address rdm) public {
@@ -34,10 +34,10 @@ contract SettersTest is BaseTest {
         terms.setTradingFee(address(loanToken), 0.1e18);
     }
 
-    function testSetTradingFeeTooHigh(uint256 feePct) public {
-        vm.assume(feePct > 1e18);
+    function testSetTradingFeeTooHigh(uint256 fee) public {
+        vm.assume(fee > 1e18);
         vm.expectRevert("Fee too high");
-        terms.setTradingFee(address(loanToken), feePct);
+        terms.setTradingFee(address(loanToken), fee);
     }
 
     function testSetTradingFeeRecipientSuccess(address recipient) public {
