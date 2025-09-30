@@ -57,7 +57,7 @@ contract LiquidationTest is BaseTest {
         morphoV2.liquidate(obligation, seizures, borrower, "");
     }
 
-    function testLiquidateObligationsInput() public {
+    function testLiquidateObligationUnitsInput() public {
         // Setup
         setupObligation(obligation, 100);
         oracle.setPrice(1e36 - 1);

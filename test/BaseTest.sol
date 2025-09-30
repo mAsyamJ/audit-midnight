@@ -77,20 +77,21 @@ abstract contract BaseTest is Test {
         return arr;
     }
 
-    function setupObligation(Obligation memory obligation, uint256 obligations) internal {
-        uint256 collateral = (obligations * 1e18 + obligation.collaterals[0].lltv - 1) / obligation.collaterals[0].lltv;
-        setupObligation(obligation, obligations, collateral);
+    function setupObligation(Obligation memory obligation, uint256 obligationsUnits) internal {
+        uint256 collateral =
+            (obligationsUnits * 1e18 + obligation.collaterals[0].lltv - 1) / obligation.collaterals[0].lltv;
+        setupObligation(obligation, obligationsUnits, collateral);
     }
 
-    function setupObligation(Obligation memory obligation, uint256 obligations, uint256 collateral) internal {
-        deal(address(loanToken), lender, obligations);
+    function setupObligation(Obligation memory obligation, uint256 obligationsUnits, uint256 collateral) internal {
+        deal(address(loanToken), lender, obligationsUnits);
         deal(address(obligation.collaterals[0].token), address(this), collateral);
 
         morphoV2.supplyCollateral(obligation, address(obligation.collaterals[0].token), collateral, borrower);
         Offer memory borrowOffer = Offer({
             buy: false,
             offering: borrower,
-            assets: obligations,
+            assets: obligationsUnits,
             loanToken: obligation.loanToken,
             collaterals: obligation.collaterals,
             maturity: block.timestamp + 100,
@@ -103,8 +104,9 @@ abstract contract BaseTest is Test {
             callbackData: ""
         });
 
-        // take `obligations` assets because the rate is 0.
-        morphoV2.take(obligation, obligations, 0, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        morphoV2.take(
+            obligation, 0, obligationsUnits, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex""
+        );
     }
 
     function setupMaxObligationWithCollaterals(Obligation memory obligation, uint256 collateral0, uint256 collateral1)
@@ -117,11 +119,11 @@ abstract contract BaseTest is Test {
 
     function setupObligationWithCollaterals(
         Obligation memory obligation,
-        uint256 obligations,
+        uint256 obligationsUnits,
         uint256 collateral0,
         uint256 collateral1
     ) internal {
-        deal(address(loanToken), lender, obligations);
+        deal(address(loanToken), lender, obligationsUnits);
         deal(address(obligation.collaterals[0].token), address(this), collateral0);
         deal(address(obligation.collaterals[1].token), address(this), collateral1);
 
@@ -130,7 +132,7 @@ abstract contract BaseTest is Test {
         Offer memory borrowOffer = Offer({
             buy: false,
             offering: borrower,
-            assets: obligations,
+            assets: obligationsUnits,
             loanToken: obligation.loanToken,
             collaterals: obligation.collaterals,
             maturity: block.timestamp + 100,
@@ -143,7 +145,8 @@ abstract contract BaseTest is Test {
             callbackData: ""
         });
 
-        // take `obligations` because the rate is 0.
-        morphoV2.take(obligation, 0, obligations, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex"");
+        morphoV2.take(
+            obligation, 0, obligationsUnits, lender, borrowOffer, sig(borrowOffer, borrowerSK), address(0), hex""
+        );
     }
 }
