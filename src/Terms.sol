@@ -60,12 +60,16 @@ contract Terms is ITerms {
         require(signatureIsValid(offer, sig), "Invalid signature");
         _checkCollateralInclusion(term, offer);
 
-        address buyer = offer.buy ? offer.offering : taker;
-        address buyerCallbackAddress = offer.buy ? offer.callbackAddress : takerCallbackAddress;
-        bytes memory buyerCallbackData = offer.buy ? offer.callbackData : takerCallbackData;
-        address seller = offer.buy ? taker : offer.offering;
-        address sellerCallbackAddress = offer.buy ? takerCallbackAddress : offer.callbackAddress;
-        bytes memory sellerCallbackData = offer.buy ? takerCallbackData : offer.callbackData;
+        (
+            address buyer,
+            address buyerCallbackAddress,
+            bytes memory buyerCallbackData,
+            address seller,
+            address sellerCallbackAddress,
+            bytes memory sellerCallbackData
+        ) = offer.buy
+            ? (offer.offering, offer.callbackAddress, offer.callbackData, taker, takerCallbackAddress, takerCallbackData)
+            : (taker, takerCallbackAddress, takerCallbackData, offer.offering, offer.callbackAddress, offer.callbackData);
 
         uint256 price = offer.expiry != offer.start
             ? offer.startPrice
