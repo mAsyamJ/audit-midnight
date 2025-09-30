@@ -173,8 +173,7 @@ contract Terms is ITerms {
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             prices[i] = IOracle(term.collaterals[i].oracle).price();
             {
-                address collateralToken = term.collaterals[i].token;
-                uint256 collateralAmount = collateralOf[borrower][id][collateralToken];
+                uint256 collateralAmount = collateralOf[borrower][id][term.collaterals[i].token];
                 maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE).mulDivDown(
                     term.collaterals[i].lltv, 1e18
                 );
@@ -187,9 +186,8 @@ contract Terms is ITerms {
         uint256 originalDebt = debtOf[borrower][id];
         require(originalDebt > maxDebt, "position is healthy");
 
-        // Realize bad debt.
-        if (originalDebt > repayableDebt) {
-            uint256 badDebt = originalDebt - repayableDebt;
+        uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
+        if (badDebt > 0) {
             debtOf[borrower][id] -= badDebt;
             totalBonds[id] -= badDebt;
         }
