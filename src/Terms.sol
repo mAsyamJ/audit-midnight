@@ -56,6 +56,7 @@ contract Terms is ITerms {
         require(term.maturity >= block.timestamp, "bond maturity");
         require(offer.loanToken == term.loanToken, "Loan tokens do not match");
         require(offer.maturity == term.maturity, "Maturities do not match");
+        require(offer.start < offer.expiry || offer.expiryPrice == offer.startPrice, "inconsistent prices");
         require(signatureIsValid(offer, sig), "Invalid signature");
         _checkCollateralInclusion(term, offer);
 
@@ -70,9 +71,9 @@ contract Terms is ITerms {
             ? (offer.offering, offer.callbackAddress, offer.callbackData, taker, takerCallbackAddress, takerCallbackData)
             : (taker, takerCallbackAddress, takerCallbackData, offer.offering, offer.callbackAddress, offer.callbackData);
 
-        uint256 offerDuration = offer.expiry - offer.start;
-        uint256 price = offerDuration > 0
-            ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start) / offerDuration
+        uint256 price = offer.expiry != offer.start
+            ? offer.startPrice
+                + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start) / (offer.expiry - offer.start)
             : offer.startPrice;
 
         if (assets > 0) bonds = assets.mulDivDown(1e18, price);
@@ -82,24 +83,22 @@ contract Terms is ITerms {
 
         bytes32 id = _id(term);
 
-        {
-            uint256 repaid = UtilsLib.min(debtOf[buyer][id], bonds);
-            uint256 bought = bonds - repaid;
-            uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalBonds[id] + 1);
-            uint256 withdrawn =
-                UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1), bonds);
-            uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
+        uint256 repaid = UtilsLib.min(debtOf[buyer][id], bonds);
+        uint256 bought = bonds - repaid;
+        uint256 boughtShares = bought.mulDivDown(totalShares[id] + 1, totalBonds[id] + 1);
+        uint256 withdrawn =
+            UtilsLib.min(bondSharesOf[seller][id].mulDivDown(totalBonds[id] + 1, totalShares[id] + 1), bonds);
+        uint256 withdrawnShares = withdrawn.mulDivUp(totalShares[id] + 1, totalBonds[id] + 1);
 
-            debtOf[buyer][id] -= repaid;
-            bondSharesOf[buyer][id] += boughtShares;
-            bondSharesOf[seller][id] -= withdrawnShares;
-            debtOf[seller][id] += bonds - withdrawn;
+        debtOf[buyer][id] -= repaid;
+        bondSharesOf[buyer][id] += boughtShares;
+        bondSharesOf[seller][id] -= withdrawnShares;
+        debtOf[seller][id] += bonds - withdrawn;
 
-            totalShares[id] += boughtShares;
-            totalShares[id] -= withdrawnShares;
-            totalBonds[id] += bought;
-            totalBonds[id] -= withdrawn;
-        }
+        totalShares[id] += boughtShares;
+        totalShares[id] -= withdrawnShares;
+        totalBonds[id] += bought;
+        totalBonds[id] -= withdrawn;
 
         if (buyerCallbackAddress != address(0)) {
             ICallbacks(buyerCallbackAddress).onTake(term, buyer, assets, buyerCallbackData);
@@ -172,15 +171,11 @@ contract Terms is ITerms {
 
         for (uint256 i = 0; i < term.collaterals.length; i++) {
             prices[i] = IOracle(term.collaterals[i].oracle).price();
-            {
-                uint256 collateralAmount = collateralOf[borrower][id][term.collaterals[i].token];
-                maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE).mulDivDown(
-                    term.collaterals[i].lltv, 1e18
-                );
-                repayableDebt += collateralAmount.mulDivUp(prices[i], ORACLE_PRICE_SCALE).mulDivUp(
-                    1e18, LIQUIDATION_INCENTIVE_FACTOR
-                );
-            }
+            uint256 collateralAmount = collateralOf[borrower][id][term.collaterals[i].token];
+            maxDebt +=
+                collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE).mulDivDown(term.collaterals[i].lltv, 1e18);
+            repayableDebt +=
+                collateralAmount.mulDivUp(prices[i], ORACLE_PRICE_SCALE).mulDivUp(1e18, LIQUIDATION_INCENTIVE_FACTOR);
         }
 
         uint256 originalDebt = debtOf[borrower][id];
