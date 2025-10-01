@@ -58,6 +58,7 @@ contract MorphoV2 is IMorphoV2 {
         require(offer.maturity == obligation.maturity, "Maturities do not match");
         require(offer.start < offer.expiry || offer.expiryPrice == offer.startPrice, "inconsistent prices");
         require(signatureIsValid(offer, sig), "Invalid signature");
+        require(offer.offering != taker, "buyer and seller cannot be the same");
         _checkCollateralInclusion(obligation, offer);
 
         (

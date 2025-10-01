@@ -391,6 +391,11 @@ contract TakeTest is BaseTest {
         vm.expectRevert("inconsistent prices");
         morphoV2.take(obligation, 100, 0, borrower, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
     }
+
+    function testTakeBuyerAndSellerCannotBeTheSame() public {
+        vm.expectRevert("buyer and seller cannot be the same");
+        morphoV2.take(obligation, 100, 0, lender, lendOffer, sig(lendOffer, lenderSK), address(0), hex"");
+    }
 }
 
 contract BorrowCallback is ICallbacks {
