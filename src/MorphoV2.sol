@@ -16,7 +16,7 @@ contract MorphoV2 is IMorphoV2 {
 
     bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
     bytes32 public constant OFFER_TYPEHASH = keccak256(
-        "Offer(bool lend,address offering,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 start,uint256 expiry,uint256 startPrice,uint256 expiryPrice,uint256 nonce)"
+        "Offer(bool lend,address maker,uint256 assets,address loanToken,Collateral[] collaterals,uint256 maturity,uint256 start,uint256 expiry,uint256 startPrice,uint256 expiryPrice,uint256 nonce)"
     );
     uint256 public constant ORACLE_PRICE_SCALE = 1e36;
     uint256 public constant LIQUIDATION_INCENTIVE_FACTOR = 1.15e18;
@@ -103,8 +103,8 @@ contract MorphoV2 is IMorphoV2 {
             address sellerCallbackAddress,
             bytes memory sellerCallbackData
         ) = offer.buy
-            ? (offer.offering, offer.callbackAddress, offer.callbackData, taker, takerCallbackAddress, takerCallbackData)
-            : (taker, takerCallbackAddress, takerCallbackData, offer.offering, offer.callbackAddress, offer.callbackData);
+            ? (offer.maker, offer.callbackAddress, offer.callbackData, taker, takerCallbackAddress, takerCallbackData)
+            : (taker, takerCallbackAddress, takerCallbackData, offer.maker, offer.callbackAddress, offer.callbackData);
 
         uint256 price = offer.expiry != offer.start
             ? offer.startPrice
@@ -128,7 +128,7 @@ contract MorphoV2 is IMorphoV2 {
         }
 
         require(
-            (consumed[offer.offering][offer.nonce] += (offer.buy ? buyerAssets : sellerAssets)) <= offer.assets,
+            (consumed[offer.maker][offer.nonce] += (offer.buy ? buyerAssets : sellerAssets)) <= offer.assets,
             "consumed"
         );
 
@@ -313,7 +313,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_TYPEHASH, block.chainid, address(this)));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, hashStruct));
         address signatory = ecrecover(digest, signature.v, signature.r, signature.s);
-        return signatory != address(0) && offer.offering == signatory;
+        return signatory != address(0) && offer.maker == signatory;
     }
 
     function _isHealthy(Obligation memory obligation, address borrower) internal view returns (bool) {
