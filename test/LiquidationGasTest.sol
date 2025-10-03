@@ -70,9 +70,9 @@ contract LiquidationTest is BaseTest {
             maxDebt,
             lender,
             borrowOffer,
-            sig(borrowOffer, borrowerSK),
-            root(borrowOffer),
-            proof(borrowOffer),
+            sig(root([borrowOffer]), borrowerSK),
+            root([borrowOffer]),
+            proof([borrowOffer]),
             address(0),
             hex""
         );

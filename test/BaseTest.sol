@@ -54,17 +54,31 @@ abstract contract BaseTest is Test {
         return keccak256(abi.encode(obligation));
     }
 
-    function root(Offer memory offer) internal pure returns (bytes32) {
-        return keccak256(abi.encode(offer));
+    function root(Offer[1] memory offers) internal pure returns (bytes32) {
+        return keccak256(abi.encode(offers[0]));
     }
 
-    function proof(Offer memory offer) internal pure returns (bytes32[] memory) {
+    function root(Offer[2] memory offers) internal pure returns (bytes32) {
+        return sortHash(keccak256(abi.encode(offers[0])), keccak256(abi.encode(offers[1])));
+    }
+
+    function proof(Offer[1] memory offers) internal pure returns (bytes32[] memory) {
         return new bytes32[](0);
     }
 
-    function sig(Offer memory offer, uint256 sk) internal view returns (Signature memory) {
-        bytes32 root = root(offer);
-        bytes32 hashStruct = keccak256(abi.encode(rootTypehash, root));
+    // assumes the offer is the first one!
+    function proof(Offer[2] memory offers) internal pure returns (bytes32[] memory) {
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = keccak256(abi.encode(offers[1]));
+        return proof;
+    }
+
+    function sortHash(bytes32 h1, bytes32 h2) internal pure returns (bytes32) {
+        return h1 < h2 ? keccak256(abi.encode(h1, h2)) : keccak256(abi.encode(h2, h1));
+    }
+
+    function sig(bytes32 _root, uint256 sk) internal view returns (Signature memory) {
+        bytes32 hashStruct = keccak256(abi.encode(rootTypehash, _root));
         bytes32 domainSeparator = keccak256(abi.encode(domainTypehash, block.chainid, address(morphoV2)));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, hashStruct));
 
@@ -116,9 +130,9 @@ abstract contract BaseTest is Test {
             obligationUnits,
             lender,
             borrowOffer,
-            sig(borrowOffer, borrowerSK),
-            root(borrowOffer),
-            proof(borrowOffer),
+            sig(root([borrowOffer]), borrowerSK),
+            root([borrowOffer]),
+            proof([borrowOffer]),
             address(0),
             hex""
         );
@@ -163,9 +177,9 @@ abstract contract BaseTest is Test {
             obligationUnits,
             lender,
             borrowOffer,
-            sig(borrowOffer, borrowerSK),
-            root(borrowOffer),
-            proof(borrowOffer),
+            sig(root([borrowOffer]), borrowerSK),
+            root([borrowOffer]),
+            proof([borrowOffer]),
             address(0),
             hex""
         );
