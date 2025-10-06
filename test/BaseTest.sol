@@ -69,7 +69,7 @@ abstract contract BaseTest is Test {
     }
 
     function sig(bytes32 _root, uint256 sk) internal view returns (Signature memory) {
-        bytes32 messageHash = keccak256(bytes.concat("\x19\x01\x45thereum signed message:\n32", _root));
+        bytes32 messageHash = keccak256(bytes.concat("\x19\x45thereum Signed Message:\n32", _root));
         Signature memory signature;
         (signature.v, signature.r, signature.s) = vm.sign(sk, messageHash);
         return signature;
