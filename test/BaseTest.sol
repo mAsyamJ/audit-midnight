@@ -54,7 +54,7 @@ abstract contract BaseTest is Test {
     }
 
     function root(Offer[2] memory offers) internal pure returns (bytes32) {
-        return MathLib.sort(keccak256(abi.encode(offers[0])), keccak256(abi.encode(offers[1])));
+        return keccak256(MathLib.sort(keccak256(abi.encode(offers[0])), keccak256(abi.encode(offers[1]))));
     }
 
     function proof(Offer[1] memory offers) internal pure returns (bytes32[] memory) {
