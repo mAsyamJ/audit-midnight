@@ -6,10 +6,10 @@ import "../src/libraries/UtilsLib.sol";
 
 contract UtilsLibTest is Test {
     function testExactlyOneZero(uint256 x, uint256 y) public pure {
-        assertEq(UtilsLib.exactlyOneZero(x, y), (x == 0) != (y == 0), "exactlyOneZero result mismatch");
+        assertEq(UtilsLib.exactlyOneZero(x, y), (x == 0) != (y == 0));
     }
 
-    function testMin(uint256 x, uint256 y) public pure {
-        assertEq(UtilsLib.min(x, y), x < y ? x : y, "min result mismatch");
+    function testAtMostOneNonZero(uint256 a, uint256 b, uint256 c) public pure {
+        assertEq(UtilsLib.atMostOneNonZero(a, b, c), (a == 0 ? 1 : 0) + (b == 0 ? 1 : 0) + (c == 0 ? 1 : 0) >= 2);
     }
 }
