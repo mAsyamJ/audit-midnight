@@ -83,20 +83,23 @@ contract MorphoV2 is IMorphoV2 {
 
         require((consumed[offer.maker][offer.nonce] += assets) <= offer.assets, "consumed");
 
-        uint256 sellerNetNewDebt =
+        uint256 sellerDebtIncrease =
             obligationShares.zeroFloorSub(sharesOf[seller][id]).mulDivUp(totalUnits[id] + 1, totalShares[id] + 1);
-        uint256 buyerNetNewShares =
+        uint256 sellerSharesDecrease = UtilsLib.min(obligationShares, sharesOf[seller][id]);
+        uint256 buyerSharesIncrease =
             obligationShares.zeroFloorSub(debtOf[buyer][id].mulDivDown(totalUnits[id] + 1, totalShares[id] + 1));
+        uint256 buyerDebtDecrease = UtilsLib.min(obligationUnits, debtOf[buyer][id]);
 
-        totalShares[id] = totalShares[id] + buyerNetNewShares
-            - (sharesOf[seller][id] - sharesOf[seller][id].zeroFloorSub(obligationShares));
-        totalUnits[id] =
-            totalUnits[id] + sellerNetNewDebt - (debtOf[buyer][id] - debtOf[buyer][id].zeroFloorSub(obligationUnits));
-
-        if (debtOf[buyer][id] > 0) debtOf[buyer][id] = debtOf[buyer][id].zeroFloorSub(obligationUnits);
-        if (buyerNetNewShares > 0) sharesOf[buyer][id] += buyerNetNewShares;
-        if (sharesOf[seller][id] > 0) sharesOf[seller][id] = sharesOf[seller][id].zeroFloorSub(obligationShares);
-        if (sellerNetNewDebt > 0) debtOf[seller][id] += sellerNetNewDebt;
+        if (buyerDebtDecrease > 0) debtOf[buyer][id] -= buyerDebtDecrease;
+        if (buyerSharesIncrease > 0) sharesOf[buyer][id] += buyerSharesIncrease;
+        if (sellerSharesDecrease > 0) sharesOf[seller][id] -= sellerSharesDecrease;
+        if (sellerDebtIncrease > 0) debtOf[seller][id] += sellerDebtIncrease;
+        if (buyerSharesIncrease != sellerSharesDecrease) {
+            totalShares[id] = totalShares[id] + buyerSharesIncrease - sellerSharesDecrease;
+        }
+        if (sellerDebtIncrease != buyerDebtDecrease) {
+            totalUnits[id] = totalUnits[id] + sellerDebtIncrease - buyerDebtDecrease;
+        }
 
         if (buyerCallbackAddress != address(0)) {
             ICallbacks(buyerCallbackAddress).onTake(offer.obligation, buyer, assets, buyerCallbackData);

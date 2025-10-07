@@ -16,4 +16,11 @@ library UtilsLib {
             z := gt(add(add(iszero(a), iszero(b)), iszero(c)), 1)
         }
     }
+
+    /// @dev Returns min(a, b).
+    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        assembly {
+            z := xor(x, mul(xor(x, y), lt(y, x)))
+        }
+    }
 }

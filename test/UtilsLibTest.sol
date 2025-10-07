@@ -12,4 +12,8 @@ contract UtilsLibTest is Test {
     function testAtMostOneNonZero(uint256 a, uint256 b, uint256 c) public pure {
         assertEq(UtilsLib.atMostOneNonZero(a, b, c), (a == 0 ? 1 : 0) + (b == 0 ? 1 : 0) + (c == 0 ? 1 : 0) >= 2);
     }
+
+    function testMin(uint256 a, uint256 b) public pure {
+        assertEq(UtilsLib.min(a, b), a < b ? a : b);
+    }
 }
