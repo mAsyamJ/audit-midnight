@@ -45,10 +45,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes memory takerCallbackData
     ) public {
         bytes32 id = _id(offer.obligation);
-        require(
-            (obligationUnits == 0 ? 1 : 0) + (obligationShares == 0 ? 1 : 0) + (assets == 0 ? 1 : 0) >= 2,
-            "inconsistent input"
-        );
+        require(UtilsLib.atMostOneNonZero(obligationUnits, obligationShares, assets), "inconsistent input");
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
         require(offer.obligation.maturity >= block.timestamp, "maturity");
