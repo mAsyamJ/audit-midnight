@@ -114,10 +114,8 @@ contract MorphoV2 is IMorphoV2 {
         require(offerPrice <= 1e18, "price too high");
 
         uint256 _tradingFee = tradingFee[obligation.loanToken];
-        uint256 buyerPrice =
-            offer.buy ? offerPrice : (WAD + _tradingFee).mulDivDown(1e18, WAD.mulDivDown(WAD, offerPrice) + _tradingFee);
-        uint256 sellerPrice =
-            offer.buy ? WAD.mulDivDown(WAD, (WAD - _tradingFee).mulDivDown(WAD, offerPrice) - _tradingFee) : offerPrice;
+        uint256 buyerPrice = offer.buy ? offerPrice : offerPrice.mulDivDown(WAD - _tradingFee, WAD) + _tradingFee;
+        uint256 sellerPrice = offer.buy ? (offerPrice - _tradingFee).mulDivDown(WAD, WAD - _tradingFee) : offerPrice;
 
         if (buyerAssets > 0) {
             obligationUnits = buyerAssets.mulDivDown(1e18, buyerPrice);
