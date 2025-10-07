@@ -85,10 +85,10 @@ contract MorphoV2 is IMorphoV2 {
 
         uint256 sellerSharesDecrease = UtilsLib.min(obligationShares, sharesOf[seller][id]);
         uint256 sellerDebtIncrease =
-            obligationShares - sellerSharesDecrease.mulDivUp(totalUnits[id] + 1, totalShares[id] + 1);
+            (obligationShares - sellerSharesDecrease).mulDivUp(totalUnits[id] + 1, totalShares[id] + 1);
         uint256 buyerDebtDecrease = UtilsLib.min(obligationUnits, debtOf[buyer][id]);
         uint256 buyerSharesIncrease =
-            obligationUnits - buyerDebtDecrease.mulDivDown(totalUnits[id] + 1, totalShares[id] + 1);
+            (obligationUnits - buyerDebtDecrease).mulDivDown(totalShares[id] + 1, totalUnits[id] + 1);
 
         if (buyerDebtDecrease > 0) debtOf[buyer][id] -= buyerDebtDecrease;
         if (buyerSharesIncrease > 0) sharesOf[buyer][id] += buyerSharesIncrease;
