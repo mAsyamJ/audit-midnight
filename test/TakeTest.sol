@@ -694,6 +694,7 @@ contract TakeTest is BaseTest {
         morphoV2.take(
             100,
             0,
+            0,
             lender,
             lendOffer,
             sig(root([lendOffer]), lenderSK),
