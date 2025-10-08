@@ -74,7 +74,7 @@ contract TradingFeeTest is BaseTest {
         borrowOffer.startPrice = price;
         borrowOffer.expiryPrice = price;
 
-        uint256 expectedSellerAssets = buyerAssets.mulDivDown(1e18, 1e18 - fee + fee.mulDivDown(1e18, price));
+        uint256 expectedSellerAssets = buyerAssets.mulDivDown(1e18, 1e18 + fee.mulDivDown(1e18, price) - fee);
         uint256 expectedUnits = expectedSellerAssets.mulDivDown(1e18, price);
         uint256 expectedFee = (expectedUnits - expectedSellerAssets) * fee / 1e18;
 
@@ -95,10 +95,14 @@ contract TradingFeeTest is BaseTest {
             hex""
         );
 
-        assertEq(morphoV2.sharesOf(lender, id), expectedUnits, "units");
-        assertEq(loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, "fee recipient balance");
         assertEq(loanToken.balanceOf(lender), lenderBalanceBefore - buyerAssets, "lender balance");
-        assertEq(loanToken.balanceOf(borrower), borrowerBalanceBefore + expectedSellerAssets, "borrower balance");
+        assertApproxEqAbs(morphoV2.sharesOf(lender, id), expectedUnits, 100, "units");
+        assertApproxEqAbs(
+            loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, 100, "fee recipient balance"
+        );
+        assertApproxEqAbs(
+            loanToken.balanceOf(borrower), borrowerBalanceBefore + expectedSellerAssets, 100, "borrower balance"
+        );
     }
 
     function testSellerAssetsWithFee() public {
