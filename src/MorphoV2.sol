@@ -60,6 +60,7 @@ contract MorphoV2 is IMorphoV2 {
 
     /// ENTRY-POINTS ///
 
+    /// @dev Returns buyerAssets, sellerAssets, obligationUnits, obligationShares.
     /// @dev Same function used to buy and sell.
     /// @dev If one wants to match two offers without taking a position, they can batch take them and not have a
     /// position at the end.

@@ -15,7 +15,7 @@ rule takeInputs(env e, uint256 buyerAssets, uint256 sellerAssets, uint256 obliga
     uint256 sellerAssetsOutput;
     uint256 obligationUnitsOutput;
     uint256 obligationSharesOutput;
-    
+
     buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, buyerAssets, sellerAssets, obligationUnits, obligationShares, taker, offer, signature, root, proof, takerCallbackAddress, takerCallbackData);
 
     assert buyerAssets == 0 || buyerAssetsOutput == buyerAssets;
