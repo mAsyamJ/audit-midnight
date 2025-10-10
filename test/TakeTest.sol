@@ -736,7 +736,7 @@ contract TakeTest is BaseTest {
 
     // test inputs
 
-    function setupFeesAndRounding() public {
+    function setupFeesAndRounding() internal {
         morphoV2.setTradingFee(address(loanToken), 0.05e18);
         morphoV2.setTradingFeeRecipient(address(this));
 
