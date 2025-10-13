@@ -27,6 +27,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev OCO offers should all have the same amounts to work as expected.
     /// @dev OCO offers should all have the same input (assets, obligation units or obligation shares) to work as
     /// expected.
+    /// @dev OCO offers should be all buy or all sell.
     mapping(address user => mapping(uint256 nonce => uint256)) public consumed;
 
     /// @dev Cut on interest at each trade.
