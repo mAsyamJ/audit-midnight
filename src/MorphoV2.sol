@@ -27,7 +27,7 @@ contract MorphoV2 is IMorphoV2 {
     /// otherwise one might not be takable anymore while an other one at the same nonce is still takeable.
     mapping(address user => mapping(uint256 nonce => uint256)) public consumed;
 
-    /// @dev Cut on interest at each trade.
+    /// @dev Cut on interest at each trade for a given obligation id.
     mapping(bytes32 id => uint256) public tradingFee;
     address public tradingFeeRecipient;
 
