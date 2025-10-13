@@ -57,12 +57,12 @@ contract TradingFeeTest is BaseTest {
         morphoV2.supplyCollateral(obligation, address(collateralToken1), 200 ether, borrower);
 
         // Set up trading fee for tests
-        morphoV2.setTradingFee(address(loanToken), 0.05e18); // 5%
+        morphoV2.setTradingFee(id, 0.05e18); // 5%
         morphoV2.setTradingFeeRecipient(feeRecipient);
     }
 
     function testTradingFeeSetup() public view {
-        assertEq(morphoV2.tradingFee(address(loanToken)), 0.05e18, "trading fee percentage");
+        assertEq(morphoV2.tradingFee(id), 0.05e18, "trading fee percentage");
         assertEq(morphoV2.tradingFeeRecipient(), feeRecipient, "fee recipient");
     }
 
@@ -177,7 +177,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testZeroTradingFee() public {
-        morphoV2.setTradingFee(address(loanToken), 0);
+        morphoV2.setTradingFee(id, 0);
         uint256 buyerAssets = 100 ether;
         borrowOffer.startPrice = 0.9 ether;
         borrowOffer.expiryPrice = 0.9 ether;

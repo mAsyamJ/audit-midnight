@@ -28,7 +28,7 @@ contract MorphoV2 is IMorphoV2 {
     mapping(address user => mapping(uint256 nonce => uint256)) public consumed;
 
     /// @dev Cut on interest at each trade.
-    mapping(address loanToken => uint256) public tradingFee;
+    mapping(bytes32 id => uint256) public tradingFee;
     address public tradingFeeRecipient;
 
     /// @dev Contract owner for administrative functions.
@@ -47,10 +47,10 @@ contract MorphoV2 is IMorphoV2 {
         owner = newOwner;
     }
 
-    function setTradingFee(address loanToken, uint256 fee) external {
+    function setTradingFee(bytes32 id, uint256 fee) external {
         require(msg.sender == owner, "Only owner");
         require(fee <= 1e18, "Fee too high");
-        tradingFee[loanToken] = fee;
+        tradingFee[id] = fee;
     }
 
     function setTradingFeeRecipient(address recipient) external {
@@ -107,7 +107,7 @@ contract MorphoV2 is IMorphoV2 {
             : offer.startPrice;
         require(offerPrice <= 1e18, "price too high");
 
-        uint256 _tradingFee = tradingFee[offer.obligation.loanToken];
+        uint256 _tradingFee = tradingFee[id];
         uint256 buyerPrice = offer.buy ? offerPrice : offerPrice.mulDivDown(WAD - _tradingFee, WAD) + _tradingFee;
         uint256 sellerPrice = offer.buy ? (offerPrice - _tradingFee).mulDivDown(WAD, WAD - _tradingFee) : offerPrice;
 
