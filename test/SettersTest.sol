@@ -21,23 +21,23 @@ contract SettersTest is BaseTest {
         morphoV2.setOwner(makeAddr("newOwner"));
     }
 
-    function testSetTradingFeeSuccess(uint256 fee) public {
+    function testSetTradingFeeSuccess(bytes32 id, uint256 fee) public {
         vm.assume(fee <= 1e18);
-        morphoV2.setTradingFee(address(loanToken), fee);
-        assertEq(morphoV2.tradingFee(address(loanToken)), fee);
+        morphoV2.setTradingFee(id, fee);
+        assertEq(morphoV2.tradingFee(id), fee);
     }
 
-    function testSetTradingFeeOnlyOwner(address rdm) public {
+    function testSetTradingFeeOnlyOwner(address rdm, bytes32 id) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
         vm.expectRevert("Only owner");
-        morphoV2.setTradingFee(address(loanToken), 0.1e18);
+        morphoV2.setTradingFee(id, 0.1e18);
     }
 
-    function testSetTradingFeeTooHigh(uint256 fee) public {
+    function testSetTradingFeeTooHigh(bytes32 id, uint256 fee) public {
         vm.assume(fee > 1e18);
         vm.expectRevert("Fee too high");
-        morphoV2.setTradingFee(address(loanToken), fee);
+        morphoV2.setTradingFee(id, fee);
     }
 
     function testSetTradingFeeRecipientSuccess(address recipient) public {
