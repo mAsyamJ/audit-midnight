@@ -27,8 +27,8 @@ contract MorphoV2 is IMorphoV2 {
     /// otherwise one might not be takable anymore while an other one at the same nonce is still takeable.
     mapping(address user => mapping(uint256 nonce => uint256)) public consumed;
 
-    /// @dev Cut on interest at each trade.
-    mapping(address loanToken => uint256) public tradingFee;
+    /// @dev Cut on interest at each trade for a given obligation id.
+    mapping(bytes32 id => uint256) public tradingFee;
     address public tradingFeeRecipient;
 
     /// @dev Contract owner for administrative functions.
@@ -55,10 +55,10 @@ contract MorphoV2 is IMorphoV2 {
         feeSetter = newFeeSetter;
     }
 
-    function setTradingFee(address loanToken, uint256 fee) external {
+    function setTradingFee(bytes32 id, uint256 fee) external {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(fee <= 1e18, "Fee too high");
-        tradingFee[loanToken] = fee;
+        tradingFee[id] = fee;
     }
 
     function setTradingFeeRecipient(address recipient) external {
@@ -72,6 +72,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Same function used to buy and sell.
     /// @dev If one wants to match two offers without taking a position, they can batch take them and not have a
     /// position at the end.
+    /// @dev Neither the taker nor the maker can pass from having obligation shares to having debt in one take.
     function take(
         uint256 buyerAssets,
         uint256 sellerAssets,
@@ -115,7 +116,7 @@ contract MorphoV2 is IMorphoV2 {
             : offer.startPrice;
         require(offerPrice <= 1e18, "price too high");
 
-        uint256 _tradingFee = tradingFee[offer.obligation.loanToken];
+        uint256 _tradingFee = tradingFee[id];
         uint256 buyerPrice = offer.buy ? offerPrice : offerPrice.mulDivDown(WAD - _tradingFee, WAD) + _tradingFee;
         uint256 sellerPrice = offer.buy ? (offerPrice - _tradingFee).mulDivDown(WAD, WAD - _tradingFee) : offerPrice;
 
@@ -141,19 +142,23 @@ contract MorphoV2 is IMorphoV2 {
             (consumed[offer.maker][offer.nonce] += (offer.buy ? buyerAssets : sellerAssets)) <= offer.assets, "consumed"
         );
 
-        uint256 sellerSharesDecrease = UtilsLib.min(obligationShares, sharesOf[seller][id]);
-        uint256 sellerDebtIncrease =
-            obligationUnits - sellerSharesDecrease.mulDivUp(totalUnits[id] + 1, totalShares[id] + 1);
-        uint256 buyerDebtDecrease = UtilsLib.min(obligationUnits, debtOf[buyer][id]);
-        uint256 buyerSharesIncrease =
-            (obligationUnits - buyerDebtDecrease).mulDivDown(totalShares[id] + 1, totalUnits[id] + 1);
-
-        debtOf[buyer][id] -= buyerDebtDecrease;
-        sharesOf[buyer][id] += buyerSharesIncrease;
-        sharesOf[seller][id] -= sellerSharesDecrease;
-        debtOf[seller][id] += sellerDebtIncrease;
-        totalShares[id] = totalShares[id] + buyerSharesIncrease - sellerSharesDecrease;
-        totalUnits[id] = totalUnits[id] + sellerDebtIncrease - buyerDebtDecrease;
+        if (debtOf[buyer][id] == 0 && sharesOf[seller][id] == 0) {
+            sharesOf[buyer][id] += obligationShares;
+            debtOf[seller][id] += obligationUnits;
+            totalShares[id] += obligationShares;
+            totalUnits[id] += obligationUnits;
+        } else if (debtOf[buyer][id] == 0 && sharesOf[seller][id] > 0) {
+            sharesOf[buyer][id] += obligationShares;
+            sharesOf[seller][id] -= obligationShares;
+        } else if (debtOf[buyer][id] > 0 && sharesOf[seller][id] == 0) {
+            debtOf[buyer][id] -= obligationUnits;
+            debtOf[seller][id] += obligationUnits;
+        } else {
+            debtOf[buyer][id] -= obligationUnits;
+            sharesOf[seller][id] -= obligationShares;
+            totalShares[id] -= obligationShares;
+            totalUnits[id] -= obligationUnits;
+        }
 
         if (buyerCallbackAddress != address(0)) {
             ICallbacks(buyerCallbackAddress).onTake(offer.obligation, buyer, buyerAssets, buyerCallbackData);
