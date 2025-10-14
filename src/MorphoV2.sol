@@ -34,6 +34,9 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Contract owner for administrative functions.
     address public owner;
 
+    /// @dev Address that can set trading fees.
+    address public feeSetter;
+
     /// CONSTRUCTOR ///
 
     constructor() {
@@ -47,8 +50,13 @@ contract MorphoV2 is IMorphoV2 {
         owner = newOwner;
     }
 
-    function setTradingFee(bytes32 id, uint256 fee) external {
+    function setFeeSetter(address newFeeSetter) external {
         require(msg.sender == owner, "Only owner");
+        feeSetter = newFeeSetter;
+    }
+
+    function setTradingFee(bytes32 id, uint256 fee) external {
+        require(msg.sender == feeSetter, "Only feeSetter");
         require(fee <= 1e18, "Fee too high");
         tradingFee[id] = fee;
     }
