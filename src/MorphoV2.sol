@@ -162,18 +162,19 @@ contract MorphoV2 is IMorphoV2 {
         }
 
         if (buyerCallbackAddress != address(0)) {
-            ICallbacks(buyerCallbackAddress).onBuy(
-                offer.obligation,
-                (buyer == offer.maker),
-                buyer,
-                seller,
-                buyerAssets,
-                sellerAssets,
-                obligationUnits,
-                obligationShares,
-                id,
-                buyerCallbackData
-            );
+            ICallbacks(buyerCallbackAddress)
+                .onBuy(
+                    offer.obligation,
+                    (buyer == offer.maker),
+                    buyer,
+                    seller,
+                    buyerAssets,
+                    sellerAssets,
+                    obligationUnits,
+                    obligationShares,
+                    id,
+                    buyerCallbackData
+                );
         }
 
         SafeTransferLib.safeTransferFrom(
@@ -182,18 +183,19 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, seller, sellerAssets);
 
         if (sellerCallbackAddress != address(0)) {
-            ICallbacks(sellerCallbackAddress).onSell(
-                offer.obligation,
-                (seller == offer.maker),
-                buyer,
-                seller,
-                buyerAssets,
-                sellerAssets,
-                obligationUnits,
-                obligationShares,
-                id,
-                sellerCallbackData
-            );
+            ICallbacks(sellerCallbackAddress)
+                .onSell(
+                    offer.obligation,
+                    (seller == offer.maker),
+                    buyer,
+                    seller,
+                    buyerAssets,
+                    sellerAssets,
+                    obligationUnits,
+                    obligationShares,
+                    id,
+                    sellerCallbackData
+                );
         }
 
         require(_isHealthy(offer.obligation, seller), "Seller is unhealthy");
