@@ -87,6 +87,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes memory takerCallbackData
     ) public returns (uint256, uint256, uint256, uint256) {
         bytes32 id = _id(offer.obligation);
+        bytes32 offerHash = keccak256(abi.encode(offer));
         require(
             UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
             "inconsistent input"
@@ -98,7 +99,7 @@ contract MorphoV2 is IMorphoV2 {
         require(offer.start < offer.expiry || offer.expiryPrice == offer.startPrice, "inconsistent prices");
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(_signer(root, sig) == offer.maker, "invalid signature");
-        require(MathLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
+        require(MathLib.isLeaf(root, offerHash, proof), "invalid proof");
 
         (
             address buyer,
@@ -172,7 +173,7 @@ contract MorphoV2 is IMorphoV2 {
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    id,
+                    offerHash,
                     buyerCallbackData
                 );
         }
@@ -193,7 +194,7 @@ contract MorphoV2 is IMorphoV2 {
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    id,
+                    offerHash,
                     sellerCallbackData
                 );
         }
