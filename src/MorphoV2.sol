@@ -26,11 +26,11 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Groups are useful to have a global offered amount shared accross multiple offers ("OCO").
     /// @dev To work as expected, all offers in a same group should have the same amount and the same loan asset.
-    mapping(address user => mapping(uint256 group => uint256)) public consumed;
+    mapping(address user => mapping(bytes32 group => uint256)) public consumed;
 
     /// @dev Offers should have this exact nonce to be valid.
     /// @dev The nonce can be shuffled by the user to cancel everything easily/efficiently.
-    mapping(address user => uint256) public nonce;
+    mapping(address user => bytes32) public nonce;
 
     /// @dev Cut on interest at each trade for a given obligation id.
     mapping(bytes32 id => uint256) public tradingFee;
@@ -301,13 +301,13 @@ contract MorphoV2 is IMorphoV2 {
         return seizures;
     }
 
-    function consume(uint256 group, uint256 amount) external {
+    function consume(bytes32 group, uint256 amount) external {
         consumed[msg.sender][group] += amount;
     }
 
     /// @dev TODO: is it safe enough?
     function shuffleNonce() external {
-        nonce[msg.sender] = uint256(keccak256(abi.encode(nonce[msg.sender], blockhash(0))));
+        nonce[msg.sender] = keccak256(abi.encode(nonce[msg.sender], blockhash(0)));
     }
 
     /// INTERNAL ///

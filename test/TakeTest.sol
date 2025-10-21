@@ -174,7 +174,7 @@ contract TakeTest is BaseTest {
             hex""
         );
         lendOffer.maker = borrower;
-        lendOffer.group = 1;
+        lendOffer.group = bytes32(uint256(1));
         morphoV2.take(
             0,
             0,
@@ -193,7 +193,7 @@ contract TakeTest is BaseTest {
         assertEq(morphoV2.sharesOf(borrower, id), 0, "borrower obligation shares");
         assertEq(morphoV2.totalUnits(id), 0, "total obligations");
         assertEq(morphoV2.totalShares(id), 0, "total shares");
-        assertEq(morphoV2.consumed(borrower, 1), 99, "borrower consumed");
+        assertEq(morphoV2.consumed(borrower, bytes32(uint256(1))), 99, "borrower consumed");
         assertEq(loanToken.balanceOf(lender), 99, "lender balance");
         assertEq(loanToken.balanceOf(borrower), 1, "borrower balance");
     }
@@ -261,7 +261,7 @@ contract TakeTest is BaseTest {
         );
 
         borrowOffer.maker = lender;
-        borrowOffer.group = 1;
+        borrowOffer.group = bytes32(uint256(1));
         morphoV2.take(
             100,
             0,
@@ -282,7 +282,7 @@ contract TakeTest is BaseTest {
         assertEq(morphoV2.debtOf(lender, id), 0, "lender debt");
         assertEq(morphoV2.totalUnits(id), 0, "total obligations");
         assertEq(morphoV2.totalShares(id), 0, "total shares");
-        assertEq(morphoV2.consumed(lender, 1), 100, "lender consumed");
+        assertEq(morphoV2.consumed(lender, bytes32(uint256(1))), 100, "lender consumed");
         assertEq(loanToken.balanceOf(borrower), 0, "borrower balance");
         assertEq(loanToken.balanceOf(lender), 100, "lender balance");
     }
@@ -742,8 +742,8 @@ contract TakeTest is BaseTest {
         deal(obligation.collaterals[0].token, address(this), 135);
         morphoV2.supplyCollateral(obligation, obligation.collaterals[0].token, 135, otherBorrower);
 
-        uint256 initialGroup = lendOffer.group;
-        lendOffer.group = uint256(keccak256("group"));
+        bytes32 initialGroup = lendOffer.group;
+        lendOffer.group = keccak256("group");
 
         // realize some bad debt
         morphoV2.take(
