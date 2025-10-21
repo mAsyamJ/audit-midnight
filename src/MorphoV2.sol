@@ -297,6 +297,10 @@ contract MorphoV2 is IMorphoV2 {
         return seizures;
     }
 
+    function consumeNonce(uint256 nonce, uint256 amount) external {
+        consumed[msg.sender][nonce] += amount;
+    }
+
     /// INTERNAL ///
 
     function _id(Obligation memory obligation) internal pure returns (bytes32) {
