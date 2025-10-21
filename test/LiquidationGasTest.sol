@@ -51,20 +51,15 @@ contract LiquidationTest is BaseTest {
         // Create and take offer
 
         id = toId(obligation);
-        Offer memory borrowOffer = Offer({
-            obligation: obligation,
-            buy: false,
-            maker: borrower,
-            assets: maxDebt,
-            start: block.timestamp,
-            expiry: block.timestamp + 100,
-            startPrice: 1e18,
-            expiryPrice: 1e18,
-            nonce: 0,
-            group: 0,
-            callbackAddress: address(0),
-            callbackData: ""
-        });
+        Offer memory borrowOffer;
+        borrowOffer.obligation = obligation;
+        borrowOffer.buy = false;
+        borrowOffer.maker = borrower;
+        borrowOffer.assets = maxDebt;
+        borrowOffer.start = block.timestamp;
+        borrowOffer.expiry = block.timestamp + 100;
+        borrowOffer.startPrice = 1e18;
+        borrowOffer.expiryPrice = 1e18;
 
         morphoV2.take(
             0,
