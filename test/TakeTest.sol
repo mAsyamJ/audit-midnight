@@ -880,7 +880,7 @@ contract TakeTest is BaseTest {
 
     function testNonce() public {
         vm.prank(lender);
-        morphoV2.shuffleNonce(0);
+        morphoV2.shuffleNonce();
 
         vm.expectRevert("invalid nonce");
         morphoV2.take(
