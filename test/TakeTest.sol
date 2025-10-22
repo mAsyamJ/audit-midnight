@@ -381,7 +381,7 @@ contract TakeTest is BaseTest {
         );
     }
 
-    function testTakePartialFill(uint256 elapsed) public {
+    function testTakePartialFill() public {
         morphoV2.take(
             50,
             0,
