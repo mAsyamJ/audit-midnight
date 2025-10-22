@@ -91,7 +91,6 @@ contract MorphoV2 is IMorphoV2 {
         address takerCallbackAddress,
         bytes memory takerCallbackData
     ) public returns (uint256, uint256, uint256, uint256) {
-        bytes32 id = _id(offer.obligation);
         require(
             UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
             "inconsistent input"
@@ -105,6 +104,7 @@ contract MorphoV2 is IMorphoV2 {
         require(_signer(root, sig) == offer.maker, "invalid signature");
         require(MathLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.nonce == nonce[offer.maker], "invalid nonce");
+        bytes32 id = _id(offer.obligation);
 
         (
             address buyer,
