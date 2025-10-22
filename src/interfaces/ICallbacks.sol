@@ -13,7 +13,6 @@ interface ICallbacks {
         uint256 sellerAssets,
         uint256 obligationUnits,
         uint256 obligationShares,
-        bytes32 offerHash,
         bytes memory data
     ) external;
     function onSell(
@@ -24,7 +23,6 @@ interface ICallbacks {
         uint256 sellerAssets,
         uint256 obligationUnits,
         uint256 obligationShares,
-        bytes32 offerHash,
         bytes memory data
     ) external;
     function onLiquidate(Seizure[] memory seizures, address borrower, address liquidator, bytes memory data) external;

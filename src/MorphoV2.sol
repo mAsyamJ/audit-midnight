@@ -172,7 +172,6 @@ contract MorphoV2 is IMorphoV2 {
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    offerHash,
                     buyerCallbackData
                 );
         }
@@ -192,7 +191,6 @@ contract MorphoV2 is IMorphoV2 {
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    offerHash,
                     sellerCallbackData
                 );
         }
