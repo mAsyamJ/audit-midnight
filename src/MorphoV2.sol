@@ -9,6 +9,7 @@ import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure} from "./interfaces/IMorphoV2.sol";
 import {ICallbacks} from "./interfaces/ICallbacks.sol";
+import {EventsLib} from "./libraries/EventsLib.sol";
 
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
@@ -46,6 +47,8 @@ contract MorphoV2 is IMorphoV2 {
 
     constructor() {
         owner = msg.sender;
+
+        emit EventsLib.Constructor(owner);
     }
 
     /// ADMIN FUNCTIONS ///
@@ -53,22 +56,30 @@ contract MorphoV2 is IMorphoV2 {
     function setOwner(address newOwner) external {
         require(msg.sender == owner, "Only owner");
         owner = newOwner;
+
+        emit EventsLib.SetOwner(newOwner);
     }
 
     function setFeeSetter(address newFeeSetter) external {
         require(msg.sender == owner, "Only owner");
         feeSetter = newFeeSetter;
+
+        emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
     function setTradingFee(bytes32 id, uint256 fee) external {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(fee <= 1e18, "Fee too high");
         tradingFee[id] = fee;
+
+        emit EventsLib.SetTradingFee(id, fee);
     }
 
     function setTradingFeeRecipient(address recipient) external {
         require(msg.sender == owner, "Only owner");
         tradingFeeRecipient = recipient;
+
+        emit EventsLib.SetTradingFeeRecipient(recipient);
     }
 
     /// ENTRY-POINTS ///
@@ -199,6 +210,10 @@ contract MorphoV2 is IMorphoV2 {
 
         require(_isHealthy(offer.obligation, seller), "Seller is unhealthy");
 
+        emit EventsLib.Take(
+            id, buyer, seller, (buyer == offer.maker), buyerAssets, sellerAssets, obligationUnits, obligationShares
+        );
+
         return (buyerAssets, sellerAssets, obligationUnits, obligationShares);
     }
 
@@ -219,6 +234,8 @@ contract MorphoV2 is IMorphoV2 {
         totalUnits[id] -= obligationUnits;
 
         SafeTransferLib.safeTransfer(obligation.loanToken, msg.sender, obligationUnits);
+
+        emit EventsLib.Withdraw(id, msg.sender, onBehalf, obligationUnits, shares);
     }
 
     function repay(Obligation memory obligation, uint256 obligationUnits, address onBehalf) external {
@@ -228,6 +245,8 @@ contract MorphoV2 is IMorphoV2 {
         withdrawable[id] += obligationUnits;
 
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), obligationUnits);
+
+        emit EventsLib.Repay(id, msg.sender, onBehalf, obligationUnits);
     }
 
     function supplyCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
@@ -235,6 +254,8 @@ contract MorphoV2 is IMorphoV2 {
     {
         collateralOf[onBehalf][_id(obligation)][collateral] += assets;
         SafeTransferLib.safeTransferFrom(collateral, msg.sender, address(this), assets);
+
+        emit EventsLib.SupplyCollateral(_id(obligation), msg.sender, onBehalf, collateral, assets);
     }
 
     function withdrawCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
@@ -245,6 +266,8 @@ contract MorphoV2 is IMorphoV2 {
         require(_isHealthy(obligation, onBehalf), "Unhealthy borrower");
 
         SafeTransferLib.safeTransfer(collateral, msg.sender, assets);
+
+        emit EventsLib.WithdrawCollateral(_id(obligation), msg.sender, onBehalf, collateral, assets);
     }
 
     /// @notice Execute the given collection of `seizures` on the given `obligation` of the given `borrower`.
@@ -314,6 +337,8 @@ contract MorphoV2 is IMorphoV2 {
         if (data.length > 0) ICallbacks(msg.sender).onLiquidate(seizures, borrower, msg.sender, data);
 
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), totalRepaid);
+
+        emit EventsLib.Liquidate(id, borrower, seizures, badDebt);
 
         return seizures;
     }
