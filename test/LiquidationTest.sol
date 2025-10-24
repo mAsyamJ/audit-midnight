@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {LIQUIDATION_INCENTIVE_FACTOR} from "../src/libraries/ConstantsLib.sol";
+import {MAX_LIF} from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Collateral, Seizure} from "../src/interfaces/IMorphoV2.sol";
 
 import {Oracle} from "./helpers/Oracle.sol";
@@ -35,7 +35,7 @@ contract LiquidationTest is BaseTest {
     function testLiquidateHealthy() public {
         setupObligation(obligation, 100);
 
-        vm.expectRevert("position is healthy");
+        vm.expectRevert("position is not liquidatable");
         morphoV2.liquidate(obligation, new Seizure[](0), borrower, "");
     }
 
@@ -129,8 +129,8 @@ contract LiquidationTest is BaseTest {
         id = toId(obligation);
 
         setupMaxObligationWithCollaterals(obligation, 100, 100);
-        uint256 price = 1e36 * 1e18 / LIQUIDATION_INCENTIVE_FACTOR * 95 / 100;
-        uint256 price2 = 1e36 * 1e18 / LIQUIDATION_INCENTIVE_FACTOR;
+        uint256 price = 1e36 * 1e18 / MAX_LIF * 95 / 100;
+        uint256 price2 = 1e36 * 1e18 / MAX_LIF;
         oracle.setPrice(price);
         oracle2.setPrice(price2);
         deal(address(loanToken), address(this), 100e18);

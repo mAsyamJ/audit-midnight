@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
-import {WAD, ORACLE_PRICE_SCALE, LIQUIDATION_INCENTIVE_FACTOR} from "./libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, DUTCH_SPEED} from "./libraries/ConstantsLib.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure} from "./interfaces/IMorphoV2.sol";
@@ -250,13 +250,16 @@ contract MorphoV2 is IMorphoV2 {
             prices[i] = IOracle(obligation.collaterals[i].oracle).price();
             uint256 collateralAmount = collateralOf[borrower][id][obligation.collaterals[i].token];
             maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE)
-                .mulDivDown(obligation.collaterals[i].lltv, 1e18);
-            repayableDebt += collateralAmount.mulDivUp(1e18, LIQUIDATION_INCENTIVE_FACTOR)
-                .mulDivUp(prices[i], ORACLE_PRICE_SCALE);
+                .mulDivDown(obligation.collaterals[i].lltv, WAD);
+            repayableDebt += collateralAmount.mulDivUp(WAD, MAX_LIF).mulDivUp(prices[i], ORACLE_PRICE_SCALE);
         }
 
         uint256 originalDebt = debtOf[borrower][id];
-        require(originalDebt > maxDebt, "position is healthy");
+        require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
+
+        uint256 lif = originalDebt > maxDebt
+            ? MAX_LIF
+            : UtilsLib.min(MAX_LIF, DUTCH_SPEED * (block.timestamp - obligation.maturity));
 
         uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
         if (badDebt > 0) {
@@ -271,11 +274,11 @@ contract MorphoV2 is IMorphoV2 {
             require(UtilsLib.atMostOneNonZero(seizure.repaid, seizure.seized), "INCONSISTENT_INPUT");
 
             if (seizure.seized > 0) {
-                seizure.repaid = seizure.seized.mulDivUp(1e18, LIQUIDATION_INCENTIVE_FACTOR)
-                    .mulDivUp(prices[seizure.collateralIndex], ORACLE_PRICE_SCALE);
+                seizure.repaid =
+                    seizure.seized.mulDivUp(WAD, lif).mulDivUp(prices[seizure.collateralIndex], ORACLE_PRICE_SCALE);
             } else {
-                seizure.seized = seizure.repaid.mulDivDown(ORACLE_PRICE_SCALE, prices[seizure.collateralIndex])
-                    .mulDivDown(LIQUIDATION_INCENTIVE_FACTOR, 1e18);
+                seizure.seized =
+                    seizure.repaid.mulDivDown(ORACLE_PRICE_SCALE, prices[seizure.collateralIndex]).mulDivDown(lif, WAD);
             }
 
             totalRepaid += seizure.repaid;
@@ -335,7 +338,7 @@ contract MorphoV2 is IMorphoV2 {
                 require(currentCollateralToken > previousCollateralToken, "collaterals not sorted");
                 uint256 price = IOracle(obligation.collaterals[i].oracle).price();
                 maxDebt += collateralOf[borrower][id][currentCollateralToken].mulDivDown(price, ORACLE_PRICE_SCALE)
-                    .mulDivDown(obligation.collaterals[i].lltv, 1e18);
+                    .mulDivDown(obligation.collaterals[i].lltv, WAD);
                 previousCollateralToken = currentCollateralToken;
             }
 
