@@ -259,7 +259,7 @@ contract MorphoV2 is IMorphoV2 {
 
         uint256 lif = originalDebt > maxDebt
             ? MAX_LIF
-            : UtilsLib.min(MAX_LIF, DUTCH_SPEED * (block.timestamp - obligation.maturity));
+            : UtilsLib.min(MAX_LIF, WAD + DUTCH_SPEED * (block.timestamp - obligation.maturity));
 
         uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
         if (badDebt > 0) {
