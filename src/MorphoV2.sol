@@ -83,7 +83,7 @@ contract MorphoV2 is IMorphoV2 {
         Signature memory sig,
         bytes32 root,
         bytes32[] memory proof,
-        address takerCallbackAddress,
+        address takerCallback,
         bytes memory takerCallbackData
     ) public returns (uint256, uint256, uint256, uint256) {
         bytes32 id = _id(offer.obligation);
@@ -102,14 +102,14 @@ contract MorphoV2 is IMorphoV2 {
 
         (
             address buyer,
-            address buyerCallbackAddress,
+            address buyerCallback,
             bytes memory buyerCallbackData,
             address seller,
-            address sellerCallbackAddress,
+            address sellerCallback,
             bytes memory sellerCallbackData
         ) = offer.buy
-            ? (offer.maker, offer.callbackAddress, offer.callbackData, taker, takerCallbackAddress, takerCallbackData)
-            : (taker, takerCallbackAddress, takerCallbackData, offer.maker, offer.callbackAddress, offer.callbackData);
+            ? (offer.maker, offer.callback, offer.callbackData, taker, takerCallback, takerCallbackData)
+            : (taker, takerCallback, takerCallbackData, offer.maker, offer.callback, offer.callbackData);
 
         uint256 offerPrice = offer.expiry != offer.start
             ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start)
@@ -161,18 +161,15 @@ contract MorphoV2 is IMorphoV2 {
             totalUnits[id] -= obligationUnits;
         }
 
-        if (buyerCallbackAddress != address(0)) {
-            ICallbacks(buyerCallbackAddress)
+        if (buyerCallback != address(0)) {
+            ICallbacks(buyerCallback)
                 .onBuy(
                     offer.obligation,
-                    (buyer == offer.maker),
                     buyer,
-                    seller,
                     buyerAssets,
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    id,
                     buyerCallbackData
                 );
         }
@@ -182,18 +179,15 @@ contract MorphoV2 is IMorphoV2 {
         );
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, seller, sellerAssets);
 
-        if (sellerCallbackAddress != address(0)) {
-            ICallbacks(sellerCallbackAddress)
+        if (sellerCallback != address(0)) {
+            ICallbacks(sellerCallback)
                 .onSell(
                     offer.obligation,
-                    (seller == offer.maker),
-                    buyer,
                     seller,
                     buyerAssets,
                     sellerAssets,
                     obligationUnits,
                     obligationShares,
-                    id,
                     sellerCallbackData
                 );
         }

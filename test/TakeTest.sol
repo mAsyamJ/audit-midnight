@@ -465,10 +465,10 @@ contract TakeTest is BaseTest {
 
     function testTakeLendBorrowCallback() public {
         (address otherBorrower, uint256 otherBorrowerSecretKey) = makeAddrAndKey("otherBorrower");
-        borrowOffer.callbackAddress = address(new BorrowCallback());
+        borrowOffer.callback = address(new BorrowCallback());
         borrowOffer.callbackData = abi.encode(address(collateralToken1), 135);
         borrowOffer.maker = address(otherBorrower);
-        deal(address(collateralToken1), borrowOffer.callbackAddress, 135);
+        deal(address(collateralToken1), borrowOffer.callback, 135);
         assertEq(morphoV2.collateralOf(otherBorrower, id, address(collateralToken1)), 0);
 
         morphoV2.take(
@@ -485,13 +485,13 @@ contract TakeTest is BaseTest {
             hex""
         );
         assertEq(morphoV2.collateralOf(otherBorrower, id, address(collateralToken1)), 135);
-        assertEq(BorrowCallback(borrowOffer.callbackAddress).recordedData(), borrowOffer.callbackData);
+        assertEq(BorrowCallback(borrowOffer.callback).recordedData(), borrowOffer.callbackData);
     }
 
     function testTakeBorrowBorrowCallback() public {
         (address otherBorrower,) = makeAddrAndKey("otherBorrower");
-        address callbackAddress = address(new BorrowCallback());
-        deal(address(collateralToken1), callbackAddress, 135);
+        address callback = address(new BorrowCallback());
+        deal(address(collateralToken1), callback, 135);
         assertEq(morphoV2.collateralOf(otherBorrower, id, address(collateralToken1)), 0);
 
         morphoV2.take(
@@ -504,21 +504,21 @@ contract TakeTest is BaseTest {
             sig(root([lendOffer]), lenderSecretKey),
             root([lendOffer]),
             proof([lendOffer]),
-            callbackAddress,
+            callback,
             abi.encode(address(collateralToken1), 135)
         );
         assertEq(morphoV2.collateralOf(otherBorrower, id, address(collateralToken1)), 135);
-        assertEq(BorrowCallback(callbackAddress).recordedData(), abi.encode(address(collateralToken1), 135));
+        assertEq(BorrowCallback(callback).recordedData(), abi.encode(address(collateralToken1), 135));
     }
 
     function testTakeBorrowLendCallback() public {
         (address otherLender, uint256 otherLenderSecretKey) = makeAddrAndKey("otherLender");
         vm.prank(otherLender);
         loanToken.approve(address(morphoV2), 100);
-        lendOffer.callbackAddress = address(new LendCallback());
+        lendOffer.callback = address(new LendCallback());
         lendOffer.callbackData = abi.encode(address(loanToken), 100);
         lendOffer.maker = address(otherLender);
-        deal(address(loanToken), lendOffer.callbackAddress, 100);
+        deal(address(loanToken), lendOffer.callback, 100);
 
         morphoV2.take(
             100,
@@ -533,15 +533,15 @@ contract TakeTest is BaseTest {
             address(0),
             hex""
         );
-        assertEq(LendCallback(lendOffer.callbackAddress).recordedData(), lendOffer.callbackData);
+        assertEq(LendCallback(lendOffer.callback).recordedData(), lendOffer.callbackData);
     }
 
     function testTakeLendLendCallback() public {
         (address otherLender,) = makeAddrAndKey("otherLender");
         vm.prank(otherLender);
         loanToken.approve(address(morphoV2), 100);
-        address callbackAddress = address(new LendCallback());
-        deal(address(loanToken), callbackAddress, 100);
+        address callback = address(new LendCallback());
+        deal(address(loanToken), callback, 100);
 
         morphoV2.take(
             100,
@@ -553,10 +553,10 @@ contract TakeTest is BaseTest {
             sig(root([borrowOffer]), borrowerSecretKey),
             root([borrowOffer]),
             proof([borrowOffer]),
-            callbackAddress,
+            callback,
             abi.encode(address(loanToken), 100)
         );
-        assertEq(LendCallback(callbackAddress).recordedData(), abi.encode(address(loanToken), 100));
+        assertEq(LendCallback(callback).recordedData(), abi.encode(address(loanToken), 100));
     }
 
     function testTakeConsistentPrices() public {
@@ -891,14 +891,11 @@ contract BorrowCallback is ICallbacks {
 
     function onSell(
         Obligation memory obligation,
-        bool,
-        address,
         address seller,
         uint256,
         uint256,
         uint256,
         uint256,
-        bytes32,
         bytes memory data
     ) external {
         recordedData = data;
@@ -909,14 +906,11 @@ contract BorrowCallback is ICallbacks {
 
     function onBuy(
         Obligation memory obligation,
-        bool isBuyerMaker,
         address buyer,
-        address seller,
         uint256 buyerAssets,
         uint256 sellerAssets,
         uint256 obligationUnits,
         uint256 obligationShares,
-        bytes32 offerHash,
         bytes memory data
     ) external {}
 
@@ -928,14 +922,11 @@ contract LendCallback is ICallbacks {
 
     function onBuy(
         Obligation memory obligation,
-        bool,
         address buyer,
-        address,
         uint256 buyerAssets,
         uint256,
         uint256,
         uint256,
-        bytes32,
         bytes memory data
     ) external {
         recordedData = data;
@@ -944,14 +935,11 @@ contract LendCallback is ICallbacks {
 
     function onSell(
         Obligation memory obligation,
-        bool isSellerMaker,
-        address buyer,
         address seller,
         uint256 buyerAssets,
         uint256 sellerAssets,
         uint256 obligationUnits,
         uint256 obligationShares,
-        bytes32 offerHash,
         bytes memory data
     ) external {}
     function onLiquidate(Seizure[] memory seizures, address borrower, address liquidator, bytes memory data) external {}

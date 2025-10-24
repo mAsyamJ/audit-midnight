@@ -113,7 +113,7 @@ abstract contract BaseTest is Test {
             startPrice: 1 ether,
             expiryPrice: 1 ether,
             nonce: 0,
-            callbackAddress: address(0),
+            callback: address(0),
             callbackData: ""
         });
 
@@ -162,7 +162,7 @@ abstract contract BaseTest is Test {
             startPrice: 1e18,
             expiryPrice: 1e18,
             nonce: 0,
-            callbackAddress: address(0),
+            callback: address(0),
             callbackData: ""
         });
 
