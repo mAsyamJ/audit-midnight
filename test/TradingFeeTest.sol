@@ -66,7 +66,7 @@ contract TradingFeeTest is BaseTest {
         assertEq(morphoV2.tradingFeeRecipient(), feeRecipient, "fee recipient");
     }
 
-    function testBuyerAssetsWithFee() public {
+    function testBuyerAssetsLendWithFee() public {
         uint256 buyerAssets = 100 ether;
         uint256 price = 0.9 ether;
         uint256 fee = 0.05e18;
@@ -106,7 +106,47 @@ contract TradingFeeTest is BaseTest {
         );
     }
 
-    function testSellerAssetsWithFee() public {
+    function testBuyerAssetsBorrowWithFee() public {
+        uint256 buyerAssets = 100 ether;
+        uint256 price = 0.9 ether;
+        uint256 fee = 0.05e18;
+
+        lendOffer.startPrice = price;
+        lendOffer.expiryPrice = price;
+
+        uint256 expectedUnits = buyerAssets.mulDivDown(1e18, price);
+        uint256 expectedSellerAssets = (buyerAssets - fee.mulDivDown(expectedUnits, 1e18)).mulDivDown(1e18, 1e18 - fee);
+        uint256 expectedFee = buyerAssets - expectedSellerAssets;
+
+        uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);
+        uint256 borrowerBalanceBefore = loanToken.balanceOf(borrower);
+        uint256 lenderBalanceBefore = loanToken.balanceOf(lender);
+
+        morphoV2.take(
+            buyerAssets,
+            0,
+            0,
+            0,
+            borrower,
+            lendOffer,
+            sig(root([lendOffer]), lenderSecretKey),
+            root([lendOffer]),
+            proof([lendOffer]),
+            address(0),
+            hex""
+        );
+
+        assertEq(loanToken.balanceOf(lender), lenderBalanceBefore - buyerAssets, "lender balance");
+        assertApproxEqAbs(morphoV2.sharesOf(lender, id), expectedUnits, 100, "units");
+        assertApproxEqAbs(
+            loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, 100, "fee recipient balance"
+        );
+        assertApproxEqAbs(
+            loanToken.balanceOf(borrower), borrowerBalanceBefore + expectedSellerAssets, 100, "borrower balance"
+        );
+    }
+
+    function testSellerAssetsLendWithFee() public {
         uint256 sellerAssets = 90 ether;
         uint256 price = 0.9 ether;
         uint256 fee = 0.05e18;
@@ -141,7 +181,45 @@ contract TradingFeeTest is BaseTest {
         assertEq(loanToken.balanceOf(lender), lenderBalanceBefore - expectedBuyerAssets, "lender balance");
     }
 
-    function testObligationUnitsWithFee() public {
+    function testSellerAssetsBorrowWithFee() public {
+        uint256 sellerAssets = 90 ether;
+        uint256 price = 0.9 ether;
+        uint256 fee = 0.05e18;
+
+        lendOffer.startPrice = price;
+        lendOffer.expiryPrice = price;
+
+        uint256 expectedBuyerAssets =
+            (sellerAssets.mulDivDown(1e18 - fee, 1e18)).mulDivDown(1e18, 1e18 - fee.mulDivDown(1e18, price));
+        uint256 expectedUnits = expectedBuyerAssets.mulDivDown(1e18, price);
+        uint256 expectedFee = expectedBuyerAssets - sellerAssets;
+
+        uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);
+        uint256 borrowerBalanceBefore = loanToken.balanceOf(borrower);
+        uint256 lenderBalanceBefore = loanToken.balanceOf(lender);
+
+        morphoV2.take(
+            0,
+            sellerAssets,
+            0,
+            0,
+            borrower,
+            lendOffer,
+            sig(root([lendOffer]), lenderSecretKey),
+            root([lendOffer]),
+            proof([lendOffer]),
+            address(0),
+            hex""
+        );
+
+        assertApproxEqAbs(
+            loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, 200, "fee recipient balance"
+        );
+        assertApproxEqAbs(loanToken.balanceOf(borrower), borrowerBalanceBefore + sellerAssets, 200, "borrower balance");
+        assertApproxEqAbs(loanToken.balanceOf(lender), lenderBalanceBefore - expectedBuyerAssets, 200, "lender balance");
+    }
+
+    function testObligationUnitsLendWithFee() public {
         uint256 obligationUnits = 100 ether;
         uint256 price = 0.9 ether;
         uint256 fee = 0.05e18;
@@ -174,6 +252,46 @@ contract TradingFeeTest is BaseTest {
         assertEq(loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, "fee recipient balance");
         assertEq(loanToken.balanceOf(borrower), borrowerBalanceBefore + expectedSellerAssets, "borrower balance");
         assertEq(loanToken.balanceOf(lender), lenderBalanceBefore - expectedBuyerAssets, "lender balance");
+    }
+
+    function testObligationUnitsBorrowWithFee() public {
+        uint256 obligationUnits = 100 ether;
+        uint256 price = 0.9 ether;
+        uint256 fee = 0.05e18;
+
+        lendOffer.startPrice = price;
+        lendOffer.expiryPrice = price;
+
+        uint256 expectedBuyerAssets = obligationUnits * price / 1e18;
+        uint256 expectedSellerAssets =
+            (expectedBuyerAssets - fee.mulDivDown(obligationUnits, 1e18)).mulDivDown(1e18, 1e18 - fee);
+        uint256 expectedFee = expectedBuyerAssets - expectedSellerAssets;
+
+        uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);
+        uint256 borrowerBalanceBefore = loanToken.balanceOf(borrower);
+        uint256 lenderBalanceBefore = loanToken.balanceOf(lender);
+
+        morphoV2.take(
+            0,
+            0,
+            obligationUnits,
+            0,
+            borrower,
+            lendOffer,
+            sig(root([lendOffer]), lenderSecretKey),
+            root([lendOffer]),
+            proof([lendOffer]),
+            address(0),
+            hex""
+        );
+
+        assertApproxEqAbs(
+            loanToken.balanceOf(feeRecipient), feeRecipientBalanceBefore + expectedFee, 100, "fee recipient balance"
+        );
+        assertApproxEqAbs(
+            loanToken.balanceOf(borrower), borrowerBalanceBefore + expectedSellerAssets, 100, "borrower balance"
+        );
+        assertApproxEqAbs(loanToken.balanceOf(lender), lenderBalanceBefore - expectedBuyerAssets, 100, "lender balance");
     }
 
     function testTradingFeeWithMaxSellerAssetsInput() public {
