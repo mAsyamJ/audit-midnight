@@ -191,7 +191,6 @@ contract TradingFeeTest is BaseTest {
 
         uint256 expectedBuyerAssets =
             (sellerAssets.mulDivDown(1e18 - fee, 1e18)).mulDivDown(1e18, 1e18 - fee.mulDivDown(1e18, price));
-        uint256 expectedUnits = expectedBuyerAssets.mulDivDown(1e18, price);
         uint256 expectedFee = expectedBuyerAssets - sellerAssets;
 
         uint256 feeRecipientBalanceBefore = loanToken.balanceOf(feeRecipient);
