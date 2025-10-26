@@ -8,7 +8,7 @@ import {WAD, ORACLE_PRICE_SCALE, LIQUIDATION_INCENTIVE_FACTOR} from "./libraries
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure} from "./interfaces/IMorphoV2.sol";
-import {ICallbacks} from "./interfaces/ICallbacks.sol";
+import {ICallbacks, IFlashloanCallback} from "./interfaces/ICallbacks.sol";
 
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
@@ -325,6 +325,14 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev TODO: is it safe enough?
     function shuffleNonce() external {
         nonce[msg.sender] = keccak256(abi.encode(nonce[msg.sender], blockhash(block.number - 1)));
+    }
+
+    function flashloan(address token, uint256 amount, address callback, bytes calldata data) external {
+        SafeTransferLib.safeTransfer(token, msg.sender, amount);
+
+        IFlashloanCallback(callback).onFlashloan(token, amount, data);
+
+        SafeTransferLib.safeTransferFrom(token, msg.sender, address(this), amount);
     }
 
     /// INTERNAL ///
