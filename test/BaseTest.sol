@@ -6,12 +6,15 @@ import {Test} from "../lib/forge-std/src/Test.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {MathLib} from "../src/libraries/MathLib.sol";
-import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMorphoV2.sol";
+import {WAD, ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
+import {Obligation, Offer, Signature, Collateral, Seizure} from "../src/interfaces/IMorphoV2.sol";
 import {MorphoV2} from "../src/MorphoV2.sol";
 
 uint256 constant MAX_TEST_AMOUNT = 1e36;
 
 abstract contract BaseTest is Test {
+    using MathLib for uint256;
+
     mapping(address => uint256) internal privateKey;
 
     MorphoV2 internal morphoV2;
@@ -48,7 +51,11 @@ abstract contract BaseTest is Test {
 
         vm.prank(lender);
         loanToken.approve(address(morphoV2), type(uint256).max);
+        vm.prank(otherLender);
+        loanToken.approve(address(morphoV2), type(uint256).max);
         vm.prank(borrower);
+        loanToken.approve(address(morphoV2), type(uint256).max);
+        vm.prank(otherBorrower);
         loanToken.approve(address(morphoV2), type(uint256).max);
         vm.prank(liquidator);
         loanToken.approve(address(morphoV2), type(uint256).max);
@@ -56,6 +63,80 @@ abstract contract BaseTest is Test {
         loanToken.approve(address(morphoV2), type(uint256).max);
         collateralToken1.approve(address(morphoV2), type(uint256).max);
         collateralToken2.approve(address(morphoV2), type(uint256).max);
+    }
+
+    // helpers.
+
+    function collateralize(Obligation memory obligation, address _borrower, uint256 debt) internal {
+        uint256 collateral = debt.mulDivUp(WAD, obligation.collaterals[0].lltv);
+        deal(address(obligation.collaterals[0].token), address(this), collateral);
+        collateralToken1.approve(address(morphoV2), collateral);
+        morphoV2.supplyCollateral(obligation, address(obligation.collaterals[0].token), collateral, _borrower);
+    }
+
+    // hardcodes the right root, signature, proof, and callback (no callback)
+    function take(
+        uint256 buyerAssets,
+        uint256 sellerAssets,
+        uint256 obligationUnits,
+        uint256 obligationShares,
+        address taker,
+        Offer memory offer
+    ) internal {
+        morphoV2.take(
+            buyerAssets,
+            sellerAssets,
+            obligationUnits,
+            obligationShares,
+            taker,
+            offer,
+            sig([offer]),
+            root([offer]),
+            proof([offer]),
+            address(0),
+            hex""
+        );
+    }
+
+    function setupOtherUsers(Obligation memory obligation, uint256 units) internal {
+        deal(address(loanToken), otherLender, units); // assets = units because price is 1.
+
+        Offer memory lenderOffer;
+        lenderOffer.obligation = obligation;
+        lenderOffer.buy = true;
+        lenderOffer.maker = otherLender;
+        lenderOffer.assets = units;
+        lenderOffer.group = keccak256(abi.encode("non zero group"));
+        lenderOffer.expiry = block.timestamp + 200;
+        lenderOffer.startPrice = 1 ether;
+        lenderOffer.expiryPrice = 1 ether;
+
+        collateralize(obligation, otherBorrower, units);
+        take(0, 0, units, 0, otherBorrower, lenderOffer);
+    }
+
+    function createBadDebt(Obligation memory obligation) internal {
+        (address badBorrower, uint256 badBorrowerPrivateKey) = makeAddrAndKey("badBorrower");
+        privateKey[badBorrower] = badBorrowerPrivateKey;
+        address unluckyLender = makeAddr("unluckyLender");
+
+        Offer memory badBorrowerOffer;
+        badBorrowerOffer.obligation = obligation;
+        badBorrowerOffer.buy = false;
+        badBorrowerOffer.maker = badBorrower;
+        badBorrowerOffer.assets = 100;
+        badBorrowerOffer.start = block.timestamp;
+        badBorrowerOffer.expiry = block.timestamp + 200;
+        badBorrowerOffer.startPrice = 1 ether;
+        badBorrowerOffer.expiryPrice = 1 ether;
+
+        deal(obligation.collaterals[0].token, address(this), 135);
+        morphoV2.supplyCollateral(obligation, obligation.collaterals[0].token, 135, badBorrower);
+
+        take(100, 0, 0, 0, unluckyLender, badBorrowerOffer);
+
+        Oracle(oracle).setPrice(ORACLE_PRICE_SCALE / 4);
+        morphoV2.liquidate(obligation, new Seizure[](1), badBorrower, "");
     }
 
     function toId(Obligation memory obligation) internal pure returns (bytes32) {
@@ -121,15 +202,15 @@ abstract contract BaseTest is Test {
         deal(address(obligation.collaterals[0].token), address(this), collateral);
 
         morphoV2.supplyCollateral(obligation, address(obligation.collaterals[0].token), collateral, borrower);
-        Offer memory borrowOffer;
-        borrowOffer.obligation = obligation;
-        borrowOffer.buy = false;
-        borrowOffer.maker = borrower;
-        borrowOffer.assets = obligationUnits;
-        borrowOffer.start = block.timestamp;
-        borrowOffer.expiry = block.timestamp;
-        borrowOffer.startPrice = 1 ether;
-        borrowOffer.expiryPrice = 1 ether;
+        Offer memory borrowerOffer;
+        borrowerOffer.obligation = obligation;
+        borrowerOffer.buy = false;
+        borrowerOffer.maker = borrower;
+        borrowerOffer.assets = obligationUnits;
+        borrowerOffer.start = block.timestamp;
+        borrowerOffer.expiry = block.timestamp;
+        borrowerOffer.startPrice = 1 ether;
+        borrowerOffer.expiryPrice = 1 ether;
 
         morphoV2.take(
             0,
@@ -137,10 +218,10 @@ abstract contract BaseTest is Test {
             obligationUnits,
             0,
             lender,
-            borrowOffer,
-            sig([borrowOffer]),
-            root([borrowOffer]),
-            proof([borrowOffer]),
+            borrowerOffer,
+            sig([borrowerOffer]),
+            root([borrowerOffer]),
+            proof([borrowerOffer]),
             address(0),
             hex""
         );
@@ -166,15 +247,15 @@ abstract contract BaseTest is Test {
 
         morphoV2.supplyCollateral(obligation, address(obligation.collaterals[0].token), collateral0, borrower);
         morphoV2.supplyCollateral(obligation, address(obligation.collaterals[1].token), collateral1, borrower);
-        Offer memory borrowOffer;
-        borrowOffer.buy = false;
-        borrowOffer.maker = borrower;
-        borrowOffer.assets = obligationUnits;
-        borrowOffer.obligation = obligation;
-        borrowOffer.start = block.timestamp;
-        borrowOffer.expiry = block.timestamp + 200;
-        borrowOffer.startPrice = 1e18;
-        borrowOffer.expiryPrice = 1e18;
+        Offer memory borrowerOffer;
+        borrowerOffer.buy = false;
+        borrowerOffer.maker = borrower;
+        borrowerOffer.assets = obligationUnits;
+        borrowerOffer.obligation = obligation;
+        borrowerOffer.start = block.timestamp;
+        borrowerOffer.expiry = block.timestamp + 200;
+        borrowerOffer.startPrice = 1e18;
+        borrowerOffer.expiryPrice = 1e18;
 
         morphoV2.take(
             0,
@@ -182,10 +263,10 @@ abstract contract BaseTest is Test {
             obligationUnits,
             0,
             lender,
-            borrowOffer,
-            sig([borrowOffer]),
-            root([borrowOffer]),
-            proof([borrowOffer]),
+            borrowerOffer,
+            sig([borrowerOffer]),
+            root([borrowerOffer]),
+            proof([borrowerOffer]),
             address(0),
             hex""
         );
