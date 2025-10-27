@@ -211,7 +211,16 @@ contract MorphoV2 is IMorphoV2 {
         require(_isHealthy(offer.obligation, seller), "Seller is unhealthy");
 
         emit EventsLib.Take(
-            id, buyer, seller, (buyer == offer.maker), buyerAssets, sellerAssets, obligationUnits, obligationShares
+            id,
+            msg.sender,
+            buyer,
+            seller,
+            (buyer == offer.maker),
+            buyerAssets,
+            sellerAssets,
+            obligationUnits,
+            obligationShares,
+            offer
         );
 
         return (buyerAssets, sellerAssets, obligationUnits, obligationShares);
