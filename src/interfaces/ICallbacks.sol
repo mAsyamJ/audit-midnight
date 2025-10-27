@@ -26,6 +26,6 @@ interface ICallbacks {
     function onLiquidate(Seizure[] memory seizures, address borrower, address liquidator, bytes memory data) external;
 }
 
-interface IFlashloanCallback {
-    function onFlashloan(address token, uint256 amount, bytes memory data) external;
+interface IFlashLoanCallback {
+    function onFlashLoan(address token, uint256 amount, bytes memory data) external;
 }
