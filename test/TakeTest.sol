@@ -59,7 +59,7 @@ contract TakeTest is BaseTest {
 
     // helpers.
 
-    // hardcodes the right root, sighature, proof, and callback (no callback)
+    // hardcodes the right root, signature, proof, and callback (no callback)
     function take(
         uint256 buyerAssets,
         uint256 sellerAssets,
