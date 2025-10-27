@@ -252,22 +252,26 @@ contract MorphoV2 is IMorphoV2 {
     function supplyCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
         external
     {
+        bytes32 id = _id(obligation);
+
         collateralOf[onBehalf][_id(obligation)][collateral] += assets;
         SafeTransferLib.safeTransferFrom(collateral, msg.sender, address(this), assets);
 
-        emit EventsLib.SupplyCollateral(_id(obligation), msg.sender, onBehalf, collateral, assets);
+        emit EventsLib.SupplyCollateral(id, msg.sender, onBehalf, collateral, assets);
     }
 
     function withdrawCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
         external
     {
-        collateralOf[onBehalf][_id(obligation)][collateral] -= assets;
+        bytes32 id = _id(obligation);
+
+        collateralOf[onBehalf][id][collateral] -= assets;
 
         require(_isHealthy(obligation, onBehalf), "Unhealthy borrower");
 
         SafeTransferLib.safeTransfer(collateral, msg.sender, assets);
 
-        emit EventsLib.WithdrawCollateral(_id(obligation), msg.sender, onBehalf, collateral, assets);
+        emit EventsLib.WithdrawCollateral(id, msg.sender, onBehalf, collateral, assets);
     }
 
     /// @notice Execute the given collection of `seizures` on the given `obligation` of the given `borrower`.
@@ -338,7 +342,7 @@ contract MorphoV2 is IMorphoV2 {
 
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), totalRepaid);
 
-        emit EventsLib.Liquidate(id, borrower, seizures, badDebt);
+        emit EventsLib.Liquidate(id, msg.sender, borrower, seizures, totalRepaid, badDebt);
 
         return seizures;
     }

@@ -41,5 +41,12 @@ library EventsLib {
         uint256 assets
     );
 
-    event Liquidate(bytes32 indexed obligationId, address indexed borrower, Seizure[] seizures, uint256 badDebt);
+    event Liquidate(
+        bytes32 indexed obligationId,
+        address indexed caller,
+        address indexed borrower,
+        Seizure[] seizures,
+        uint256 totalRepaid,
+        uint256 badDebt
+    );
 }
