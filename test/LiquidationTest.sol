@@ -129,7 +129,7 @@ contract LiquidationTest is BaseTest {
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
         assertEq(loanToken.balanceOf(address(this)), 0, "loan token balance");
-        assertApproxEqAbs(morphoV2.debtOf(borrower, id), obligations - repaid, 1, "debt"); // TODO fix approx
+        assertEq(morphoV2.debtOf(borrower, id), obligations - repaid, "debt");
         assertEq(
             morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token),
             initialCollateral - seized,
@@ -174,8 +174,8 @@ contract LiquidationTest is BaseTest {
         // TODO assert bad debt.
     }
 
-    function testLiquidateSeizedBadDebt(uint256 obligations, uint256 seized) public {
-        obligations = bound(obligations, 1, MAX_TEST_AMOUNT);
+    function testLiquidateWithBadDebtSeizedInput(uint256 obligations, uint256 seized) public {
+        obligations = bound(obligations, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
         collateralize(obligation, borrower, obligations);
         setupObligation(obligation, obligations);
         uint256 initialCollateral = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token);
@@ -186,11 +186,11 @@ contract LiquidationTest is BaseTest {
 
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
-        // TODO assert bad debt
+        assertLt(morphoV2.totalUnits(id), morphoV2.totalShares(id), "total units < total shares");
     }
 
-    function testLiquidateRepaidBadDebt(uint256 obligations, uint256 repaid) public {
-        obligations = bound(obligations, 1, MAX_TEST_AMOUNT);
+    function testLiquidateWithBadDebtRepaidInput(uint256 obligations, uint256 repaid) public {
+        obligations = bound(obligations, 10, MAX_TEST_AMOUNT);
         collateralize(obligation, borrower, obligations);
         setupObligation(obligation, obligations);
         oracle.setPrice(0.5e36);
@@ -202,11 +202,11 @@ contract LiquidationTest is BaseTest {
 
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
-        // TODO assert bad debt.
+        assertLt(morphoV2.totalUnits(id), morphoV2.totalShares(id), "total units < total shares");
     }
 
     // Check that if there is bad debt it is possible to seize all assets.
-    function testSeizeAllWhenBadDebt(uint256 obligations) public {
+    function testLiquidateWithBadDebtSeizeAll(uint256 obligations) public {
         obligations = bound(obligations, 1, MAX_TEST_AMOUNT);
         Oracle oracle2 = new Oracle();
         obligation.collaterals[1].oracle = address(oracle2);
