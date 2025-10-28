@@ -14,7 +14,6 @@ import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
 /// @dev Obligations' collaterals must be sorted by token address.
 contract MorphoV2 is IMorphoV2 {
     using MathLib for uint256;
-    using MathLib for uint128;
 
     /// STORAGE ///
 
