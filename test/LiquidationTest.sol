@@ -164,14 +164,20 @@ contract LiquidationTest is BaseTest {
     // Test bad debt.
 
     function testRealizeOnlyBadDebt(uint256 obligations) public {
-        obligations = bound(obligations, 1, MAX_TEST_AMOUNT);
+        obligations = bound(obligations, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
         collateralize(obligation, borrower, obligations);
         setupObligation(obligation, obligations);
-        oracle.setPrice(0.5e36); // TODO fuzz
+        uint256 oraclePrice = 0.5e36;
+        oracle.setPrice(oraclePrice); // TODO fuzz
+        uint256 repayable = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token).mulDivUp(WAD, MAX_LIF)
+            .mulDivUp(oraclePrice, ORACLE_PRICE_SCALE);
+        uint256 expectedBadDebt = obligations - repayable;
 
         morphoV2.liquidate(obligation, seizures, borrower, ""); // empty seizures.
 
-        // TODO assert bad debt.
+        assertEq(morphoV2.debtOf(borrower, id), obligations - expectedBadDebt, "debt");
+        assertEq(morphoV2.totalUnits(id), obligations - expectedBadDebt, "total units");
+        assertEq(morphoV2.totalShares(id), obligations, "total shares");
     }
 
     function testLiquidateWithBadDebtSeizedInput(uint256 obligations, uint256 seized) public {
@@ -180,29 +186,40 @@ contract LiquidationTest is BaseTest {
         setupObligation(obligation, obligations);
         uint256 initialCollateral = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token);
         seized = bound(seized, 0, initialCollateral);
-        oracle.setPrice(0.5e36);
+        uint256 oraclePrice = 0.5e36;
+        oracle.setPrice(oraclePrice);
+        uint256 repayable = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token).mulDivUp(WAD, MAX_LIF)
+            .mulDivUp(oraclePrice, ORACLE_PRICE_SCALE);
+        uint256 expectedBadDebt = obligations - repayable;
+        uint256 repaid = seized.mulDivUp(WAD, MAX_LIF).mulDivUp(oraclePrice, ORACLE_PRICE_SCALE);
+
         deal(address(loanToken), address(this), obligations); // over-approx.
         seizures.push(Seizure({collateralIndex: 0, repaid: 0, seized: seized}));
 
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
-        assertLt(morphoV2.totalUnits(id), morphoV2.totalShares(id), "total units < total shares");
+        assertEq(morphoV2.debtOf(borrower, id), obligations - expectedBadDebt - repaid, "debt");
+        assertEq(morphoV2.totalUnits(id), obligations - expectedBadDebt, "total units");
+        assertEq(morphoV2.totalShares(id), obligations, "total shares");
     }
 
     function testLiquidateWithBadDebtRepaidInput(uint256 obligations, uint256 repaid) public {
-        obligations = bound(obligations, 10, MAX_TEST_AMOUNT);
+        obligations = bound(obligations, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
         collateralize(obligation, borrower, obligations);
         setupObligation(obligation, obligations);
         oracle.setPrice(0.5e36);
         uint256 repayableDebt = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token)
             .mulDivUp(WAD, MAX_LIF).mulDivUp(0.5e36, ORACLE_PRICE_SCALE);
-        repaid = bound(repaid, 0, repayableDebt - 1); // TODO fix -1.
+        repaid = bound(repaid, 0, repayableDebt - 1); // TODO fix - 1.
+        uint256 expectedBadDebt = obligations - repayableDebt;
         deal(address(loanToken), address(this), repaid);
         seizures.push(Seizure({collateralIndex: 0, repaid: repaid, seized: 0}));
 
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
-        assertLt(morphoV2.totalUnits(id), morphoV2.totalShares(id), "total units < total shares");
+        assertEq(morphoV2.debtOf(borrower, id), obligations - repaid - expectedBadDebt, "debt");
+        assertEq(morphoV2.totalUnits(id), obligations - expectedBadDebt, "total units");
+        assertEq(morphoV2.totalShares(id), obligations, "total shares");
     }
 
     // Check that if there is bad debt it is possible to seize all assets.
