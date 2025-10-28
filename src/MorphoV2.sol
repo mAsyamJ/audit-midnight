@@ -4,11 +4,11 @@ pragma solidity 0.8.28;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
-import {WAD, ORACLE_PRICE_SCALE, LIQUIDATION_INCENTIVE_FACTOR} from "./libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, AUCTION_DURATION} from "./libraries/ConstantsLib.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure, TradingFee} from "./interfaces/IMorphoV2.sol";
-import {ICallbacks} from "./interfaces/ICallbacks.sol";
+import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
 
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
@@ -272,8 +272,10 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransfer(collateral, msg.sender, assets);
     }
 
-    /// @notice Execute the given collection of `seizures` on the given `obligation` of the given `borrower`.
-    /// @dev On each seizure either `repaid` or `seized` should be equal to zero.
+    /// @dev On each seizure at least one of `repaid` or `seized` should be equal to zero.
+    /// @dev Accounts are liquidatable if they are unhealthy or if the maturity is reached.
+    /// @dev If an account is healthy, the LIF grows linearly from 1 at maturity to MAX_LIF at maturity +
+    /// AUCTION_DURATION.
     /// @param obligation The obligation.
     /// @param seizures An array of amounts of debt to repay or assets to seize with the index of the collateral in the
     /// obligation's collateral assets.
@@ -294,12 +296,15 @@ contract MorphoV2 is IMorphoV2 {
             uint256 collateralAmount = collateralOf[borrower][id][obligation.collaterals[i].token];
             maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE)
                 .mulDivDown(obligation.collaterals[i].lltv, WAD);
-            repayableDebt += collateralAmount.mulDivUp(WAD, LIQUIDATION_INCENTIVE_FACTOR)
-                .mulDivUp(prices[i], ORACLE_PRICE_SCALE);
+            repayableDebt += collateralAmount.mulDivUp(WAD, MAX_LIF).mulDivUp(prices[i], ORACLE_PRICE_SCALE);
         }
 
         uint256 originalDebt = debtOf[borrower][id];
-        require(originalDebt > maxDebt, "position is healthy");
+        require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
+
+        uint256 lif = originalDebt > maxDebt
+            ? MAX_LIF
+            : UtilsLib.min(MAX_LIF, WAD + (MAX_LIF - WAD) * (block.timestamp - obligation.maturity) / AUCTION_DURATION);
 
         uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
         if (badDebt > 0) {
@@ -314,11 +319,11 @@ contract MorphoV2 is IMorphoV2 {
             require(UtilsLib.atMostOneNonZero(seizure.repaid, seizure.seized), "INCONSISTENT_INPUT");
 
             if (seizure.seized > 0) {
-                seizure.repaid = seizure.seized.mulDivUp(WAD, LIQUIDATION_INCENTIVE_FACTOR)
-                    .mulDivUp(prices[seizure.collateralIndex], ORACLE_PRICE_SCALE);
+                seizure.repaid =
+                    seizure.seized.mulDivUp(WAD, lif).mulDivUp(prices[seizure.collateralIndex], ORACLE_PRICE_SCALE);
             } else {
-                seizure.seized = seizure.repaid.mulDivDown(ORACLE_PRICE_SCALE, prices[seizure.collateralIndex])
-                    .mulDivDown(LIQUIDATION_INCENTIVE_FACTOR, WAD);
+                seizure.seized =
+                    seizure.repaid.mulDivDown(ORACLE_PRICE_SCALE, prices[seizure.collateralIndex]).mulDivDown(lif, WAD);
             }
 
             totalRepaid += seizure.repaid;
@@ -350,6 +355,14 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev TODO: is it safe enough?
     function shuffleNonce() external {
         nonce[msg.sender] = keccak256(abi.encode(nonce[msg.sender], blockhash(block.number - 1)));
+    }
+
+    function flashLoan(address token, uint256 amount, address callback, bytes calldata data) external {
+        SafeTransferLib.safeTransfer(token, msg.sender, amount);
+
+        IFlashLoanCallback(callback).onFlashLoan(token, amount, data);
+
+        SafeTransferLib.safeTransferFrom(token, msg.sender, address(this), amount);
     }
 
     /// INTERNAL ///
