@@ -7,7 +7,7 @@ import {MorphoV2} from "../src/MorphoV2.sol";
 import {ORACLE_PRICE_SCALE, WAD} from "../src/libraries/ConstantsLib.sol";
 import {MathLib} from "../src/libraries/MathLib.sol";
 import {ICallbacks} from "../src/interfaces/ICallbacks.sol";
-
+import {stdError} from "../lib/forge-std/src/StdError.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
@@ -42,29 +42,35 @@ contract TakeTest is BaseTest {
 
         lenderOffer.buy = true;
         lenderOffer.maker = lender;
-        lenderOffer.assets = 100;
+        lenderOffer.assets = type(uint256).max;
         lenderOffer.obligation = obligation;
         lenderOffer.expiry = block.timestamp + 200;
-        lenderOffer.startPrice = 0.99 ether;
-        lenderOffer.expiryPrice = 0.99 ether;
+        lenderOffer.startPrice = 1 ether;
+        lenderOffer.expiryPrice = 1 ether;
 
         otherLenderOffer.buy = false;
         otherLenderOffer.maker = otherLender;
+        otherLenderOffer.assets = type(uint256).max;
         otherLenderOffer.obligation = obligation;
         otherLenderOffer.expiry = block.timestamp + 200;
+        otherLenderOffer.startPrice = 1 ether;
+        otherLenderOffer.expiryPrice = 1 ether;
 
         borrowerOffer.buy = false;
         borrowerOffer.maker = borrower;
-        borrowerOffer.assets = 100;
+        borrowerOffer.assets = type(uint256).max;
         borrowerOffer.obligation = obligation;
         borrowerOffer.expiry = block.timestamp + 200;
-        borrowerOffer.startPrice = 0.99 ether;
-        borrowerOffer.expiryPrice = 0.99 ether;
+        borrowerOffer.startPrice = 1 ether;
+        borrowerOffer.expiryPrice = 1 ether;
 
         otherBorrowerOffer.buy = true;
         otherBorrowerOffer.maker = otherBorrower;
+        otherBorrowerOffer.assets = type(uint256).max;
         otherBorrowerOffer.obligation = obligation;
         otherBorrowerOffer.expiry = block.timestamp + 200;
+        otherBorrowerOffer.startPrice = 1 ether;
+        otherBorrowerOffer.expiryPrice = 1 ether;
 
         createBadDebt(obligation); // to create non trivial shares <=> units conversion.
 
@@ -372,6 +378,18 @@ contract TakeTest is BaseTest {
         assertApproxEqAbs(morphoV2.consumed(lenderOffer.maker, 0), buyerAssets, 1, "maker consumed");
     }
 
+    function testCannotCrossTopDown(uint256 obligationUnits, uint256 otherLenderUnits) public {
+        otherLenderUnits = bound(otherLenderUnits, 1, maxAssets - 1);
+        obligationUnits = bound(obligationUnits, otherLenderUnits + 1, maxAssets);
+        setupOtherUsers(obligation, otherLenderUnits);
+
+        vm.expectRevert(stdError.arithmeticError);
+        take(0, 0, obligationUnits, 0, lender, otherLenderOffer);
+
+        vm.expectRevert(stdError.arithmeticError);
+        take(0, 0, obligationUnits, 0, otherLender, lenderOffer);
+    }
+
     // path 3: Borrower exits + borrower enters.
 
     function testBuyAssetsInput3(uint256 buyerAssets, uint256 price, uint256 otherBorrowerDebt) public {
@@ -520,6 +538,18 @@ contract TakeTest is BaseTest {
             loanToken.balanceOf(otherBorrower), otherBorrowerDebt - buyerAssets, 1, "otherBorrower balance"
         );
         assertApproxEqAbs(morphoV2.consumed(otherBorrowerOffer.maker, 0), buyerAssets, 1, "maker consumed");
+    }
+
+    function testCannotCrossBottomUp(uint256 obligationUnits, uint256 otherUnits) public {
+        otherUnits = bound(otherUnits, 1, maxAssets - 1);
+        obligationUnits = bound(obligationUnits, otherUnits + 1, maxAssets);
+        setupOtherUsers(obligation, otherUnits);
+
+        vm.expectRevert(stdError.arithmeticError);
+        take(0, 0, obligationUnits, 0, borrower, otherBorrowerOffer);
+
+        vm.expectRevert(stdError.arithmeticError);
+        take(0, 0, obligationUnits, 0, otherBorrower, borrowerOffer);
     }
 
     // path 4: Borrower exits + lender exits.
