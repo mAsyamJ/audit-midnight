@@ -198,7 +198,7 @@ contract MorphoV2 is IMorphoV2 {
                     buyerCallbackData
                 );
         }
-        
+
         emit EventsLib.Take(
             id,
             msg.sender,
@@ -232,7 +232,6 @@ contract MorphoV2 is IMorphoV2 {
 
         require(_isHealthy(offer.obligation, seller), "Seller is unhealthy");
 
-
         return (buyerAssets, sellerAssets, obligationUnits, obligationShares);
     }
 
@@ -253,7 +252,7 @@ contract MorphoV2 is IMorphoV2 {
         totalUnits[id] -= obligationUnits;
 
         emit EventsLib.Withdraw(id, msg.sender, onBehalf, obligationUnits, shares);
-        
+
         SafeTransferLib.safeTransfer(obligation.loanToken, msg.sender, obligationUnits);
     }
 
@@ -264,7 +263,7 @@ contract MorphoV2 is IMorphoV2 {
         withdrawable[id] += obligationUnits;
 
         emit EventsLib.Repay(id, msg.sender, obligationUnits, onBehalf);
-        
+
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), obligationUnits);
     }
 
@@ -274,9 +273,9 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 id = _id(obligation);
 
         collateralOf[onBehalf][_id(obligation)][collateral] += assets;
-        
+
         emit EventsLib.SupplyCollateral(id, msg.sender, collateral, assets, onBehalf);
-        
+
         SafeTransferLib.safeTransferFrom(collateral, msg.sender, address(this), assets);
     }
 
@@ -288,7 +287,7 @@ contract MorphoV2 is IMorphoV2 {
         collateralOf[onBehalf][id][collateral] -= assets;
 
         require(_isHealthy(obligation, onBehalf), "Unhealthy borrower");
-        
+
         emit EventsLib.WithdrawCollateral(id, msg.sender, collateral, assets, onBehalf);
 
         SafeTransferLib.safeTransfer(collateral, msg.sender, assets);
@@ -357,7 +356,7 @@ contract MorphoV2 is IMorphoV2 {
         debtOf[borrower][id] -= totalRepaid;
 
         emit EventsLib.Liquidate(id, msg.sender, seizures, borrower, totalRepaid, badDebt);
-        
+
         for (uint256 i = 0; i < seizures.length; i++) {
             Seizure memory seizure = seizures[i];
             SafeTransferLib.safeTransfer(
