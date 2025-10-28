@@ -119,6 +119,8 @@ abstract contract BaseTest is Test {
         (address badBorrower, uint256 badBorrowerPrivateKey) = makeAddrAndKey("badBorrower");
         privateKey[badBorrower] = badBorrowerPrivateKey;
         address unluckyLender = makeAddr("unluckyLender");
+        vm.prank(unluckyLender);
+        loanToken.approve(address(morphoV2), type(uint256).max);
 
         Offer memory badBorrowerOffer;
         badBorrowerOffer.obligation = obligation;
@@ -133,10 +135,24 @@ abstract contract BaseTest is Test {
         deal(obligation.collaterals[0].token, address(this), 135);
         morphoV2.supplyCollateral(obligation, obligation.collaterals[0].token, 135, badBorrower);
 
+        deal(address(loanToken), unluckyLender, 100);
+
         take(100, 0, 0, 0, unluckyLender, badBorrowerOffer);
 
         Oracle(oracle).setPrice(ORACLE_PRICE_SCALE / 4);
-        morphoV2.liquidate(obligation, new Seizure[](1), badBorrower, "");
+        morphoV2.liquidate(obligation, new Seizure[](0), badBorrower, "");
+
+        assertNotEq(
+            morphoV2.totalUnits(toId(obligation)), morphoV2.totalShares(toId(obligation)), "total units != total shares"
+        );
+
+        // then empty the market (borrow side only).
+        deal(address(loanToken), address(this), morphoV2.debtOf(badBorrower, toId(obligation)));
+        morphoV2.repay(obligation, morphoV2.debtOf(badBorrower, toId(obligation)), badBorrower);
+        assertEq(morphoV2.debtOf(badBorrower, toId(obligation)), 0, "debt");
+
+        // reset the price.
+        Oracle(oracle).setPrice(ORACLE_PRICE_SCALE);
     }
 
     function toId(Obligation memory obligation) internal pure returns (bytes32) {
@@ -217,5 +233,9 @@ abstract contract BaseTest is Test {
             address(0),
             hex""
         );
+    }
+
+    function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a > b ? a : b;
     }
 }

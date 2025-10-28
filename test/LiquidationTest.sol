@@ -151,7 +151,11 @@ contract LiquidationTest is BaseTest {
 
         assertEq(recordedSeizures.length, 1, "seizures length");
         assertEq(recordedSeizures[0].repaid, repaid, "repaid obligations");
-        assertEq(recordedSeizures[0].seized, repaid.mulDivDown(ORACLE_PRICE_SCALE, 1e36 - 1).mulDivDown(MAX_LIF, WAD), "seized assets");
+        assertEq(
+            recordedSeizures[0].seized,
+            repaid.mulDivDown(ORACLE_PRICE_SCALE, 1e36 - 1).mulDivDown(MAX_LIF, WAD),
+            "seized assets"
+        );
         assertEq(recordedBorrower, borrower, "borrower");
         assertEq(recordedLiquidator, address(this), "liquidator");
         assertEq(recordedData, data, "data");
@@ -190,11 +194,12 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, obligations);
         setupObligation(obligation, obligations);
         oracle.setPrice(0.5e36);
-        uint256 repayableDebt = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token).mulDivUp(WAD, MAX_LIF).mulDivUp(0.5e36, ORACLE_PRICE_SCALE);
+        uint256 repayableDebt = morphoV2.collateralOf(borrower, id, obligation.collaterals[0].token)
+            .mulDivUp(WAD, MAX_LIF).mulDivUp(0.5e36, ORACLE_PRICE_SCALE);
         repaid = bound(repaid, 0, repayableDebt - 1); // TODO fix -1.
         deal(address(loanToken), address(this), repaid);
         seizures.push(Seizure({collateralIndex: 0, repaid: repaid, seized: 0}));
-        
+
         morphoV2.liquidate(obligation, seizures, borrower, "");
 
         // TODO assert bad debt.

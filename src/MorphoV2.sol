@@ -176,7 +176,7 @@ contract MorphoV2 is IMorphoV2 {
             debtOf[buyer][id] -= obligationUnits;
             debtOf[seller][id] += obligationUnits;
         } else {
-            // Borrower exits + borrower enters.
+            // Borrower exits + lender exits.
             debtOf[buyer][id] -= obligationUnits;
             sharesOf[seller][id] -= obligationShares;
             totalShares[id] -= obligationShares;
