@@ -162,15 +162,15 @@ contract MorphoV2 is IMorphoV2 {
             sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
         }
 
-        if (offer.obligationUnits > 0) {
-            require((consumed[offer.maker][offer.group] += obligationUnits) <= offer.obligationUnits, "consumed");
-        } else if (offer.obligationShares > 0) {
-            require((consumed[offer.maker][offer.group] += obligationShares) <= offer.obligationShares, "consumed");
-        } else {
+        if (offer.assets > 0) {
             require(
                 (consumed[offer.maker][offer.group] += offer.buy ? buyerAssets : sellerAssets) <= offer.assets,
                 "consumed"
             );
+        } else if (offer.obligationShares > 0) {
+            require((consumed[offer.maker][offer.group] += obligationUnits) <= offer.obligationUnits, "consumed");
+        } else {
+            require((consumed[offer.maker][offer.group] += obligationShares) <= offer.obligationShares, "consumed");
         }
 
         if (debtOf[buyer][id] == 0 && sharesOf[seller][id] == 0) {

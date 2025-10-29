@@ -135,7 +135,7 @@ contract TakeTest is BaseTest {
         uint256 expectedShares = obligationUnits.mulDivDown(initialShares + 1, initialUnits + 1);
         deal(address(loanToken), lender, expectedAssets);
         collateralize(obligation, borrower, obligationUnits);
-        borrowerOffer.assets = expectedAssets;
+        borrowerOffer.assets = expectedAssets + 1;
 
         take(0, 0, obligationUnits, 0, lender, borrowerOffer);
 
@@ -157,7 +157,7 @@ contract TakeTest is BaseTest {
         uint256 expectedShares = obligationUnits.mulDivDown(initialShares + 1, initialUnits + 1);
         deal(address(loanToken), lender, expectedAssets);
         collateralize(obligation, borrower, obligationUnits);
-        lenderOffer.assets = expectedAssets;
+        lenderOffer.assets = expectedAssets + 1;
 
         take(0, 0, obligationUnits, 0, borrower, lenderOffer);
 
@@ -179,7 +179,7 @@ contract TakeTest is BaseTest {
         uint256 expectedAssets = expectedUnits.mulDivDown(price, WAD);
         deal(address(loanToken), lender, expectedAssets);
         collateralize(obligation, borrower, obligationShares);
-        borrowerOffer.assets = expectedAssets;
+        borrowerOffer.assets = expectedAssets + 1;
 
         take(0, 0, 0, obligationShares, lender, borrowerOffer);
 
@@ -201,7 +201,7 @@ contract TakeTest is BaseTest {
         uint256 expectedAssets = expectedUnits.mulDivDown(price, WAD);
         deal(address(loanToken), lender, expectedAssets);
         collateralize(obligation, borrower, obligationShares);
-        lenderOffer.assets = expectedAssets;
+        lenderOffer.assets = expectedAssets + 1;
 
         take(0, 0, 0, obligationShares, borrower, lenderOffer);
 
@@ -279,7 +279,7 @@ contract TakeTest is BaseTest {
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
         deal(address(loanToken), lender, buyerAssets);
         otherLenderOffer.buy = false;
-        otherLenderOffer.assets = buyerAssets;
+        otherLenderOffer.assets = buyerAssets + 1;
         otherLenderOffer.startPrice = price;
         otherLenderOffer.expiryPrice = price;
 
@@ -306,7 +306,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, otherLenderUnits);
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
         deal(address(loanToken), lender, buyerAssets);
-        lenderOffer.assets = buyerAssets;
+        lenderOffer.assets = buyerAssets + 1;
         lenderOffer.startPrice = price;
         lenderOffer.expiryPrice = price;
 
@@ -446,7 +446,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, otherBorrowerDebt);
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
         collateralize(obligation, borrower, obligationUnits);
-        borrowerOffer.assets = buyerAssets;
+        borrowerOffer.assets = buyerAssets + 1;
         borrowerOffer.startPrice = price;
         borrowerOffer.expiryPrice = price;
 
@@ -469,7 +469,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, otherBorrowerDebt);
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
         collateralize(obligation, borrower, obligationUnits);
-        otherBorrowerOffer.assets = buyerAssets;
+        otherBorrowerOffer.assets = buyerAssets + 1;
         otherBorrowerOffer.startPrice = price;
         otherBorrowerOffer.expiryPrice = price;
 
@@ -616,7 +616,7 @@ contract TakeTest is BaseTest {
         existingUnits = bound(existingUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, existingUnits);
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
-        otherLenderOffer.assets = buyerAssets;
+        otherLenderOffer.assets = buyerAssets + 1;
         otherLenderOffer.startPrice = price;
         otherLenderOffer.expiryPrice = price;
 
@@ -643,7 +643,7 @@ contract TakeTest is BaseTest {
         existingUnits = bound(existingUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, existingUnits);
         uint256 otherLenderShares = morphoV2.sharesOf(otherLender, id);
-        otherBorrowerOffer.assets = buyerAssets;
+        otherBorrowerOffer.assets = buyerAssets + 1;
         otherBorrowerOffer.startPrice = price;
         otherBorrowerOffer.expiryPrice = price;
 
