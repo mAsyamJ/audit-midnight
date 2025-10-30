@@ -19,6 +19,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run Claude code security review
-        uses: anthropics/claude-code-security-review@v1
+        uses: anthropics/claude-code-security-review@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
