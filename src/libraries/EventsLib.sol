@@ -29,7 +29,9 @@ library EventsLib {
         uint256 shares,
         address indexed onBehalf
     );
-    event Repay(address indexed caller, bytes32 indexed obligationId,  uint256 obligationUnits, address indexed onBehalf);
+    event Repay(
+        address indexed caller, bytes32 indexed obligationId, uint256 obligationUnits, address indexed onBehalf
+    );
     event SupplyCollateral(
         address caller,
         bytes32 indexed obligationId,

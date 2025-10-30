@@ -240,7 +240,7 @@ contract MorphoV2 is IMorphoV2 {
         totalShares[id] -= shares;
         totalUnits[id] -= obligationUnits;
 
-        emit EventsLib.Withdraw(msg.sender, id, obligationUnits, shares,  onBehalf);
+        emit EventsLib.Withdraw(msg.sender, id, obligationUnits, shares, onBehalf);
 
         SafeTransferLib.safeTransfer(obligation.loanToken, msg.sender, obligationUnits);
     }
