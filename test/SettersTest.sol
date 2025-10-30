@@ -33,13 +33,13 @@ contract SettersTest is BaseTest {
         morphoV2.setFeeSetter(makeAddr("newFeeSetter"));
     }
 
-    function testSetTradingFeeSuccess(bytes32 id, uint128 slope, uint128 max) public {
-        vm.assume(slope <= 1e18);
-        vm.assume(max <= 1e18);
-        morphoV2.setTradingFee(id, slope, max);
-        (uint128 _slope, uint128 _max) = morphoV2.tradingFee(id);
-        assertEq(_slope, slope);
-        assertEq(_max, max);
+    function testSetTradingFeeSuccess(bytes32 id, uint128 tradingFee, uint128 interestCutLimit) public {
+        vm.assume(tradingFee <= 1e18);
+        vm.assume(interestCutLimit <= 1e18);
+        morphoV2.setTradingFee(id, tradingFee, interestCutLimit);
+        (uint128 _tradingFee, uint128 _interestCutLimit) = morphoV2.tradingFeeParams(id);
+        assertEq(_tradingFee, tradingFee);
+        assertEq(_interestCutLimit, interestCutLimit);
     }
 
     function testSetTradingFeeOnlyFeeSetter(address rdm, bytes32 id) public {
@@ -49,16 +49,16 @@ contract SettersTest is BaseTest {
         morphoV2.setTradingFee(id, 0.1e18, 0.1e18);
     }
 
-    function testSetInterestCutTooHigh(bytes32 id, uint128 interestCut) public {
-        vm.assume(interestCut > 1e18);
-        vm.expectRevert("Interest cut too high");
-        morphoV2.setTradingFee(id, interestCut, 0.1e18);
+    function testSetInterestCutLimitTooHigh(bytes32 id, uint128 interestCutLimit) public {
+        vm.assume(interestCutLimit > 1e18);
+        vm.expectRevert("Interest cut limit too high");
+        morphoV2.setTradingFee(id, 0.1e18, interestCutLimit);
     }
 
-    function testSetCashCutTooHigh(bytes32 id, uint128 cashCut) public {
-        vm.assume(cashCut > 1e18);
-        vm.expectRevert("Cash cut too high");
-        morphoV2.setTradingFee(id, 0.1e18, cashCut);
+    function testSetTradingFeeTooHigh(bytes32 id, uint128 tradingFee) public {
+        vm.assume(tradingFee > 1e18);
+        vm.expectRevert("Trading fee too high");
+        morphoV2.setTradingFee(id, tradingFee, 0.1e18);
     }
 
     function testSetTradingFeeRecipientSuccess(address recipient) public {

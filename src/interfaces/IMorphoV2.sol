@@ -48,9 +48,9 @@ struct Seizure {
     uint256 seized;
 }
 
-struct TradingFee {
-    uint128 interestCut;
-    uint128 cashCut;
+struct TradingFeeParams {
+    uint128 tradingFee;
+    uint128 interestCutLimit;
 }
 
 interface IMorphoV2 {}
