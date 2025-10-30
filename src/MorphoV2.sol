@@ -91,7 +91,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Same function used to buy and sell.
     /// @dev If one wants to match two offers without taking a position, they can batch take them and not have a
     /// position at the end.
-    /// @dev Neither the taker nor the maker can pass from having obligation shares to having debt in one take.
+    /// @dev Neither the taker nor the maker can pass from having shares to having debt in one take.
     function take(
         uint256 buyerAssets,
         uint256 sellerAssets,
@@ -174,17 +174,21 @@ contract MorphoV2 is IMorphoV2 {
         }
 
         if (debtOf[buyer][id] == 0 && sharesOf[seller][id] == 0) {
+            // Lender enters + borrower enters.
             sharesOf[buyer][id] += obligationShares;
             debtOf[seller][id] += obligationUnits;
             totalShares[id] += obligationShares;
             totalUnits[id] += obligationUnits;
         } else if (debtOf[buyer][id] == 0 && sharesOf[seller][id] > 0) {
+            // Lender enters + lender exits.
             sharesOf[buyer][id] += obligationShares;
             sharesOf[seller][id] -= obligationShares;
         } else if (debtOf[buyer][id] > 0 && sharesOf[seller][id] == 0) {
+            // Borrower exits + borrower enters.
             debtOf[buyer][id] -= obligationUnits;
             debtOf[seller][id] += obligationUnits;
         } else {
+            // Borrower exits + lender exits.
             debtOf[buyer][id] -= obligationUnits;
             sharesOf[seller][id] -= obligationShares;
             totalShares[id] -= obligationShares;
