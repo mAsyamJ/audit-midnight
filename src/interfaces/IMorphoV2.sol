@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 struct Obligation {
-    uint256 chainId;
     address loanToken;
     // Must be sorted by address.
     Collateral[] collaterals;

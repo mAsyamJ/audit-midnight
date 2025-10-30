@@ -157,8 +157,8 @@ abstract contract BaseTest is Test {
         Oracle(obligation.collaterals[0].oracle).setPrice(ORACLE_PRICE_SCALE);
     }
 
-    function toId(Obligation memory obligation) internal pure returns (bytes32) {
-        return keccak256(abi.encode(obligation));
+    function toId(Obligation memory obligation) internal view returns (bytes32) {
+        return keccak256(abi.encode(block.chainid, address(morphoV2), obligation));
     }
 
     function root(Offer[1] memory offers) internal pure returns (bytes32) {
