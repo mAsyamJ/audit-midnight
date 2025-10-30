@@ -9,7 +9,7 @@ library EventsLib {
 
     event SetOwner(address indexed owner);
     event SetFeeSetter(address indexed feeSetter);
-    event SetTradingFee(bytes32 indexed obligationId, uint256 fee);
+    event SetTradingFee(bytes32 indexed obligationId, uint256 tradingFee, uint256 interestCutLimit);
     event SetTradingFeeRecipient(address indexed recipient);
 
     event Take(
