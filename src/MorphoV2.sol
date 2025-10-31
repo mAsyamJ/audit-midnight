@@ -290,7 +290,7 @@ contract MorphoV2 is IMorphoV2 {
     {
         bytes32 id = _id(obligation);
 
-        collateralOf[onBehalf][_id(obligation)][collateral] += assets;
+        collateralOf[onBehalf][id][collateral] += assets;
 
         emit EventsLib.SupplyCollateral(msg.sender, id, collateral, assets, onBehalf);
 
