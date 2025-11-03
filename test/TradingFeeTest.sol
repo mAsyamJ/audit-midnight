@@ -57,15 +57,15 @@ contract TradingFeeTest is BaseTest {
 
     function testBuyerAssetsLendProportional(uint256 tradingFee, uint256 sellerPrice, uint256 buyerAssets) public {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        tradingFee = bound(tradingFee, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, tradingFee, 1e18);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        tradingFee = bound(tradingFee, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, tradingFee, WAD);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedSellerAssets = buyerAssets.mulDivDown(1e18, 1e18 + tradingFee);
-        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
-        uint256 expectedUnits = expectedSellerAssets.mulDivUp(1e18, sellerPrice);
+        uint256 expectedSellerAssets = buyerAssets.mulDivDown(WAD, WAD + tradingFee);
+        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
+        uint256 expectedUnits = expectedSellerAssets.mulDivUp(WAD, sellerPrice);
 
         collateralize(obligation, borrower, (expectedUnits + 1) * 10); // todo: why
         take(buyerAssets, 0, 0, 0, lender, borrowerOffer);
@@ -77,15 +77,15 @@ contract TradingFeeTest is BaseTest {
 
     // function testBuyerAssetsBorrowProportional(uint256 tradingFee, uint256 price, uint256 buyerAssets) public {
     //     buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
-    //     price = bound(price, 0.5e18, 1e18);
-    //     tradingFee = bound(tradingFee, 0, (1e18 - price) / 2);
-    //     morphoV2.setTradingFee(id, tradingFee, 1e18);
+    //     price = bound(price, 0.5e18, WAD);
+    //     tradingFee = bound(tradingFee, 0, (WAD - price) / 2);
+    //     morphoV2.setTradingFee(id, tradingFee, WAD);
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedSellerAssets = buyerAssets.mulDivDown(1e18, 1e18 + tradingFee);
-    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
-    //     uint256 expectedUnits = buyerAssets.mulDivDown(1e18, price);
+    //     uint256 expectedSellerAssets = buyerAssets.mulDivDown(WAD, WAD + tradingFee);
+    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
+    //     uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
 
     //     collateralize(obligation, borrower, expectedUnits);
     //     take(buyerAssets, 0, 0, 0, borrower, lenderOffer);
@@ -97,15 +97,15 @@ contract TradingFeeTest is BaseTest {
 
     function testSellerAssetsLendProportional(uint256 tradingFee, uint256 sellerPrice, uint256 sellerAssets) public {
         sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        tradingFee = bound(tradingFee, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, tradingFee, 1e18);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        tradingFee = bound(tradingFee, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, tradingFee, WAD);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedFee = sellerAssets.mulDivDown(tradingFee, 1e18);
+        uint256 expectedFee = sellerAssets.mulDivDown(tradingFee, WAD);
 
-        collateralize(obligation, borrower, sellerAssets.mulDivDown(1e18, sellerPrice));
+        collateralize(obligation, borrower, sellerAssets.mulDivDown(WAD, sellerPrice));
         take(0, sellerAssets, 0, 0, lender, borrowerOffer);
 
         assertApproxEqAbs(
@@ -115,15 +115,15 @@ contract TradingFeeTest is BaseTest {
 
     // function testSellerAssetsBorrowProportional(uint256 tradingFee, uint256 price, uint256 sellerAssets) public {
     //     sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
-    //     price = bound(price, 0.5e18, 1e18);
-    //     tradingFee = bound(tradingFee, 0, (1e18 - price) / 2);
-    //     morphoV2.setTradingFee(id, tradingFee, 1e18);
+    //     price = bound(price, 0.5e18, WAD);
+    //     tradingFee = bound(tradingFee, 0, (WAD - price) / 2);
+    //     morphoV2.setTradingFee(id, tradingFee, WAD);
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedFee = sellerAssets.mulDivDown(tradingFee, 1e18);
+    //     uint256 expectedFee = sellerAssets.mulDivDown(tradingFee, WAD);
 
-    //     collateralize(obligation, borrower, sellerAssets.mulDivDown(1e18, price));
+    //     collateralize(obligation, borrower, sellerAssets.mulDivDown(WAD, price));
     //     take(0, sellerAssets, 0, 0, borrower, lenderOffer);
 
     //     assertApproxEqAbs(
@@ -135,14 +135,14 @@ contract TradingFeeTest is BaseTest {
         public
     {
         obligationUnits = bound(obligationUnits, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        tradingFee = bound(tradingFee, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, tradingFee, 1e18);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        tradingFee = bound(tradingFee, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, tradingFee, WAD);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedSellerAssets = obligationUnits.mulDivDown(sellerPrice, 1e18);
-        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
+        uint256 expectedSellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
+        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
 
         collateralize(obligation, borrower, obligationUnits);
         take(0, 0, obligationUnits, 0, lender, borrowerOffer);
@@ -154,15 +154,15 @@ contract TradingFeeTest is BaseTest {
 
     // function testObligationUnitsBorrowProportional(uint256 tradingFee, uint256 price, uint256 obligationUnits) public
     // { obligationUnits = bound(obligationUnits, 0, MAX_TEST_AMOUNT);
-    //     price = bound(price, 0.5e18, 1e18);
-    //     tradingFee = bound(tradingFee, 0, (1e18 - price) / 2);
-    //     morphoV2.setTradingFee(id, tradingFee, 1e18);
+    //     price = bound(price, 0.5e18, WAD);
+    //     tradingFee = bound(tradingFee, 0, (WAD - price) / 2);
+    //     morphoV2.setTradingFee(id, tradingFee, WAD);
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedBuyerAssets = obligationUnits.mulDivDown(1e18, price);
-    //     uint256 expectedSellerAssets = expectedBuyerAssets.mulDivDown(1e18, 1e18 + tradingFee);
-    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
+    //     uint256 expectedBuyerAssets = obligationUnits.mulDivDown(WAD, price);
+    //     uint256 expectedSellerAssets = expectedBuyerAssets.mulDivDown(WAD, WAD + tradingFee);
+    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
 
     //     collateralize(obligation, borrower, obligationUnits);
     //     take(0, 0, obligationUnits, 0, borrower, lenderOffer);
@@ -176,14 +176,14 @@ contract TradingFeeTest is BaseTest {
         public
     {
         obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        tradingFee = bound(tradingFee, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, tradingFee, 1e18);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        tradingFee = bound(tradingFee, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, tradingFee, WAD);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedSellerAssets = obligationShares.mulDivDown(sellerPrice, 1e18);
-        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
+        uint256 expectedSellerAssets = obligationShares.mulDivDown(sellerPrice, WAD);
+        uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
 
         collateralize(obligation, borrower, obligationShares);
         take(0, 0, 0, obligationShares, lender, borrowerOffer);
@@ -197,15 +197,15 @@ contract TradingFeeTest is BaseTest {
     //     public
     // {
     //     obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
-    //     price = bound(price, 0.5e18, 1e18);
-    //     tradingFee = bound(tradingFee, 0, (1e18 - price) / 2);
-    //     morphoV2.setTradingFee(id, tradingFee, 1e18);
+    //     price = bound(price, 0.5e18, WAD);
+    //     tradingFee = bound(tradingFee, 0, (WAD - price) / 2);
+    //     morphoV2.setTradingFee(id, tradingFee, WAD);
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedBuyerAssets = obligationShares.mulDivDown(1e18, price);
-    //     uint256 expectedSellerAssets = expectedBuyerAssets.mulDivDown(1e18, 1e18 + tradingFee);
-    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, 1e18);
+    //     uint256 expectedBuyerAssets = obligationShares.mulDivDown(WAD, price);
+    //     uint256 expectedSellerAssets = expectedBuyerAssets.mulDivDown(WAD, WAD + tradingFee);
+    //     uint256 expectedFee = expectedSellerAssets.mulDivDown(tradingFee, WAD);
 
     //     collateralize(obligation, borrower, obligationShares);
     //     take(0, 0, 0, obligationShares, borrower, lenderOffer);
@@ -221,16 +221,16 @@ contract TradingFeeTest is BaseTest {
         public
     {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
-        interestCutLimit = bound(interestCutLimit, 0, 1e18);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        morphoV2.setTradingFee(id, 1e18, interestCutLimit);
+        interestCutLimit = bound(interestCutLimit, 0, WAD);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        morphoV2.setTradingFee(id, WAD, interestCutLimit);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
         uint256 expectedSellerAssets =
-            buyerAssets.mulDivDown(1e18, 1e18 + interestCutLimit.mulDivDown(1e18 - sellerPrice, sellerPrice));
-        uint256 expectedUnits = expectedSellerAssets.mulDivUp(1e18, sellerPrice);
-        uint256 expectedFee = (expectedUnits - expectedSellerAssets).mulDivDown(interestCutLimit, 1e18);
+            buyerAssets.mulDivDown(WAD, WAD + interestCutLimit.mulDivDown(WAD - sellerPrice, sellerPrice));
+        uint256 expectedUnits = expectedSellerAssets.mulDivUp(WAD, sellerPrice);
+        uint256 expectedFee = (expectedUnits - expectedSellerAssets).mulDivDown(interestCutLimit, WAD);
 
         collateralize(obligation, borrower, (expectedUnits + 1) * 10); // todo: why
         take(buyerAssets, 0, 0, 0, lender, borrowerOffer);
@@ -241,7 +241,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     // function testBuyerAssetsBorrowInterestCutLimit(uint256 interestCutLimit, uint256 price, uint256 buyerAssets)
-    // public { morphoV2.setTradingFee(id, 1e18, 0.05e18);
+    // public { morphoV2.setTradingFee(id, WAD, 0.05e18);
     //     uint256 buyerAssets = 100 ether;
     //     uint256 price = 0.9 ether;
     //     uint256 fee = 0.05e18;
@@ -249,8 +249,8 @@ contract TradingFeeTest is BaseTest {
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedUnits = buyerAssets.mulDivDown(1e18, price);
-    //     uint256 expectedSellerAssets = (buyerAssets - fee.mulDivDown(expectedUnits, 1e18)).mulDivDown(1e18, 1e18 -
+    //     uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
+    //     uint256 expectedSellerAssets = (buyerAssets - fee.mulDivDown(expectedUnits, WAD)).mulDivDown(WAD, WAD -
     // fee); uint256 expectedFee = buyerAssets - expectedSellerAssets;
 
     //     collateralize(obligation, borrower, expectedUnits);
@@ -263,14 +263,14 @@ contract TradingFeeTest is BaseTest {
         public
     {
         sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        interestCutLimit = bound(interestCutLimit, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, 1e18, interestCutLimit);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        interestCutLimit = bound(interestCutLimit, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, WAD, interestCutLimit);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedUnits = sellerAssets.mulDivDown(1e18, sellerPrice);
-        uint256 expectedFee = (expectedUnits - sellerAssets).mulDivDown(interestCutLimit, 1e18);
+        uint256 expectedUnits = sellerAssets.mulDivDown(WAD, sellerPrice);
+        uint256 expectedFee = (expectedUnits - sellerAssets).mulDivDown(interestCutLimit, WAD);
 
         collateralize(obligation, borrower, expectedUnits);
         take(0, sellerAssets, 0, 0, lender, borrowerOffer);
@@ -281,7 +281,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     // function testSellerAssetsBorrow() public {
-    //     morphoV2.setTradingFee(id, 1e18, 0.05e18);
+    //     morphoV2.setTradingFee(id, WAD, 0.05e18);
     //     uint256 sellerAssets = 90 ether;
     //     uint256 price = 0.9 ether;
     //     uint256 fee = 0.05e18;
@@ -290,7 +290,7 @@ contract TradingFeeTest is BaseTest {
     //     lenderOffer.expiryPrice = price;
 
     //     uint256 expectedBuyerAssets =
-    //         (sellerAssets.mulDivDown(1e18 - fee, 1e18)).mulDivDown(1e18, 1e18 - fee.mulDivDown(1e18, price));
+    //         (sellerAssets.mulDivDown(WAD - fee, WAD)).mulDivDown(WAD, WAD - fee.mulDivDown(WAD, price));
     //     uint256 expectedFee = expectedBuyerAssets - sellerAssets;
 
     //     collateralize(obligation, borrower, expectedUnits);
@@ -305,15 +305,15 @@ contract TradingFeeTest is BaseTest {
         uint256 obligationUnits
     ) public {
         obligationUnits = bound(obligationUnits, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        interestCutLimit = bound(interestCutLimit, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, 1e18, interestCutLimit);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        interestCutLimit = bound(interestCutLimit, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, WAD, interestCutLimit);
 
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedSellerAssets = obligationUnits.mulDivDown(sellerPrice, 1e18);
-        uint256 expectedFee = (obligationUnits - expectedSellerAssets).mulDivDown(interestCutLimit, 1e18);
+        uint256 expectedSellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
+        uint256 expectedFee = (obligationUnits - expectedSellerAssets).mulDivDown(interestCutLimit, WAD);
 
         collateralize(obligation, borrower, obligationUnits);
         take(0, 0, obligationUnits, 0, lender, borrowerOffer);
@@ -324,7 +324,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     // function testObligationUnitsBorrow() public {
-    //     morphoV2.setTradingFee(id, 1e18, 0.05e18);
+    //     morphoV2.setTradingFee(id, WAD, 0.05e18);
     //     uint256 obligationUnits = 100 ether;
     //     uint256 price = 0.9 ether;
     //     uint256 fee = 0.05e18;
@@ -332,9 +332,9 @@ contract TradingFeeTest is BaseTest {
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedBuyerAssets = obligationUnits * price / 1e18;
+    //     uint256 expectedBuyerAssets = obligationUnits * price / WAD;
     //     uint256 expectedSellerAssets =
-    //         (expectedBuyerAssets - fee.mulDivDown(obligationUnits, 1e18)).mulDivDown(1e18, 1e18 - fee);
+    //         (expectedBuyerAssets - fee.mulDivDown(obligationUnits, WAD)).mulDivDown(WAD, WAD - fee);
     //     uint256 expectedFee = expectedBuyerAssets - expectedSellerAssets;
 
     //     collateralize(obligation, borrower, expectedUnits);
@@ -349,14 +349,14 @@ contract TradingFeeTest is BaseTest {
         uint256 obligationShares
     ) public {
         obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
-        sellerPrice = bound(sellerPrice, 0.5e18, 1e18);
-        interestCutLimit = bound(interestCutLimit, 0, (1e18 - sellerPrice) / 2);
-        morphoV2.setTradingFee(id, 1e18, interestCutLimit);
+        sellerPrice = bound(sellerPrice, 0.5e18, WAD);
+        interestCutLimit = bound(interestCutLimit, 0, (WAD - sellerPrice) / 2);
+        morphoV2.setTradingFee(id, WAD, interestCutLimit);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
 
-        uint256 expectedSellerAssets = obligationShares.mulDivDown(sellerPrice, 1e18);
-        uint256 expectedFee = (obligationShares - expectedSellerAssets).mulDivDown(interestCutLimit, 1e18);
+        uint256 expectedSellerAssets = obligationShares.mulDivDown(sellerPrice, WAD);
+        uint256 expectedFee = (obligationShares - expectedSellerAssets).mulDivDown(interestCutLimit, WAD);
 
         collateralize(obligation, borrower, obligationShares);
         take(0, 0, 0, obligationShares, lender, borrowerOffer);
@@ -372,14 +372,14 @@ contract TradingFeeTest is BaseTest {
     //     uint256 obligationShares
     // ) public {
     //     obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
-    //     price = bound(price, 0.5e18, 1e18);
-    //     interestCutLimit = bound(interestCutLimit, 0, (1e18 - price) / 2);
-    //     morphoV2.setTradingFee(id, 1e18, interestCutLimit);
+    //     price = bound(price, 0.5e18, WAD);
+    //     interestCutLimit = bound(interestCutLimit, 0, (WAD - price) / 2);
+    //     morphoV2.setTradingFee(id, WAD, interestCutLimit);
     //     lenderOffer.startPrice = price;
     //     lenderOffer.expiryPrice = price;
 
-    //     uint256 expectedSellerAssets = obligationShares.mulDivDown(price, 1e18);
-    //     uint256 expectedFee = (obligationShares - expectedSellerAssets).mulDivDown(interestCutLimit, 1e18);
+    //     uint256 expectedSellerAssets = obligationShares.mulDivDown(price, WAD);
+    //     uint256 expectedFee = (obligationShares - expectedSellerAssets).mulDivDown(interestCutLimit, WAD);
 
     //     collateralize(obligation, borrower, obligationShares);
     //     take(0, 0, 0, obligationShares, borrower, lenderOffer);
