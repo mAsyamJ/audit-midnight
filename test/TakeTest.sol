@@ -732,10 +732,10 @@ contract TakeTest is BaseTest {
         secondRevertingTake = bound(secondRevertingTake, offerAmount - assets + 1, maxAssets);
         secondPassingTake = bound(secondPassingTake, 0, offerAmount - assets);
         borrowerOffer.assets = offerAmount;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerAmount);
-        collateralize(obligation, borrower, offerAmount);
+        collateralize(obligation, borrower, offerAmount * 1 ether / borrowerOffer.startPrice);
 
         take(assets, 0, 0, 0, lender, borrowerOffer);
 
@@ -756,10 +756,10 @@ contract TakeTest is BaseTest {
         secondRevertingTake = bound(secondRevertingTake, offerAmount - assets + 1, maxAssets);
         secondPassingTake = bound(secondPassingTake, 0, offerAmount - assets);
         lenderOffer.assets = offerAmount;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerAmount);
-        collateralize(obligation, borrower, offerAmount);
+        collateralize(obligation, borrower, offerAmount * 1 ether / lenderOffer.startPrice);
 
         take(assets, 0, 0, 0, borrower, lenderOffer);
 
@@ -773,13 +773,13 @@ contract TakeTest is BaseTest {
         firstFill = bound(firstFill, 0, maxAssets);
         secondFill = bound(secondFill, 0, maxAssets);
         borrowerOffer.assets = firstFill + secondFill;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         Offer memory borrowerOffer2 = borrowerOffer;
         borrowerOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
-        collateralize(obligation, borrower, firstFill);
-        collateralize(borrowerOffer2.obligation, borrower, secondFill);
+        collateralize(obligation, borrower, firstFill * 1 ether / borrowerOffer.startPrice);
+        collateralize(borrowerOffer2.obligation, borrower, secondFill * 1 ether / borrowerOffer.startPrice);
 
         take(firstFill, 0, 0, 0, lender, borrowerOffer);
 
@@ -793,13 +793,13 @@ contract TakeTest is BaseTest {
         firstFill = bound(firstFill, 0, maxAssets);
         secondFill = bound(secondFill, 0, maxAssets);
         lenderOffer.assets = firstFill + secondFill;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         Offer memory lenderOffer2 = lenderOffer;
         lenderOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
-        collateralize(obligation, borrower, firstFill);
-        collateralize(lenderOffer2.obligation, borrower, secondFill);
+        collateralize(obligation, borrower, firstFill * 1 ether / lenderOffer.startPrice);
+        collateralize(lenderOffer2.obligation, borrower, secondFill * 1 ether / lenderOffer.startPrice);
 
         take(firstFill, 0, 0, 0, borrower, lenderOffer);
 
