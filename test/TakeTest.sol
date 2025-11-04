@@ -822,8 +822,8 @@ contract TakeTest is BaseTest {
         secondPassingTake = bound(secondPassingTake, 0, offerObligationUnits - obligationUnits);
         borrowerOffer.obligationUnits = offerObligationUnits;
         borrowerOffer.assets = 0;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerObligationUnits);
         collateralize(obligation, borrower, offerObligationUnits);
 
@@ -847,8 +847,8 @@ contract TakeTest is BaseTest {
         secondPassingTake = bound(secondPassingTake, 0, offerObligationUnits - obligationUnits);
         lenderOffer.obligationUnits = offerObligationUnits;
         lenderOffer.assets = 0;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerObligationUnits);
         collateralize(obligation, borrower, offerObligationUnits);
 
@@ -865,8 +865,8 @@ contract TakeTest is BaseTest {
         secondFill = bound(secondFill, 0, maxAssets);
         borrowerOffer.obligationUnits = firstFill + secondFill;
         borrowerOffer.assets = 0;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         Offer memory borrowerOffer2 = borrowerOffer;
         borrowerOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
@@ -886,8 +886,8 @@ contract TakeTest is BaseTest {
         secondFill = bound(secondFill, 0, maxAssets);
         lenderOffer.obligationUnits = firstFill + secondFill;
         lenderOffer.assets = 0;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         Offer memory lenderOffer2 = lenderOffer;
         lenderOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
@@ -915,8 +915,8 @@ contract TakeTest is BaseTest {
         secondPassingTake = bound(secondPassingTake, 0, offerObligationShares - obligationShares);
         borrowerOffer.obligationShares = offerObligationShares;
         borrowerOffer.assets = 0;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerObligationShares);
         collateralize(obligation, borrower, offerObligationShares);
 
@@ -940,8 +940,8 @@ contract TakeTest is BaseTest {
         secondPassingTake = bound(secondPassingTake, 0, offerObligationShares - obligationShares);
         lenderOffer.obligationShares = offerObligationShares;
         lenderOffer.assets = 0;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         deal(address(loanToken), lender, offerObligationShares);
         collateralize(obligation, borrower, offerObligationShares);
 
@@ -958,8 +958,8 @@ contract TakeTest is BaseTest {
         secondFill = bound(secondFill, 0, maxAssets);
         borrowerOffer.obligationShares = firstFill + secondFill;
         borrowerOffer.assets = 0;
-        borrowerOffer.startPrice = 1 ether;
-        borrowerOffer.expiryPrice = 1 ether;
+        borrowerOffer.startPrice = 0.9 ether;
+        borrowerOffer.expiryPrice = 0.9 ether;
         Offer memory borrowerOffer2 = borrowerOffer;
         borrowerOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
@@ -979,8 +979,8 @@ contract TakeTest is BaseTest {
         secondFill = bound(secondFill, 0, maxAssets);
         lenderOffer.obligationShares = firstFill + secondFill;
         lenderOffer.assets = 0;
-        lenderOffer.startPrice = 1 ether;
-        lenderOffer.expiryPrice = 1 ether;
+        lenderOffer.startPrice = 0.9 ether;
+        lenderOffer.expiryPrice = 0.9 ether;
         Offer memory lenderOffer2 = lenderOffer;
         lenderOffer2.obligation.maturity = obligation.maturity + 100;
         deal(address(loanToken), lender, firstFill + secondFill);
