@@ -197,7 +197,6 @@ contract MorphoV2 is IMorphoV2 {
             require((consumed[offer.maker][offer.group] += obligationShares) <= offer.obligationShares, "consumed");
         }
 
-
         if (debtOf[buyer][id] == 0 && sharesOf[seller][id] == 0) {
             // Lender enters + borrower enters.
             sharesOf[buyer][id] += obligationShares;
