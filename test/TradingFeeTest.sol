@@ -233,7 +233,7 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    // Interst cut limit. Proportional to interest.
+    // Interest cut limit. Proportional to interest.
 
     // Buy: the interest cut limit is the limiting one iff tradingFee >= interestCutLimit * (1 - P_S)/P_S <=> P_S >=
     // interestCutLimit / (tradingFee + interestCutLimit). It's always true for reasonably high price if you put the

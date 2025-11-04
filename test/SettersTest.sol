@@ -51,7 +51,7 @@ contract SettersTest is BaseTest {
     }
 
     function testSetInterestCutLimitTooHigh(bytes32 id, uint256 interestCutLimit) public {
-        vm.assume(interestCutLimit > WAD);
+        vm.assume(interestCutLimit >= WAD);
         vm.expectRevert("Interest cut limit too high");
         morphoV2.setTradingFee(id, 0.1e18, interestCutLimit);
     }
