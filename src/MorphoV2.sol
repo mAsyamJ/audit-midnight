@@ -9,11 +9,13 @@ import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure, TradingFeeParams} from "./interfaces/IMorphoV2.sol";
 import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
+import {console} from "forge-std/console.sol";
 
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
 contract MorphoV2 is IMorphoV2 {
     using MathLib for uint256;
+    using MathLib for uint128;
 
     /// STORAGE ///
 
@@ -76,8 +78,8 @@ contract MorphoV2 is IMorphoV2 {
 
     function setTradingFee(bytes32 id, uint256 tradingFee, uint256 interestCutLimit) external {
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(tradingFee <= WAD, "Trading fee too high");
-        require(interestCutLimit <= WAD, "Interest cut limit too high");
+        require(tradingFee <= type(uint128).max, "Trading fee too high");
+        require(interestCutLimit < WAD, "Interest cut limit too high");
         // Safe cast because values are below 1e18.
         tradingFeeParams[id] =
             TradingFeeParams({tradingFee: uint128(tradingFee), interestCutLimit: uint128(interestCutLimit)});
@@ -149,7 +151,7 @@ contract MorphoV2 is IMorphoV2 {
         if (offer.buy) {
             buyerPrice = offerPrice;
             sellerPrice = UtilsLib.max(
-                (buyerPrice - _tradingFeeParams.interestCutLimit)
+                (buyerPrice.zeroFloorSub(_tradingFeeParams.interestCutLimit))
                 .mulDivDown(WAD, WAD - _tradingFeeParams.interestCutLimit),
                 buyerPrice.mulDivDown(WAD, WAD + _tradingFeeParams.tradingFee)
             );
