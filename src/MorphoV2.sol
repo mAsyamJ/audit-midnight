@@ -197,17 +197,19 @@ contract MorphoV2 is IMorphoV2 {
             require((consumed[offer.maker][offer.group] += obligationShares) <= offer.obligationShares, "consumed");
         }
 
-        if (debtOf[buyer][id] == 0 && sharesOf[seller][id] == 0) {
+        bool buyerEnter = (debtOf[buyer][id] == 0);
+        bool sellerEnter = (sharesOf[seller][id] == 0);
+        if (buyerEnter && sellerEnter) {
             // Lender enters + borrower enters.
             sharesOf[buyer][id] += obligationShares;
             debtOf[seller][id] += obligationUnits;
             totalShares[id] += obligationShares;
             totalUnits[id] += obligationUnits;
-        } else if (debtOf[buyer][id] == 0 && sharesOf[seller][id] > 0) {
+        } else if (buyerEnter && !sellerEnter) {
             // Lender enters + lender exits.
             sharesOf[buyer][id] += obligationShares;
             sharesOf[seller][id] -= obligationShares;
-        } else if (debtOf[buyer][id] > 0 && sharesOf[seller][id] == 0) {
+        } else if (!buyerEnter && sellerEnter) {
             // Borrower exits + borrower enters.
             debtOf[buyer][id] -= obligationUnits;
             debtOf[seller][id] += obligationUnits;
@@ -228,12 +230,8 @@ contract MorphoV2 is IMorphoV2 {
             obligationShares,
             taker,
             offer,
-            totalUnits[id],
-            totalShares[id],
-            sharesOf[buyer][id],
-            debtOf[buyer][id],
-            sharesOf[seller][id],
-            debtOf[seller][id]
+            buyerEnter,
+            sellerEnter
         );
 
         if (buyerCallback != address(0)) {
