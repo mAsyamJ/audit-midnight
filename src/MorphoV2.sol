@@ -134,7 +134,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 id = _id(offer.obligation);
 
         if (!obligationCreated[id]) {
-            emit EventsLib.NewObligation(id, offer.obligation);
+            emit EventsLib.CreateObligation(id, offer.obligation);
             obligationCreated[id] = true;
         }
 
@@ -314,7 +314,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 id = _id(obligation);
 
         if (!obligationCreated[id]) {
-            emit EventsLib.NewObligation(id, obligation);
+            emit EventsLib.CreateObligation(id, obligation);
             obligationCreated[id] = true;
         }
 
