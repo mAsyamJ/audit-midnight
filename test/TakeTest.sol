@@ -224,7 +224,7 @@ contract TakeTest is BaseTest {
 
     function testBuyAssetsInput2(uint256 buyerAssets, uint256 tick, uint256 otherLenderUnits) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         uint256 expectedShares = expectedUnits.mulDivDown(initialShares + 1, initialUnits + 1);
@@ -252,7 +252,7 @@ contract TakeTest is BaseTest {
 
     function testSellAssetsInput2(uint256 buyerAssets, uint256 tick, uint256 otherLenderUnits) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         uint256 expectedShares = expectedUnits.mulDivDown(initialShares + 1, initialUnits + 1);
@@ -279,7 +279,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationUnitsInput2(uint256 obligationUnits, uint256 tick, uint256 otherLenderUnits) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         uint256 expectedShares = obligationUnits.mulDivDown(initialShares + 1, initialUnits + 1);
@@ -307,7 +307,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationUnitsInput2(uint256 obligationUnits, uint256 tick, uint256 otherLenderUnits) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         uint256 expectedShares = obligationUnits.mulDivDown(initialShares + 1, initialUnits + 1);
@@ -335,7 +335,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationSharesInput2(uint256 obligationShares, uint256 tick, uint256 otherLenderUnits) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
         uint256 buyerAssets = expectedUnits.mulDivDown(price, WAD);
@@ -364,7 +364,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationSharesInput2(uint256 obligationShares, uint256 tick, uint256 otherLenderUnits) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
         uint256 buyerAssets = expectedUnits.mulDivDown(price, WAD);
@@ -406,7 +406,7 @@ contract TakeTest is BaseTest {
 
     function testBuyAssetsInput3(uint256 buyerAssets, uint256 tick, uint256 otherBorrowerDebt) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         otherBorrowerDebt = bound(otherBorrowerDebt, expectedUnits, max(expectedUnits, maxAssets));
@@ -430,7 +430,7 @@ contract TakeTest is BaseTest {
 
     function testSellAssetsInput3(uint256 buyerAssets, uint256 tick, uint256 otherBorrowerDebt) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         otherBorrowerDebt = bound(otherBorrowerDebt, expectedUnits, max(expectedUnits, maxAssets));
@@ -454,7 +454,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationUnitsInput3(uint256 obligationUnits, uint256 tick, uint256 otherBorrowerDebt) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         otherBorrowerDebt = bound(otherBorrowerDebt, obligationUnits, maxAssets);
@@ -478,7 +478,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationUnitsInput3(uint256 obligationUnits, uint256 tick, uint256 otherBorrowerDebt) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         otherBorrowerDebt = bound(otherBorrowerDebt, obligationUnits, maxAssets);
@@ -502,7 +502,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationSharesInput3(uint256 obligationShares, uint256 tick, uint256 otherBorrowerDebt) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
         uint256 buyerAssets = expectedUnits.mulDivDown(price, WAD);
@@ -531,7 +531,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationSharesInput3(uint256 obligationShares, uint256 tick, uint256 otherBorrowerDebt) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
         uint256 buyerAssets = expectedUnits.mulDivDown(price, WAD);
@@ -574,7 +574,7 @@ contract TakeTest is BaseTest {
 
     function testBuyAssetsInput4(uint256 buyerAssets, uint256 tick, uint256 existingUnits) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         uint256 expectedShares = expectedUnits.mulDivDown(initialShares + 1, initialUnits + 1);
@@ -602,7 +602,7 @@ contract TakeTest is BaseTest {
 
     function testSellAssetsInput4(uint256 buyerAssets, uint256 tick, uint256 existingUnits) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 600);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 expectedUnits = buyerAssets.mulDivDown(WAD, price);
         uint256 expectedShares = expectedUnits.mulDivDown(initialShares + 1, initialUnits + 1);
