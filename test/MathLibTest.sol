@@ -81,17 +81,17 @@ contract MathLibTest is Test {
     }
 
     function testWExp() public pure {
-        assertEq(MathLib.wExp(0), 1e18);
-        assertApproxEqRel(MathLib.wExp(1e18), 2.71828e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(2e18), 7.38905e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(3e18), 20.08553e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(4e18), 54.59815e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(5e18), 148.41315e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(6e18), 403.42879e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(7e18), 1101.62722e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(8e18), 2980.95798e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(9e18), 8103.08392e18, 0.01e18);
-        assertApproxEqRel(MathLib.wExp(10e18), 22026.46579e18, 0.01e18);
+        assertEq(MathLib.wExp(0), 1e18, "exp(0)");
+        assertApproxEqRel(MathLib.wExp(1e18), 2.71828e18, 0.001e18, "exp(1)");
+        assertApproxEqRel(MathLib.wExp(2e18), 7.38905e18, 0.001e18, "exp(2)");
+        assertApproxEqRel(MathLib.wExp(3e18), 20.08553e18, 0.001e18, "exp(3)");
+        assertApproxEqRel(MathLib.wExp(4e18), 54.59815e18, 0.001e18, "exp(4)");
+        assertApproxEqRel(MathLib.wExp(5e18), 148.41315e18, 0.001e18, "exp(5)");
+        assertApproxEqRel(MathLib.wExp(6e18), 403.42879e18, 0.001e18, "exp(6)");
+        assertApproxEqRel(MathLib.wExp(7e18), 1096.63315e18, 0.001e18, "exp(7)");
+        assertApproxEqRel(MathLib.wExp(8e18), 2980.95798e18, 0.001e18, "exp(8)");
+        assertApproxEqRel(MathLib.wExp(9e18), 8103.08392e18, 0.001e18, "exp(9)");
+        assertApproxEqRel(MathLib.wExp(10e18), 22026.46579e18, 0.001e18, "exp(10)");
     }
 
     function mulDivDown(uint256 x, uint256 y, uint256 d) external pure {

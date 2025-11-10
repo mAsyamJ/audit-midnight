@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {WAD} from "./ConstantsLib.sol";
 
+int256 constant WAD_INT = 1e18;
+
 library MathLib {
     /// @dev Returns (`x` * `y`) / `d` rounded down.
     function mulDivDown(uint256 x, uint256 y, uint256 d) internal pure returns (uint256) {
@@ -38,12 +40,12 @@ library MathLib {
     }
 
     function wExp(uint256 x) internal pure returns (uint256) {
-        uint256 LN2 = 0.69314718056e18;
-        uint256 k = x / LN2;
-        uint256 r = x - k * LN2;
-        uint256 secondTerm = mulDivDown(r, r, 2 * WAD);
-        uint256 thirdTerm = mulDivDown(secondTerm, r, 3 * WAD);
-        uint256 expR = WAD + r + secondTerm + thirdTerm;
-        return expR << k;
+        int256 LN2 = 0.693147180559945309e18;
+        int256 q = (int256(x) + LN2 / 2) / LN2;
+        int256 r = int256(x) - q * LN2;
+        int256 secondTerm = r * r / (2 * WAD_INT);
+        int256 thirdTerm = secondTerm * r / (3 * WAD_INT);
+        int256 expR = WAD_INT + r + secondTerm + thirdTerm;
+        return uint256(expR) << uint256(q);
     }
 }
