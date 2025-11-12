@@ -7,7 +7,15 @@ import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
 import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, TIME_TO_MAX_LIF, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "./libraries/ConstantsLib.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
-import {IMorphoV2, Obligation, Offer, Signature, Seizure, TradingFeeParams} from "./interfaces/IMorphoV2.sol";
+import {
+    IMorphoV2,
+    Obligation,
+    Offer,
+    Signature,
+    Collateral,
+    Seizure,
+    TradingFeeParams
+} from "./interfaces/IMorphoV2.sol";
 import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
 
 /// OBLIGATIONS
@@ -29,9 +37,9 @@ contract MorphoV2 is IMorphoV2 {
     /// obligationShares and loan token.
     mapping(address user => mapping(bytes32 group => uint256)) public consumed;
 
-    /// @dev Offers should have this exact nonce to be valid.
-    /// @dev The nonce can be shuffled by the user to cancel everything easily/efficiently.
-    mapping(address user => bytes32) public nonce;
+    /// @dev Offers should have the current session to be valid.
+    /// @dev The session can be shuffled by the user to cancel all current offers easily and efficiently.
+    mapping(address user => bytes32) public session;
 
     /// @dev Trading fee parameters for a given obligation id.
     mapping(bytes32 id => TradingFeeParams) public tradingFeeParams;
@@ -74,11 +82,13 @@ contract MorphoV2 is IMorphoV2 {
         feeSetter = newFeeSetter;
     }
 
-    function setTradingFee(bytes32 id, uint128 tradingFee, uint128 interestCutLimit) external {
+    function setTradingFee(bytes32 id, uint256 tradingFee, uint256 interestCutLimit) external {
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(tradingFee <= WAD, "Trading fee too high");
-        require(interestCutLimit <= WAD, "Interest cut limit too high");
-        tradingFeeParams[id] = TradingFeeParams({tradingFee: tradingFee, interestCutLimit: interestCutLimit});
+        require(tradingFee <= type(uint128).max, "Trading fee too high");
+        require(interestCutLimit < WAD, "Interest cut limit too high");
+        // Safe cast because values are below type(uint128).max.
+        tradingFeeParams[id] =
+            TradingFeeParams({tradingFee: uint128(tradingFee), interestCutLimit: uint128(interestCutLimit)});
     }
 
     function setTradingFeeRecipient(address recipient) external {
@@ -120,7 +130,7 @@ contract MorphoV2 is IMorphoV2 {
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(_signer(root, sig) == offer.maker, "invalid signature");
         require(MathLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
-        require(offer.nonce == nonce[offer.maker], "invalid nonce");
+        require(offer.session == session[offer.maker], "invalid session");
         bytes32 id = computeId(offer.obligation);
 
         (
@@ -141,20 +151,23 @@ contract MorphoV2 is IMorphoV2 {
         require(offerPrice <= WAD, "price too high");
 
         TradingFeeParams memory _tradingFeeParams = tradingFeeParams[id];
-        uint256 buyerPrice = offer.buy
-            ? offerPrice
-            : UtilsLib.min(
-                offerPrice.mulDivDown(WAD - _tradingFeeParams.interestCutLimit, WAD)
-                    + _tradingFeeParams.interestCutLimit,
-                offerPrice.mulDivDown(WAD + _tradingFeeParams.tradingFee, WAD)
-            );
-        uint256 sellerPrice = offer.buy
-            ? UtilsLib.max(
-                (offerPrice - _tradingFeeParams.interestCutLimit)
+        uint256 buyerPrice;
+        uint256 sellerPrice;
+        if (offer.buy) {
+            buyerPrice = offerPrice;
+            sellerPrice = UtilsLib.max(
+                (buyerPrice.zeroFloorSub(_tradingFeeParams.interestCutLimit))
                 .mulDivDown(WAD, WAD - _tradingFeeParams.interestCutLimit),
-                offerPrice.mulDivDown(WAD, WAD + _tradingFeeParams.tradingFee)
-            )
-            : offerPrice;
+                buyerPrice.mulDivDown(WAD, WAD + _tradingFeeParams.tradingFee)
+            );
+        } else {
+            sellerPrice = offerPrice;
+            buyerPrice = UtilsLib.min(
+                sellerPrice.mulDivDown(WAD - _tradingFeeParams.interestCutLimit, WAD)
+                    + _tradingFeeParams.interestCutLimit,
+                sellerPrice.mulDivDown(WAD + _tradingFeeParams.tradingFee, WAD)
+            );
+        }
 
         if (buyerAssets > 0) {
             obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);
@@ -246,6 +259,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Will revert if there is no withdrawable funds.
     function withdraw(Obligation memory obligation, uint256 obligationUnits, uint256 shares, address onBehalf)
         external
+        returns (uint256, uint256)
     {
         require(UtilsLib.atMostOneNonZero(obligationUnits, shares), "INCONSISTENT_INPUT");
         bytes32 id = computeId(obligation);
@@ -260,6 +274,8 @@ contract MorphoV2 is IMorphoV2 {
         totalUnits[id] -= obligationUnits;
 
         SafeTransferLib.safeTransfer(obligation.loanToken, msg.sender, obligationUnits);
+
+        return (obligationUnits, shares);
     }
 
     function repay(Obligation memory obligation, uint256 obligationUnits, address onBehalf) external {
@@ -308,11 +324,12 @@ contract MorphoV2 is IMorphoV2 {
         uint256[] memory prices = new uint256[](obligation.collaterals.length);
 
         for (uint256 i = 0; i < obligation.collaterals.length; i++) {
-            prices[i] = IOracle(obligation.collaterals[i].oracle).price();
-            uint256 collateralAmount = collateralOf[borrower][id][obligation.collaterals[i].token];
-            maxDebt += collateralAmount.mulDivDown(prices[i], ORACLE_PRICE_SCALE)
-                .mulDivDown(obligation.collaterals[i].lltv, WAD);
-            repayableDebt += collateralAmount.mulDivUp(WAD, MAX_LIF).mulDivUp(prices[i], ORACLE_PRICE_SCALE);
+            Collateral memory _collateral = obligation.collaterals[i];
+            uint256 price = IOracle(_collateral.oracle).price();
+            prices[i] = price;
+            uint256 _collateralOf = collateralOf[borrower][id][_collateral.token];
+            maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
+            repayableDebt += _collateralOf.mulDivUp(WAD, MAX_LIF).mulDivUp(price, ORACLE_PRICE_SCALE);
         }
 
         uint256 originalDebt = debtOf[borrower][id];
@@ -369,8 +386,8 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     /// @dev TODO: is it safe enough?
-    function shuffleNonce() external {
-        nonce[msg.sender] = keccak256(abi.encode(nonce[msg.sender], blockhash(block.number - 1)));
+    function shuffleSession() external {
+        session[msg.sender] = keccak256(abi.encode(session[msg.sender], blockhash(block.number - 1)));
     }
 
     function flashLoan(address token, uint256 amount, address callback, bytes calldata data) external {
@@ -414,14 +431,14 @@ contract MorphoV2 is IMorphoV2 {
             uint256 maxDebt;
             address previousCollateralToken;
             for (uint256 i = 0; i < obligation.collaterals.length; i++) {
-                address currentCollateralToken = obligation.collaterals[i].token;
-                require(currentCollateralToken > previousCollateralToken, "collaterals not sorted");
-                uint256 price = IOracle(obligation.collaterals[i].oracle).price();
-                maxDebt += collateralOf[borrower][id][currentCollateralToken].mulDivDown(price, ORACLE_PRICE_SCALE)
-                    .mulDivDown(obligation.collaterals[i].lltv, WAD);
-                previousCollateralToken = currentCollateralToken;
+                Collateral memory _collateral = obligation.collaterals[i];
+                address collateralToken = _collateral.token;
+                require(collateralToken > previousCollateralToken, "collaterals not sorted");
+                maxDebt += collateralOf[borrower][id][collateralToken]
+                    .mulDivDown(IOracle(_collateral.oracle).price(), ORACLE_PRICE_SCALE)
+                    .mulDivDown(_collateral.lltv, WAD);
+                previousCollateralToken = collateralToken;
             }
-
             return debt <= maxDebt;
         }
     }
