@@ -326,8 +326,8 @@ contract MorphoV2 is IMorphoV2 {
 
         for (uint256 i = 0; i < obligation.collaterals.length; i++) {
             Collateral memory _collateral = obligation.collaterals[i];
-            prices[i] = IOracle(_collateral.oracle).price();
-            uint256 price = prices[i];
+            uint256 price = IOracle(_collateral.oracle).price();
+            prices[i] = price;
             uint256 _collateralOf = collateralOf[borrower][id][_collateral.token];
             maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
             repayableDebt += _collateralOf.mulDivUp(WAD, MAX_LIF).mulDivUp(price, ORACLE_PRICE_SCALE);
