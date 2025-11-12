@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
-import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, TIME_TO_MAX_LIF} from "./libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, TIME_TO_MAX_LIF, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "./libraries/ConstantsLib.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Seizure, TradingFeeParams} from "./interfaces/IMorphoV2.sol";
@@ -387,9 +387,20 @@ contract MorphoV2 is IMorphoV2 {
 
     /// INTERNAL ///
 
-    function _signer(bytes32 root, Signature memory signature) internal pure returns (address) {
-        bytes32 messageHash = keccak256(bytes.concat("\x19\x45thereum Signed Message:\n32", root));
-        address tentativeSigner = ecrecover(messageHash, signature.v, signature.r, signature.s);
+    function _domainSeparator() internal view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPEHASH,
+                block.chainid,
+                address(this)
+            )
+        );
+    }
+
+    function _signer(bytes32 root, Signature memory signature) internal view returns (address) {
+        bytes32 structHash = keccak256(abi.encode(ROOT_TYPEHASH, root, block.chainid, address(this)));
+        bytes32 digest = keccak256(bytes.concat("\x19\x01", _domainSeparator(), structHash));
+        address tentativeSigner = ecrecover(digest, signature.v, signature.r, signature.s);
         require(tentativeSigner != address(0), "invalid signature");
         return tentativeSigner;
     }
