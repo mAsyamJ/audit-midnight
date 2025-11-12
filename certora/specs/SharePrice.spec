@@ -5,6 +5,8 @@ methods {
 
     function totalUnits(bytes32 id) external returns (uint256) envfree;
     function totalShares(bytes32 id) external returns (uint256) envfree;
+
+    function _.price() external => NONDET;
 }
 
 strong invariant sharePriceBelowOne(bytes32 id)
