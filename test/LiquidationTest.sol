@@ -109,7 +109,11 @@ contract LiquidationTest is BaseTest {
         assertEq(actualSeizures.length, 1, "seizures length");
         assertEq(actualSeizures[0].collateralIndex, 0, "collateral index");
         assertEq(actualSeizures[0].repaid, repaid, "repaid units");
-        assertEq(actualSeizures[0].seized, repaid.mulDivDown(ORACLE_PRICE_SCALE, 1e36 - 1).mulDivDown(MAX_LIF, WAD), "seized assets");
+        assertEq(
+            actualSeizures[0].seized,
+            repaid.mulDivDown(ORACLE_PRICE_SCALE, 1e36 - 1).mulDivDown(MAX_LIF, WAD),
+            "seized assets"
+        );
 
         assertEq(morphoV2.debtOf(borrower, id), units - actualSeizures[0].repaid);
         assertEq(
@@ -134,7 +138,11 @@ contract LiquidationTest is BaseTest {
 
         assertEq(actualSeizures.length, 1, "seizures length");
         assertEq(actualSeizures[0].collateralIndex, 0, "collateral index");
-        assertEq(actualSeizures[0].repaid, seized.mulDivUp(WAD, MAX_LIF).mulDivUp(1e36 - 1, ORACLE_PRICE_SCALE), "repaid units");
+        assertEq(
+            actualSeizures[0].repaid,
+            seized.mulDivUp(WAD, MAX_LIF).mulDivUp(1e36 - 1, ORACLE_PRICE_SCALE),
+            "repaid units"
+        );
         assertEq(actualSeizures[0].seized, seized, "seized assets");
 
         assertEq(loanToken.balanceOf(address(this)), 0, "loan token balance");
