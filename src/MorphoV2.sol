@@ -43,8 +43,8 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev The session can be shuffled by the user to cancel all current offers easily and efficiently.
     mapping(address user => bytes32) public session;
 
-    /// @dev Trading fee parameters for a given obligation id.
-    mapping(bytes32 id => TradingFeeParams) public tradingFeeParams;
+    /// @dev Trading fees for a given obligation id.
+    mapping(bytes32 id => uint256[5]) public tradingFees;
     address public tradingFeeRecipient;
 
     /// @dev Contract owner for administrative functions.
@@ -87,14 +87,29 @@ contract MorphoV2 is IMorphoV2 {
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
-    function setTradingFee(bytes32 id, uint256 tradingFee, uint256 interestCutLimit) external {
+    function setTradingFee(
+        bytes32 id,
+        uint256 zeroDaysTradingFee,
+        uint256 oneDaysTradingFee,
+        uint256 sevenDaysTradingFee,
+        uint256 thirtyDaysTradingFee,
+        uint256 ninetyDaysTradingFee
+    ) external {
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(tradingFee <= type(uint128).max, "Trading fee too high");
-        require(interestCutLimit < WAD, "Interest cut limit too high");
+        require(zeroDaysTradingFee <= WAD, "0days trading fee too high");
+        require(oneDaysTradingFee <= WAD, "1days trading fee too high");
+        require(sevenDaysTradingFee <= WAD, "7days trading fee too high");
+        require(thirtyDaysTradingFee <= WAD, "30days trading fee too high");
+        require(ninetyDaysTradingFee <= WAD, "90days trading fee too high");
         // forge-lint: disable-next-item(unsafe-typecast) Safe cast because values are below type(uint128).max.
-        tradingFeeParams[id] =
-            TradingFeeParams({tradingFee: uint128(tradingFee), interestCutLimit: uint128(interestCutLimit)});
-        emit EventsLib.SetTradingFee(id, tradingFee, interestCutLimit);
+        tradingFees[id][0] = zeroDaysTradingFee;
+        tradingFees[id][1] = oneDaysTradingFee;
+        tradingFees[id][2] = sevenDaysTradingFee;
+        tradingFees[id][3] = thirtyDaysTradingFee;
+        tradingFees[id][4] = ninetyDaysTradingFee;
+        emit EventsLib.SetTradingFee(
+            id, zeroDaysTradingFee, oneDaysTradingFee, sevenDaysTradingFee, thirtyDaysTradingFee, ninetyDaysTradingFee
+        );
     }
 
     function setTradingFeeRecipient(address recipient) external {
@@ -158,24 +173,11 @@ contract MorphoV2 is IMorphoV2 {
             : offer.startPrice;
         require(offerPrice <= WAD, "price too high");
 
-        TradingFeeParams memory _tradingFeeParams = tradingFeeParams[id];
-        uint256 buyerPrice;
-        uint256 sellerPrice;
-        if (offer.buy) {
-            buyerPrice = offerPrice;
-            sellerPrice = UtilsLib.max(
-                (buyerPrice.zeroFloorSub(_tradingFeeParams.interestCutLimit))
-                .mulDivDown(WAD, WAD - _tradingFeeParams.interestCutLimit),
-                buyerPrice.mulDivDown(WAD, WAD + _tradingFeeParams.tradingFee)
-            );
-        } else {
-            sellerPrice = offerPrice;
-            buyerPrice = UtilsLib.min(
-                sellerPrice.mulDivDown(WAD - _tradingFeeParams.interestCutLimit, WAD)
-                    + _tradingFeeParams.interestCutLimit,
-                sellerPrice.mulDivDown(WAD + _tradingFeeParams.tradingFee, WAD)
-            );
-        }
+        uint256 ttm = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
+        uint256 tradingFeeIndex = ttm < 1 days ? 0 : ttm < 7 days ? 1 : ttm < 30 days ? 2 : ttm < 90 days ? 3 : 4;
+        uint256 tradingFee = tradingFees[id][tradingFeeIndex];
+        uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + tradingFee;
+        uint256 sellerPrice = buyerPrice - tradingFee;
 
         if (buyerAssets > 0) {
             obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);

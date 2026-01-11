@@ -31,9 +31,9 @@ library UtilsLib {
         }
     }
 
-    function max(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    function zeroFloorSub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         assembly {
-            z := xor(x, mul(xor(x, y), gt(y, x)))
+            z := mul(gt(x, y), sub(x, y))
         }
     }
 }

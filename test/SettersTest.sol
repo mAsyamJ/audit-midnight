@@ -34,32 +34,53 @@ contract SettersTest is BaseTest {
         morphoV2.setFeeSetter(makeAddr("newFeeSetter"));
     }
 
-    function testSetTradingFeeSuccess(bytes32 id, uint128 tradingFee, uint128 interestCutLimit) public {
-        vm.assume(tradingFee <= WAD);
-        vm.assume(interestCutLimit < WAD);
-        morphoV2.setTradingFee(id, tradingFee, interestCutLimit);
-        (uint128 _tradingFee, uint128 _interestCutLimit) = morphoV2.tradingFeeParams(id);
-        assertEq(_tradingFee, tradingFee);
-        assertEq(_interestCutLimit, interestCutLimit);
+    function testSetTradingFeeSuccess(
+        bytes32 id,
+        uint256 zeroDaysTradingFee,
+        uint256 oneDaysTradingFee,
+        uint256 sevenDaysTradingFee,
+        uint256 thirtyDaysTradingFee,
+        uint256 ninetyDaysTradingFee
+    ) public {
+        vm.assume(zeroDaysTradingFee <= WAD);
+        vm.assume(oneDaysTradingFee <= WAD);
+        vm.assume(sevenDaysTradingFee <= WAD);
+        vm.assume(thirtyDaysTradingFee <= WAD);
+        vm.assume(ninetyDaysTradingFee <= WAD);
+        morphoV2.setTradingFee(
+            id, zeroDaysTradingFee, oneDaysTradingFee, sevenDaysTradingFee, thirtyDaysTradingFee, ninetyDaysTradingFee
+        );
+        uint256 _zeroDaysTradingFee = morphoV2.tradingFees(id, 0);
+        assertEq(_zeroDaysTradingFee, zeroDaysTradingFee);
+        uint256 _oneDaysTradingFee = morphoV2.tradingFees(id, 1);
+        assertEq(_oneDaysTradingFee, oneDaysTradingFee);
+        uint256 _sevenDaysTradingFee = morphoV2.tradingFees(id, 2);
+        assertEq(_sevenDaysTradingFee, sevenDaysTradingFee);
+        uint256 _thirtyDaysTradingFee = morphoV2.tradingFees(id, 3);
+        assertEq(_thirtyDaysTradingFee, thirtyDaysTradingFee);
+        uint256 _ninetyDaysTradingFee = morphoV2.tradingFees(id, 4);
+        assertEq(_ninetyDaysTradingFee, ninetyDaysTradingFee);
     }
 
     function testSetTradingFeeOnlyFeeSetter(address rdm, bytes32 id) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
         vm.expectRevert("Only feeSetter");
-        morphoV2.setTradingFee(id, 0.1e18, 0.1e18);
+        morphoV2.setTradingFee(id, 0, 0, 0, 0, 0);
     }
 
-    function testSetInterestCutLimitTooHigh(bytes32 id, uint256 interestCutLimit) public {
-        vm.assume(interestCutLimit >= WAD);
-        vm.expectRevert("Interest cut limit too high");
-        morphoV2.setTradingFee(id, 0.1e18, interestCutLimit);
-    }
-
-    function testSetTradingFeeTooHigh(bytes32 id, uint256 tradingFee) public {
-        vm.assume(tradingFee > type(uint128).max);
-        vm.expectRevert("Trading fee too high");
-        morphoV2.setTradingFee(id, tradingFee, 0.1e18);
+    function testSetTradingFeeZeroDaysTooHigh(bytes32 id, uint256 tradingFeeTooHigh) public {
+        vm.assume(tradingFeeTooHigh > WAD);
+        vm.expectRevert("0days trading fee too high");
+        morphoV2.setTradingFee(id, tradingFeeTooHigh, 0, 0, 0, 0);
+        vm.expectRevert("1days trading fee too high");
+        morphoV2.setTradingFee(id, 0, tradingFeeTooHigh, 0, 0, 0);
+        vm.expectRevert("7days trading fee too high");
+        morphoV2.setTradingFee(id, 0, 0, tradingFeeTooHigh, 0, 0);
+        vm.expectRevert("30days trading fee too high");
+        morphoV2.setTradingFee(id, 0, 0, 0, tradingFeeTooHigh, 0);
+        vm.expectRevert("90days trading fee too high");
+        morphoV2.setTradingFee(id, 0, 0, 0, 0, tradingFeeTooHigh);
     }
 
     function testSetTradingFeeRecipientSuccess(address recipient) public {
