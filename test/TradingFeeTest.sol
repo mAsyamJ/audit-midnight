@@ -244,4 +244,28 @@ contract TradingFeeTest is BaseTest {
 
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
+
+    function testBuyerPriceTooHighFees() public {
+        uint256 tradingFee = 0.6 ether;
+        uint256 sellerPrice = 0.5 ether;
+
+        morphoV2.setObligationTradingFee(id, 1, tradingFee);
+        borrowerOffer.startPrice = sellerPrice;
+        borrowerOffer.expiryPrice = sellerPrice;
+
+        collateralize(obligation, borrower, MAX_TEST_AMOUNT * 3);
+
+        vm.expectRevert("cannot trade at price above one");
+        take(MAX_TEST_AMOUNT, 0, 0, 0, lender, borrowerOffer);
+    }
+
+    function testBuyerPriceTooHighOfferPrice() public {
+        uint256 offerPrice = 1.5 ether;
+
+        lenderOffer.startPrice = offerPrice;
+        lenderOffer.expiryPrice = offerPrice;
+
+        vm.expectRevert("cannot trade at price above one");
+        take(MAX_TEST_AMOUNT, 0, 0, 0, borrower, lenderOffer);
+    }
 }

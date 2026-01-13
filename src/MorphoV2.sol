@@ -177,13 +177,12 @@ contract MorphoV2 is IMorphoV2 {
             ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start)
                 / (offer.expiry - offer.start)
             : offer.startPrice;
-        require(offerPrice <= WAD, "price too high");
-
         uint256 ttm = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
         uint256 tradingFee = _obligationTradingFee[id] != 0
             ? obligationTradingFee(id, ttm)
             : defaultTradingFee(offer.obligation.loanToken, ttm);
         uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + tradingFee;
+        require(buyerPrice <= WAD, "cannot trade at price above one");
         uint256 sellerPrice = buyerPrice - tradingFee;
 
         if (buyerAssets > 0) {
