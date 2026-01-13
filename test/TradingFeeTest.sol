@@ -202,4 +202,46 @@ contract TradingFeeTest is BaseTest {
 
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
+
+    function testDefaultFee(uint256 buyerAssets, uint256 sellerPrice, uint256 tradingFee) public {
+        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        sellerPrice = bound(sellerPrice, 0.5 ether, 1 ether);
+        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice) / 1e9 * 1e9;
+        morphoV2.setDefaultTradingFee(address(loanToken), 1, tradingFee);
+        borrowerOffer.startPrice = sellerPrice;
+        borrowerOffer.expiryPrice = sellerPrice;
+
+        uint256 buyerPrice = sellerPrice + tradingFee;
+        uint256 expectedSellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);
+        uint256 expectedFee = buyerAssets - expectedSellerAssets;
+
+        collateralize(obligation, borrower, MAX_TEST_AMOUNT * 3);
+        take(buyerAssets, 0, 0, 0, lender, borrowerOffer);
+
+        assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
+    }
+
+    function testSevenDayTtmFee(uint256 buyerAssets, uint256 sellerPrice, uint256 tradingFee) public {
+        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        sellerPrice = bound(sellerPrice, 0.5 ether, 1 ether);
+        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice) / 1e9 * 1e9;
+
+        obligation.maturity = block.timestamp + 3 days;
+        id = keccak256(abi.encode(obligation));
+        lenderOffer.obligation = obligation;
+        borrowerOffer.obligation = obligation;
+
+        morphoV2.setObligationTradingFee(id, 2, tradingFee);
+        borrowerOffer.startPrice = sellerPrice;
+        borrowerOffer.expiryPrice = sellerPrice;
+
+        uint256 buyerPrice = sellerPrice + tradingFee;
+        uint256 expectedSellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);
+        uint256 expectedFee = buyerAssets - expectedSellerAssets;
+
+        collateralize(obligation, borrower, MAX_TEST_AMOUNT * 3);
+        take(buyerAssets, 0, 0, 0, lender, borrowerOffer);
+
+        assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
+    }
 }
