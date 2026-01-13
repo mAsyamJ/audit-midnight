@@ -169,9 +169,9 @@ contract MorphoV2 is IMorphoV2 {
         require(offerPrice <= WAD, "price too high");
 
         uint256 ttm = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
-        uint256 tradingFee = tradingFee(id, ttm);
-        uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + tradingFee;
-        uint256 sellerPrice = buyerPrice - tradingFee;
+        uint256 obligationTradingFee = tradingFee(id, ttm);
+        uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + obligationTradingFee;
+        uint256 sellerPrice = buyerPrice - obligationTradingFee;
 
         if (buyerAssets > 0) {
             obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);
