@@ -104,6 +104,7 @@ contract MorphoV2 is IMorphoV2 {
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
+    /// @dev Trading fees are truncated to the nearest 1e9.
     function setObligationTradingFee(
         bytes32 id,
         uint256 zeroDaysTradingFee,
@@ -125,6 +126,7 @@ contract MorphoV2 is IMorphoV2 {
         );
     }
 
+    /// @dev Trading fees are truncated to the nearest 1e9.
     function setDefaultTradingFee(
         address loanToken,
         uint256 zeroDaysTradingFee,
