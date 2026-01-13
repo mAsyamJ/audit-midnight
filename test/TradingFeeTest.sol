@@ -53,20 +53,10 @@ contract TradingFeeTest is BaseTest {
         morphoV2.setTradingFeeRecipient(feeRecipient);
     }
 
-    // Normal trading fee. Proportional to amount traded.
-
-    // Buy: the proportional trading fee is the limiting one:
-    // iff tradingFee <= interestCutLimit * (1 - P_S)/P_S
-    // iff P_S <= interestCutLimit / (tradingFee + interestCutLimit)
-
-    // Sell: the proportional trading fee is the limiting one:
-    // iff (P_B - interestCutLimit) / (1 - interestCutLimit) <= P_B / (1 + tradingFee)
-    // iff P_B <= interestCutLimit * (1 + tradingFee) / (tradingFee + interestCutLimit)
-
-    function testBuyBuyerAssetsProportional(uint256 buyerAssets, uint256 sellerPrice, uint256 tradingFee) public {
+    function testBuyBuyerAssets(uint256 buyerAssets, uint256 sellerPrice, uint256 tradingFee) public {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
         sellerPrice = bound(sellerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice);
+        tradingFee = bound(tradingFee, 0, (1 ether - sellerPrice) / 1e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
@@ -81,10 +71,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testSellBuyerAssetsProportional(uint256 tradingFee, uint256 buyerPrice, uint256 buyerAssets) public {
+    function testSellBuyerAssets(uint256 tradingFee, uint256 buyerPrice, uint256 buyerAssets) public {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
         buyerPrice = bound(buyerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, buyerPrice);
+        tradingFee = bound(tradingFee, 0, buyerPrice / 1e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         lenderOffer.startPrice = buyerPrice;
         lenderOffer.expiryPrice = buyerPrice;
@@ -101,10 +91,10 @@ contract TradingFeeTest is BaseTest {
         );
     }
 
-    function testBuySellerAssetsProportional(uint256 tradingFee, uint256 sellerPrice, uint256 sellerAssets) public {
+    function testBuySellerAssets(uint256 tradingFee, uint256 sellerPrice, uint256 sellerAssets) public {
         sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
         sellerPrice = bound(sellerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice);
+        tradingFee = bound(tradingFee, 0, (1 ether - sellerPrice) / 1e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
@@ -119,10 +109,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testSellSellerAssetsProportional(uint256 tradingFee, uint256 buyerPrice, uint256 sellerAssets) public {
+    function testSellSellerAssets(uint256 tradingFee, uint256 buyerPrice, uint256 sellerAssets) public {
         sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
         buyerPrice = bound(buyerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 0.05 ether);
+        tradingFee = bound(tradingFee, 0, 0.05e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         lenderOffer.startPrice = buyerPrice;
         lenderOffer.expiryPrice = buyerPrice;
@@ -137,12 +127,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testBuyObligationUnitsProportional(uint256 tradingFee, uint256 sellerPrice, uint256 obligationUnits)
-        public
-    {
+    function testBuyObligationUnits(uint256 tradingFee, uint256 sellerPrice, uint256 obligationUnits) public {
         obligationUnits = bound(obligationUnits, 0, MAX_TEST_AMOUNT);
         sellerPrice = bound(sellerPrice, 0.01 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice);
+        tradingFee = bound(tradingFee, 0, (1 ether - sellerPrice) / 1e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
@@ -158,12 +146,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testSellObligationUnitsProportional(uint256 tradingFee, uint256 buyerPrice, uint256 obligationUnits)
-        public
-    {
+    function testSellObligationUnits(uint256 tradingFee, uint256 buyerPrice, uint256 obligationUnits) public {
         obligationUnits = bound(obligationUnits, 0, MAX_TEST_AMOUNT);
         buyerPrice = bound(buyerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 0.05 ether);
+        tradingFee = bound(tradingFee, 0, 0.05e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         lenderOffer.startPrice = buyerPrice;
         lenderOffer.expiryPrice = buyerPrice;
@@ -179,12 +165,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testBuyObligationSharesProportional(uint256 tradingFee, uint256 sellerPrice, uint256 obligationShares)
-        public
-    {
+    function testBuyObligationShares(uint256 tradingFee, uint256 sellerPrice, uint256 obligationShares) public {
         obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
         sellerPrice = bound(sellerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 1 ether - sellerPrice);
+        tradingFee = bound(tradingFee, 0, (1 ether - sellerPrice) / 1e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         borrowerOffer.startPrice = sellerPrice;
         borrowerOffer.expiryPrice = sellerPrice;
@@ -200,12 +184,10 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testSellObligationSharesProportional(uint256 tradingFee, uint256 buyerPrice, uint256 obligationShares)
-        public
-    {
+    function testSellObligationShares(uint256 tradingFee, uint256 buyerPrice, uint256 obligationShares) public {
         obligationShares = bound(obligationShares, 0, MAX_TEST_AMOUNT);
         buyerPrice = bound(buyerPrice, 0.5 ether, 1 ether);
-        tradingFee = bound(tradingFee, 0, 0.05 ether);
+        tradingFee = bound(tradingFee, 0, 0.05e9);
         morphoV2.setTradingFee(id, tradingFee, 0, 0, 0, 0);
         lenderOffer.startPrice = buyerPrice;
         lenderOffer.expiryPrice = buyerPrice;

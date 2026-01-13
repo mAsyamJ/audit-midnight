@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
-import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, TIME_TO_MAX_LIF} from "./libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, MAX_LIF, TIME_TO_MAX_LIF, FEE_PRECISION} from "./libraries/ConstantsLib.sol";
 import {MathLib} from "./libraries/MathLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Collateral, Seizure} from "./interfaces/IMorphoV2.sol";
@@ -36,7 +36,8 @@ contract MorphoV2 is IMorphoV2 {
     mapping(address user => bytes32) public session;
 
     /// @dev Trading fees for a given obligation id.
-    mapping(bytes32 id => uint256[5]) public tradingFees;
+    /// @dev The slot contains the 5 trading fees packed (each takes 32 bits).
+    mapping(bytes32 id => uint256) private _tradingFee;
     address public tradingFeeRecipient;
 
     /// @dev Contract owner for administrative functions.
@@ -44,6 +45,12 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Address that can set trading fees.
     address public feeSetter;
+
+    function tradingFee(bytes32 id, uint256 ttm) public view returns (uint256) {
+        return uint32(
+            _tradingFee[id] >> (ttm < 1 days ? 0 : ttm < 7 days ? 32 : ttm < 30 days ? 64 : ttm < 90 days ? 96 : 128)
+        );
+    }
 
     /// CONSTRUCTOR ///
 
@@ -88,17 +95,13 @@ contract MorphoV2 is IMorphoV2 {
         uint256 ninetyDaysTradingFee
     ) external {
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(zeroDaysTradingFee <= WAD, "0days trading fee too high");
-        require(oneDaysTradingFee <= WAD, "1days trading fee too high");
-        require(sevenDaysTradingFee <= WAD, "7days trading fee too high");
-        require(thirtyDaysTradingFee <= WAD, "30days trading fee too high");
-        require(ninetyDaysTradingFee <= WAD, "90days trading fee too high");
-        // forge-lint: disable-next-item(unsafe-typecast) Safe cast because values are below type(uint128).max.
-        tradingFees[id][0] = zeroDaysTradingFee;
-        tradingFees[id][1] = oneDaysTradingFee;
-        tradingFees[id][2] = sevenDaysTradingFee;
-        tradingFees[id][3] = thirtyDaysTradingFee;
-        tradingFees[id][4] = ninetyDaysTradingFee;
+        require(zeroDaysTradingFee <= FEE_PRECISION, "0days trading fee too high");
+        require(oneDaysTradingFee <= FEE_PRECISION, "1days trading fee too high");
+        require(sevenDaysTradingFee <= FEE_PRECISION, "7days trading fee too high");
+        require(thirtyDaysTradingFee <= FEE_PRECISION, "30days trading fee too high");
+        require(ninetyDaysTradingFee <= FEE_PRECISION, "90days trading fee too high");
+        _tradingFee[id] = zeroDaysTradingFee << 0 | oneDaysTradingFee << 32 | sevenDaysTradingFee << 64
+            | thirtyDaysTradingFee << 96 | ninetyDaysTradingFee << 128;
         emit EventsLib.SetTradingFee(
             id, zeroDaysTradingFee, oneDaysTradingFee, sevenDaysTradingFee, thirtyDaysTradingFee, ninetyDaysTradingFee
         );
@@ -166,8 +169,7 @@ contract MorphoV2 is IMorphoV2 {
         require(offerPrice <= WAD, "price too high");
 
         uint256 ttm = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
-        uint256 tradingFeeIndex = ttm < 1 days ? 0 : ttm < 7 days ? 1 : ttm < 30 days ? 2 : ttm < 90 days ? 3 : 4;
-        uint256 tradingFee = tradingFees[id][tradingFeeIndex];
+        uint256 tradingFee = tradingFee(id, ttm);
         uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + tradingFee;
         uint256 sellerPrice = buyerPrice - tradingFee;
 

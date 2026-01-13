@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
-import {WAD} from "../src/libraries/ConstantsLib.sol";
+import {FEE_PRECISION} from "../src/libraries/ConstantsLib.sol";
 
 contract SettersTest is BaseTest {
     function testInitialOwner() public view {
@@ -42,24 +42,24 @@ contract SettersTest is BaseTest {
         uint256 thirtyDaysTradingFee,
         uint256 ninetyDaysTradingFee
     ) public {
-        vm.assume(zeroDaysTradingFee <= WAD);
-        vm.assume(oneDaysTradingFee <= WAD);
-        vm.assume(sevenDaysTradingFee <= WAD);
-        vm.assume(thirtyDaysTradingFee <= WAD);
-        vm.assume(ninetyDaysTradingFee <= WAD);
+        zeroDaysTradingFee = bound(zeroDaysTradingFee, 0, FEE_PRECISION);
+        oneDaysTradingFee = bound(oneDaysTradingFee, 0, FEE_PRECISION);
+        sevenDaysTradingFee = bound(sevenDaysTradingFee, 0, FEE_PRECISION);
+        thirtyDaysTradingFee = bound(thirtyDaysTradingFee, 0, FEE_PRECISION);
+        ninetyDaysTradingFee = bound(ninetyDaysTradingFee, 0, FEE_PRECISION);
         morphoV2.setTradingFee(
             id, zeroDaysTradingFee, oneDaysTradingFee, sevenDaysTradingFee, thirtyDaysTradingFee, ninetyDaysTradingFee
         );
-        uint256 _zeroDaysTradingFee = morphoV2.tradingFees(id, 0);
-        assertEq(_zeroDaysTradingFee, zeroDaysTradingFee);
-        uint256 _oneDaysTradingFee = morphoV2.tradingFees(id, 1);
-        assertEq(_oneDaysTradingFee, oneDaysTradingFee);
-        uint256 _sevenDaysTradingFee = morphoV2.tradingFees(id, 2);
-        assertEq(_sevenDaysTradingFee, sevenDaysTradingFee);
-        uint256 _thirtyDaysTradingFee = morphoV2.tradingFees(id, 3);
-        assertEq(_thirtyDaysTradingFee, thirtyDaysTradingFee);
-        uint256 _ninetyDaysTradingFee = morphoV2.tradingFees(id, 4);
-        assertEq(_ninetyDaysTradingFee, ninetyDaysTradingFee);
+        uint256 _zeroDaysTradingFee = morphoV2.tradingFee(id, 0);
+        assertEq(_zeroDaysTradingFee, zeroDaysTradingFee, "zero days trading fee");
+        uint256 _oneDaysTradingFee = morphoV2.tradingFee(id, 1 days);
+        assertEq(_oneDaysTradingFee, oneDaysTradingFee, "one days trading fee");
+        uint256 _sevenDaysTradingFee = morphoV2.tradingFee(id, 7 days);
+        assertEq(_sevenDaysTradingFee, sevenDaysTradingFee, "seven days trading fee");
+        uint256 _thirtyDaysTradingFee = morphoV2.tradingFee(id, 30 days);
+        assertEq(_thirtyDaysTradingFee, thirtyDaysTradingFee, "thirty days trading fee");
+        uint256 _ninetyDaysTradingFee = morphoV2.tradingFee(id, 90 days);
+        assertEq(_ninetyDaysTradingFee, ninetyDaysTradingFee, "ninety days trading fee");
     }
 
     function testSetTradingFeeOnlyFeeSetter(address rdm, bytes32 id) public {
@@ -70,7 +70,7 @@ contract SettersTest is BaseTest {
     }
 
     function testSetTradingFeeZeroDaysTooHigh(bytes32 id, uint256 tradingFeeTooHigh) public {
-        vm.assume(tradingFeeTooHigh > WAD);
+        tradingFeeTooHigh = bound(tradingFeeTooHigh, FEE_PRECISION + 1, 2 * FEE_PRECISION);
         vm.expectRevert("0days trading fee too high");
         morphoV2.setTradingFee(id, tradingFeeTooHigh, 0, 0, 0, 0);
         vm.expectRevert("1days trading fee too high");
