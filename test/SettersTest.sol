@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
 import {WAD} from "../src/libraries/ConstantsLib.sol";
-import {console} from "forge-std/console.sol";
 
 contract SettersTest is BaseTest {
     function testInitialOwner() public view {
