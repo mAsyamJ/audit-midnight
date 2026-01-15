@@ -487,13 +487,16 @@ contract MorphoV2 is IMorphoV2 {
         }
 
         uint256[6] memory breakpoints = [uint256(0), 1 days, 7 days, 30 days, 90 days, 180 days];
+        // forge-lint: disable-next-line(unsafe-typecast)
         if (ttm >= breakpoints[5]) return uint256(uint24(tradingFeeStorage >> 121)) * 1e12;
 
         uint256 index = ttm < breakpoints[1]
             ? 0
             : ttm < breakpoints[2] ? 1 : ttm < breakpoints[3] ? 2 : ttm < breakpoints[4] ? 3 : 4;
 
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint256 feeLower = uint24(tradingFeeStorage >> (1 + index * 24));
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint256 feeUpper = uint24(tradingFeeStorage >> (1 + (index + 1) * 24));
 
         return (feeLower * (breakpoints[index + 1] - ttm) + feeUpper * (ttm - breakpoints[index])) * 1e12
