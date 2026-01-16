@@ -92,7 +92,7 @@ contract MorphoV2 is IMorphoV2 {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        require(newTradingFee % FeeLib.FEE_PRECISION == 0, "fee should be a multiple of 1e12");
+        require(newTradingFee % FeeLib.FEE_DIVISOR == 0, "fee should be a multiple of 1e12");
         require(newTradingFee == 0 || FeeLib.getActivated(feeStorage), "fee must be activated");
         _obligationTradingFeeStorage[id] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
@@ -111,7 +111,7 @@ contract MorphoV2 is IMorphoV2 {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        require(newTradingFee % FeeLib.FEE_PRECISION == 0, "fee should be a multiple of 1e12");
+        require(newTradingFee % FeeLib.FEE_DIVISOR == 0, "fee should be a multiple of 1e12");
         require(newTradingFee == 0 || FeeLib.getActivated(feeStorage), "fee must be activated");
         _defaultTradingFeeStorage[loanToken] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
