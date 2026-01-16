@@ -92,7 +92,6 @@ contract MorphoV2 is IMorphoV2 {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        require(newTradingFee % FeeLib.FEE_STEP == 0, "fee should be a multiple of 1e12");
         _obligationTradingFeeStorage[id] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
     }
@@ -109,7 +108,6 @@ contract MorphoV2 is IMorphoV2 {
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        require(newTradingFee % FeeLib.FEE_STEP == 0, "fee should be a multiple of 1e12");
         _defaultTradingFeeStorage[loanToken] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
@@ -180,8 +178,8 @@ contract MorphoV2 is IMorphoV2 {
             ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start)
                 / (offer.expiry - offer.start)
             : offer.startPrice;
-        uint256 ttm = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
-        uint256 _tradingFee = tradingFee(id, offer.obligation.loanToken, ttm);
+        uint256 timeToMaturity = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
+        uint256 _tradingFee = tradingFee(id, offer.obligation.loanToken, timeToMaturity);
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
         uint256 buyerPrice = sellerPrice + _tradingFee;
         require(buyerPrice <= WAD, "cannot trade at price above one");
@@ -487,27 +485,27 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Return the trading fee using piecewise linear interpolation between breakpoints.
     /// @dev Returns 0 if neither obligation nor default fee is activated.
-    function tradingFee(bytes32 id, address loanToken, uint256 ttm) public view returns (uint256) {
+    function tradingFee(bytes32 id, address loanToken, uint256 timeToMaturity) public view returns (uint256) {
         uint256 feeStorage = _obligationTradingFeeStorage[id];
         if (!FeeLib.getActivated(feeStorage)) {
             feeStorage = _defaultTradingFeeStorage[loanToken];
             if (!FeeLib.getActivated(feeStorage)) return 0;
         }
 
-        if (ttm >= 180 days) return FeeLib.getFee(feeStorage, 5);
+        if (timeToMaturity >= 180 days) return FeeLib.getFee(feeStorage, 5);
 
         // forgefmt: disable-start
         (uint256 index, uint256 start, uint256 end) =
-            ttm < 1 days ? (0, 0 days, 1 days) :
-            ttm < 7 days ? (1, 1 days, 7 days) :
-            ttm < 30 days ? (2, 7 days, 30 days) :
-            ttm < 90 days ? (3, 30 days, 90 days) :
+            timeToMaturity < 1 days ? (0, 0 days, 1 days) :
+            timeToMaturity < 7 days ? (1, 1 days, 7 days) :
+            timeToMaturity < 30 days ? (2, 7 days, 30 days) :
+            timeToMaturity < 90 days ? (3, 30 days, 90 days) :
             (4, 90 days, 180 days);
         // forgefmt: disable-end
 
         uint256 feeLower = FeeLib.getFee(feeStorage, index);
         uint256 feeUpper = FeeLib.getFee(feeStorage, index + 1);
 
-        return (feeLower * (end - ttm) + feeUpper * (ttm - start)) / (end - start);
+        return (feeLower * (end - timeToMaturity) + feeUpper * (timeToMaturity - start)) / (end - start);
     }
 }
