@@ -87,26 +87,42 @@ contract MorphoV2 is IMorphoV2 {
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
-    function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee, bool activated) external {
+    function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee) external {
+        uint256 feeStorage = _obligationTradingFeeStorage[id];
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
         require(newTradingFee % FeeLib.FEE_PRECISION == 0, "fee should be a multiple of 1e12");
-
-        _obligationTradingFeeStorage[id] =
-            FeeLib.setFee(_obligationTradingFeeStorage[id], index, newTradingFee, activated);
+        require(newTradingFee == 0 || FeeLib.getActivated(feeStorage), "fee must be activated");
+        _obligationTradingFeeStorage[id] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
     }
 
-    function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee, bool activated) external {
+    function setObligationTradingFeeActivated(bytes32 id, bool activated) external {
+        uint256 feeStorage = _obligationTradingFeeStorage[id];
+        require(msg.sender == feeSetter, "Only feeSetter");
+        require(activated || FeeLib.areAllFeesZero(feeStorage), "all fees must be zero to deactivate");
+        _obligationTradingFeeStorage[id] = FeeLib.setActivated(feeStorage, activated);
+        emit EventsLib.SetObligationTradingFeeActivated(id, activated);
+    }
+
+    function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee) external {
+        uint256 feeStorage = _defaultTradingFeeStorage[loanToken];
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
         require(newTradingFee % FeeLib.FEE_PRECISION == 0, "fee should be a multiple of 1e12");
-
-        _defaultTradingFeeStorage[loanToken] =
-            FeeLib.setFee(_defaultTradingFeeStorage[loanToken], index, newTradingFee, activated);
+        require(newTradingFee == 0 || FeeLib.getActivated(feeStorage), "fee must be activated");
+        _defaultTradingFeeStorage[loanToken] = FeeLib.setFee(feeStorage, index, newTradingFee);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
+    }
+
+    function setDefaultTradingFeeActivated(address loanToken, bool activated) external {
+        uint256 feeStorage = _defaultTradingFeeStorage[loanToken];
+        require(msg.sender == feeSetter, "Only feeSetter");
+        require(activated || FeeLib.areAllFeesZero(feeStorage), "all fees must be zero to deactivate");
+        _defaultTradingFeeStorage[loanToken] = FeeLib.setActivated(feeStorage, activated);
+        emit EventsLib.SetDefaultTradingFeeActivated(loanToken, activated);
     }
 
     function setTradingFeeRecipient(address recipient) external {
@@ -477,9 +493,9 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Returns 0 if neither obligation nor default fee is activated.
     function tradingFee(bytes32 id, address loanToken, uint256 ttm) public view returns (uint256) {
         uint256 feeStorage = _obligationTradingFeeStorage[id];
-        if (!FeeLib.isActivated(feeStorage)) {
+        if (!FeeLib.getActivated(feeStorage)) {
             feeStorage = _defaultTradingFeeStorage[loanToken];
-            if (!FeeLib.isActivated(feeStorage)) return 0;
+            if (!FeeLib.getActivated(feeStorage)) return 0;
         }
 
         uint256[6] memory breakpoints = [uint256(0), 1 days, 7 days, 30 days, 90 days, 180 days];
