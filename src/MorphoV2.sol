@@ -88,34 +88,30 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee) external {
-        uint256 feeStorage = _obligationTradingFeeStorage[id];
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        _obligationTradingFeeStorage[id] = FeeLib.setFee(feeStorage, index, newTradingFee);
+        _obligationTradingFeeStorage[id] = FeeLib.setFee(_obligationTradingFeeStorage[id], index, newTradingFee);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
     }
 
     function setObligationTradingFeeActivated(bytes32 id, bool activated) external {
-        uint256 feeStorage = _obligationTradingFeeStorage[id];
         require(msg.sender == feeSetter, "Only feeSetter");
-        _obligationTradingFeeStorage[id] = FeeLib.setActivated(feeStorage, activated);
+        _obligationTradingFeeStorage[id] = FeeLib.setActivated(_obligationTradingFeeStorage[id], activated);
         emit EventsLib.SetObligationTradingFeeActivated(id, activated);
     }
 
     function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee) external {
-        uint256 feeStorage = _defaultTradingFeeStorage[loanToken];
         require(msg.sender == feeSetter, "Only feeSetter");
         require(newTradingFee <= WAD, "Trading fee too high");
         require(index <= 5, "Invalid index");
-        _defaultTradingFeeStorage[loanToken] = FeeLib.setFee(feeStorage, index, newTradingFee);
+        _defaultTradingFeeStorage[loanToken] = FeeLib.setFee(_defaultTradingFeeStorage[loanToken], index, newTradingFee);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
 
     function setDefaultTradingFeeActivated(address loanToken, bool activated) external {
-        uint256 feeStorage = _defaultTradingFeeStorage[loanToken];
         require(msg.sender == feeSetter, "Only feeSetter");
-        _defaultTradingFeeStorage[loanToken] = FeeLib.setActivated(feeStorage, activated);
+        _defaultTradingFeeStorage[loanToken] = FeeLib.setActivated(_defaultTradingFeeStorage[loanToken], activated);
         emit EventsLib.SetDefaultTradingFeeActivated(loanToken, activated);
     }
 
