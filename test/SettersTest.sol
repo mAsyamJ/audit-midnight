@@ -263,42 +263,6 @@ contract SettersTest is BaseTest {
         assertEq(morphoV2.tradingFee(id, token, 1 days), 0, "both deactivated should return 0");
     }
 
-    function testDeactivateRequiresZeroFees() public {
-        bytes32 id = keccak256("test");
-
-        // Activate and set a non-zero fee
-        morphoV2.setObligationTradingFeeActivated(id, true);
-        morphoV2.setObligationTradingFee(id, 1, 0.05e18);
-
-        // Try to deactivate with non-zero fee, should revert
-        vm.expectRevert("all fees must be zero to deactivate");
-        morphoV2.setObligationTradingFeeActivated(id, false);
-
-        // Clear fee to 0, then deactivate should succeed
-        morphoV2.setObligationTradingFee(id, 1, 0);
-        morphoV2.setObligationTradingFeeActivated(id, false);
-    }
-
-    function testDeactivateRequiresAllFeesZero() public {
-        bytes32 id = keccak256("test");
-
-        // Activate and set multiple fees
-        morphoV2.setObligationTradingFeeActivated(id, true);
-        morphoV2.setObligationTradingFee(id, 0, 0.01e18);
-        morphoV2.setObligationTradingFee(id, 1, 0.02e18);
-        morphoV2.setObligationTradingFee(id, 2, 0.03e18);
-
-        // Clear only one fee, deactivate should still fail
-        morphoV2.setObligationTradingFee(id, 0, 0);
-        vm.expectRevert("all fees must be zero to deactivate");
-        morphoV2.setObligationTradingFeeActivated(id, false);
-
-        // Clear all fees, deactivate should succeed
-        morphoV2.setObligationTradingFee(id, 1, 0);
-        morphoV2.setObligationTradingFee(id, 2, 0);
-        morphoV2.setObligationTradingFeeActivated(id, false);
-    }
-
     function testSetActivatedOnlyFeeSetter(address rdm, bytes32 id) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);

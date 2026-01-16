@@ -100,7 +100,6 @@ contract MorphoV2 is IMorphoV2 {
     function setObligationTradingFeeActivated(bytes32 id, bool activated) external {
         uint256 feeStorage = _obligationTradingFeeStorage[id];
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(activated || FeeLib.areAllFeesZero(feeStorage), "all fees must be zero to deactivate");
         _obligationTradingFeeStorage[id] = FeeLib.setActivated(feeStorage, activated);
         emit EventsLib.SetObligationTradingFeeActivated(id, activated);
     }
@@ -118,7 +117,6 @@ contract MorphoV2 is IMorphoV2 {
     function setDefaultTradingFeeActivated(address loanToken, bool activated) external {
         uint256 feeStorage = _defaultTradingFeeStorage[loanToken];
         require(msg.sender == feeSetter, "Only feeSetter");
-        require(activated || FeeLib.areAllFeesZero(feeStorage), "all fees must be zero to deactivate");
         _defaultTradingFeeStorage[loanToken] = FeeLib.setActivated(feeStorage, activated);
         emit EventsLib.SetDefaultTradingFeeActivated(loanToken, activated);
     }
