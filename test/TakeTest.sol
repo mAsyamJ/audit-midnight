@@ -5,14 +5,14 @@ pragma solidity ^0.8.0;
 import {Obligation, Offer, Signature, Collateral, Seizure} from "../src/interfaces/IMorphoV2.sol";
 import {MorphoV2} from "../src/MorphoV2.sol";
 import {WAD} from "../src/libraries/ConstantsLib.sol";
-import {MathLib} from "../src/libraries/MathLib.sol";
+import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {ICallbacks} from "../src/interfaces/ICallbacks.sol";
 import {stdError} from "../lib/forge-std/src/StdError.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 
 contract TakeTest is BaseTest {
-    using MathLib for uint256;
+    using UtilsLib for uint256;
 
     Obligation internal obligation;
     bytes32 internal id;
@@ -28,7 +28,6 @@ contract TakeTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        obligation.chainId = block.chainid;
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
         obligation.collaterals
@@ -37,7 +36,7 @@ contract TakeTest is BaseTest {
             .push(Collateral({token: address(collateralToken2), lltv: 0.75e18, oracle: address(oracle2)}));
         obligation.collaterals = sortCollaterals(obligation.collaterals);
 
-        id = keccak256(abi.encode(obligation));
+        id = toId(obligation);
 
         lenderOffer.buy = true;
         lenderOffer.maker = lender;

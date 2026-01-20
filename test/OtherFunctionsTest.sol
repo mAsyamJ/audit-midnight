@@ -8,10 +8,10 @@ import {ERC20} from "./helpers/ERC20.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 
 import {WAD, DELTA} from "../src/libraries/ConstantsLib.sol";
-import {MathLib} from "../src/libraries/MathLib.sol";
+import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 
 contract OtherFunctionsTest is BaseTest {
-    using MathLib for uint256;
+    using UtilsLib for uint256;
 
     Obligation internal obligation;
     bytes32 internal id;
@@ -19,7 +19,6 @@ contract OtherFunctionsTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        obligation.chainId = block.chainid;
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
         obligation.collaterals
