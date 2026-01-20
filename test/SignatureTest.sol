@@ -13,6 +13,6 @@ contract SignatureTest is Test, MorphoV2 {
         bytes32 structHash = keccak256(abi.encode(ROOT_TYPEHASH, root));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", _domainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
-        assertEq(_signer(root, Signature({v: v, r: r, s: s})), vm.addr(privateKey));
+        assertEq(signer(root, Signature({v: v, r: r, s: s})), vm.addr(privateKey));
     }
 }
