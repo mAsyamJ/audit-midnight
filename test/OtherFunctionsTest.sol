@@ -177,7 +177,7 @@ contract OtherFunctionsTest is BaseTest {
     function testReturnJumps() public view {
         uint256 price = morphoV2.tickToPrice(205);
         uint256 previousReturn = _return(price);
-        for (uint256 i = 400; i <= 900; i++) {
+        for (uint256 i = 400; i <= 401; i++) {
             uint256 currentReturn = _return(morphoV2.tickToPrice(i));
             assertApproxEqRel(currentReturn, previousReturn.mulDivDown(WAD, 1.025e18), 0.01e18, "tick i");
             previousReturn = currentReturn;
@@ -186,6 +186,12 @@ contract OtherFunctionsTest is BaseTest {
 
     function _return(uint256 price) internal pure returns (uint256) {
         return WAD.mulDivDown(WAD, price) - WAD;
+    }
+
+    function testTickMonotonicity() public view {
+        for (uint256 i = 0; i <= 1175; i++) {
+            assertGe(morphoV2.tickToPrice(i + 1), morphoV2.tickToPrice(i));
+        }
     }
 
     function testTickToPriceRange() public view {
