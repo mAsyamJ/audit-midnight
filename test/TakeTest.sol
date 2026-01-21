@@ -83,7 +83,7 @@ contract TakeTest is BaseTest {
 
     function testBuyAssetsInput1(uint256 buyerAssets, uint256 tick) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         borrowerOffer.startTick = tick;
@@ -107,7 +107,7 @@ contract TakeTest is BaseTest {
 
     function testSellAssetsInput1(uint256 buyerAssets, uint256 tick) public {
         buyerAssets = bound(buyerAssets, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         lenderOffer.startTick = tick;
@@ -131,7 +131,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationUnitsInput1(uint256 obligationUnits, uint256 tick) public {
         obligationUnits = bound(obligationUnits, 1, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         borrowerOffer.startTick = tick;
@@ -155,7 +155,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationUnitsInput1(uint256 obligationUnits, uint256 tick) public {
         obligationUnits = bound(obligationUnits, 1, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         lenderOffer.startTick = tick;
@@ -179,7 +179,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationSharesInput1(uint256 obligationShares, uint256 tick) public {
         obligationShares = bound(obligationShares, 1, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         borrowerOffer.startTick = tick;
@@ -203,7 +203,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationSharesInput1(uint256 obligationShares, uint256 tick) public {
         obligationShares = bound(obligationShares, 1, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         lenderOffer.startTick = tick;
@@ -646,7 +646,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationUnitsInput4(uint256 obligationUnits, uint256 tick, uint256 existingUnits) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         vm.assume(price > 0.01 ether);
@@ -675,7 +675,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationUnitsInput4(uint256 obligationUnits, uint256 tick, uint256 existingUnits) public {
         obligationUnits = bound(obligationUnits, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
@@ -704,7 +704,7 @@ contract TakeTest is BaseTest {
 
     function testBuyObligationSharesInput4(uint256 obligationShares, uint256 tick, uint256 existingUnits) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
@@ -734,7 +734,7 @@ contract TakeTest is BaseTest {
 
     function testSellObligationSharesInput4(uint256 obligationShares, uint256 tick, uint256 existingUnits) public {
         obligationShares = bound(obligationShares, 0, maxAssets);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         uint256 expectedUnits = obligationShares.mulDivDown(initialUnits + 1, initialShares + 1);
@@ -1050,13 +1050,13 @@ contract TakeTest is BaseTest {
     // address(this) makes an arbitrage for 2 crossed offers.
     function testMatch(uint256 units, uint256 tick1, uint256 tick2) public {
         units = bound(units, 1, maxAssets);
-        tick1 = bound(tick1, 0, 1000);
-        tick2 = bound(tick2, 0, 1000);
+        tick1 = bound(tick1, 600, 1176);
+        tick2 = bound(tick2, 600, 1176);
         uint256 price1 = morphoV2.tickToPrice(tick1);
         uint256 price2 = morphoV2.tickToPrice(tick2);
         vm.assume(price1 > price2);
-        vm.assume(price1 > 0.01 ether);
-        vm.assume(price2 > 0.01 ether);
+        vm.assume(price1 > 0.5 ether);
+        vm.assume(price2 > 0.5 ether);
         borrowerOffer.assets = units;
         borrowerOffer.startTick = tick1;
         borrowerOffer.expiryTick = tick1;
@@ -1085,11 +1085,11 @@ contract TakeTest is BaseTest {
     // address(this) makes an arbitrage for 2 crossed offers.
     function testMatchInverse(uint256 units, uint256 tick1, uint256 tick2) public {
         units = bound(units, 1, maxAssets);
-        tick1 = bound(tick1, 0, 1000);
-        tick2 = bound(tick2, 0, 1000);
+        tick1 = bound(tick1, 600, 1176);
+        tick2 = bound(tick2, 600, 1176);
         uint256 price1 = morphoV2.tickToPrice(tick1);
         uint256 price2 = morphoV2.tickToPrice(tick2);
-        vm.assume(price1 > price2);
+        vm.assume(price2 > price1);
         vm.assume(price1 > 0.5 ether);
         vm.assume(price2 > 0.5 ether);
         borrowerOffer.assets = units;
@@ -1148,7 +1148,7 @@ contract TakeTest is BaseTest {
     function testBuyUnhealthy(uint256 units, uint256 tick, uint256 collateralized) public {
         units = bound(units, 1, maxAssets);
         collateralized = bound(collateralized, 0, units / 2);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         borrowerOffer.assets = units;
         borrowerOffer.startTick = tick;
@@ -1163,7 +1163,7 @@ contract TakeTest is BaseTest {
     function testSellUnhealthy(uint256 units, uint256 tick, uint256 collateralized) public {
         units = bound(units, 1, maxAssets);
         collateralized = bound(collateralized, 0, units / 2);
-        tick = bound(tick, 0, 1000);
+        tick = bound(tick, 0, 1176);
         uint256 price = morphoV2.tickToPrice(tick);
         lenderOffer.assets = units;
         lenderOffer.startTick = tick;
