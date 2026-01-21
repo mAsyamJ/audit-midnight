@@ -12,7 +12,7 @@ import {
     TIME_TO_MAX_LIF,
     EIP712_DOMAIN_TYPEHASH,
     ROOT_TYPEHASH,
-    DELTA
+    LN_ONE_PLUS_DELTA
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMorphoV2, Obligation, Offer, Signature, Collateral, Seizure} from "./interfaces/IMorphoV2.sol";
@@ -453,7 +453,8 @@ contract MorphoV2 is IMorphoV2 {
 
     function tickToPrice(uint256 tick) public pure returns (uint256) {
         // forge-lint: disable-next-line(unsafe-typecast) tick is always less than 1176
-        return (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12) * 1e12;
+        return
+            (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12) * 1e12;
     }
 
     function toId(Obligation memory obligation) public view returns (bytes32) {
