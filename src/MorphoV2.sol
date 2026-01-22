@@ -453,7 +453,8 @@ contract MorphoV2 is IMorphoV2 {
 
     function tickToPrice(uint256 tick) public pure returns (uint256) {
         return // forge-lint: disable-next-line(unsafe-typecast) tick is always less than 1176
-            (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12) * 1e12;
+                (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12)
+                * 1e12;
     }
 
     function toId(Obligation memory obligation) public view returns (bytes32) {
