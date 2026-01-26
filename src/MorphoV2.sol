@@ -32,6 +32,7 @@ contract MorphoV2 is IMorphoV2 {
     mapping(bytes32 obligationId => uint256) public totalShares;
     mapping(address user => mapping(bytes32 obligationId => mapping(address collateralToken => uint256))) public
         collateralOf;
+    mapping(bytes32 obligationId => bool) public obligationCreated;
 
     /// @dev Groups are useful to have a global offered amount shared accross multiple offers ("OCO").
     /// @dev To work as expected, all offers in a same group should have the same assets, obligationUnits,
@@ -158,12 +159,11 @@ contract MorphoV2 is IMorphoV2 {
         );
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
-        require(offer.start < offer.expiry || offer.expiryPrice == offer.startPrice, "inconsistent prices");
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(signer(root, sig) == offer.maker, "invalid signature");
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
-        bytes32 id = toId(offer.obligation);
+        bytes32 id = touchObligation(offer.obligation);
 
         (
             address buyer,
@@ -176,13 +176,9 @@ contract MorphoV2 is IMorphoV2 {
             ? (offer.maker, offer.callback, offer.callbackData, taker, takerCallback, takerCallbackData)
             : (taker, takerCallback, takerCallbackData, offer.maker, offer.callback, offer.callbackData);
 
-        uint256 offerPrice = offer.expiry != offer.start
-            ? offer.startPrice + (offer.expiryPrice - offer.startPrice) * (block.timestamp - offer.start)
-                / (offer.expiry - offer.start)
-            : offer.startPrice;
         uint256 timeToMaturity = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
         uint256 _tradingFee = tradingFee(id, offer.obligation.loanToken, timeToMaturity);
-        uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
+        uint256 sellerPrice = offer.buy ? offer.price - _tradingFee : offer.price;
         uint256 buyerPrice = sellerPrice + _tradingFee;
         require(buyerPrice <= WAD, "cannot trade at price above one");
 
@@ -293,7 +289,7 @@ contract MorphoV2 is IMorphoV2 {
         returns (uint256, uint256)
     {
         require(UtilsLib.atMostOneNonZero(obligationUnits, shares), "INCONSISTENT_INPUT");
-        bytes32 id = toId(obligation);
+        bytes32 id = touchObligation(obligation);
 
         if (obligationUnits > 0) shares = obligationUnits.mulDivUp(totalShares[id] + 1, totalUnits[id] + 1);
         else obligationUnits = shares.mulDivDown(totalUnits[id] + 1, totalShares[id] + 1);
@@ -312,7 +308,7 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     function repay(Obligation memory obligation, uint256 obligationUnits, address onBehalf) external {
-        bytes32 id = toId(obligation);
+        bytes32 id = touchObligation(obligation);
 
         debtOf[onBehalf][id] -= obligationUnits;
         withdrawable[id] += obligationUnits;
@@ -325,7 +321,7 @@ contract MorphoV2 is IMorphoV2 {
     function supplyCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
         external
     {
-        bytes32 id = toId(obligation);
+        bytes32 id = touchObligation(obligation);
 
         collateralOf[onBehalf][id][collateral] += assets;
 
@@ -337,7 +333,7 @@ contract MorphoV2 is IMorphoV2 {
     function withdrawCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
         external
     {
-        bytes32 id = toId(obligation);
+        bytes32 id = touchObligation(obligation);
 
         collateralOf[onBehalf][id][collateral] -= assets;
 
@@ -363,7 +359,7 @@ contract MorphoV2 is IMorphoV2 {
         bytes calldata data
     ) external returns (uint256, uint256) {
         require(UtilsLib.atMostOneNonZero(repaidUnits, seizedAssets), "INCONSISTENT_INPUT");
-        bytes32 id = toId(obligation);
+        bytes32 id = touchObligation(obligation);
 
         uint256 repayableDebt;
         uint256 maxDebt;
@@ -448,6 +444,15 @@ contract MorphoV2 is IMorphoV2 {
         IFlashLoanCallback(callback).onFlashLoan(token, assets, data);
 
         SafeTransferLib.safeTransferFrom(token, msg.sender, address(this), assets);
+    }
+
+    function touchObligation(Obligation memory obligation) internal returns (bytes32) {
+        bytes32 id = toId(obligation);
+        if (!obligationCreated[id]) {
+            emit EventsLib.ObligationCreated(id, obligation);
+            obligationCreated[id] = true;
+        }
+        return id;
     }
 
     /// VIEW FUNCTIONS ///

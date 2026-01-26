@@ -2,6 +2,8 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
+import {Obligation} from "../interfaces/IMorphoV2.sol";
+
 library EventsLib {
     event Constructor(address indexed owner);
 
@@ -13,6 +15,7 @@ library EventsLib {
     event SetDefaultTradingFeeActivated(address indexed loanToken, bool activated);
     event SetTradingFeeRecipient(address indexed recipient);
 
+    event ObligationCreated(bytes32 indexed obligationId, Obligation obligation);
     event Take(
         address indexed caller,
         bytes32 indexed obligationId,
