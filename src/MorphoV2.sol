@@ -38,6 +38,7 @@ contract MorphoV2 is IMorphoV2 {
     mapping(bytes32 id => mapping(address user => uint256)) public debtOf;
     mapping(bytes32 id => mapping(address user => mapping(address collateralToken => uint256))) public collateralOf;
     mapping(bytes32 id => ObligationStorage) public obligationStorage;
+    mapping(bytes32 id => Obligation) internal _idToObligation;
 
     /// @dev Groups are useful to have a global offered amount shared accross multiple offers ("OCO").
     /// @dev To work as expected, all offers in a same group should have the same assets, obligationUnits,
@@ -465,12 +466,18 @@ contract MorphoV2 is IMorphoV2 {
             obligationStorage[id].created = true;
             obligationStorage[id].fees = defaultFees[obligation.loanToken];
 
+            _idToObligation[id] = obligation;
+
             emit EventsLib.ObligationCreated(id, obligation);
         }
         return id;
     }
 
     /// VIEW FUNCTIONS ///
+
+    function idToObligation(bytes32 id) external view returns (Obligation memory) {
+        return _idToObligation[id];
+    }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
         return obligationStorage[id].totalUnits;

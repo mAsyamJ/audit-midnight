@@ -156,6 +156,27 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(morphoV2.consumed(user, group), amount, "consumed");
     }
 
+    function testIdToObligation(Obligation memory _obligation) public {
+        // Ensure collaterals are sorted, non-zero and unique (done by adding the index to the hash of the token).
+        Collateral[] memory collaterals = new Collateral[](_obligation.collaterals.length);
+        for (uint256 i = 0; i < _obligation.collaterals.length; i++) {
+            collaterals[i].token = address(uint160(uint256(keccak256(abi.encode(_obligation.collaterals[i].token, i)))));
+        }
+        collaterals = sortCollaterals(collaterals);
+        _obligation.collaterals = collaterals;
+
+        bytes32 _id = morphoV2.touchObligation(_obligation);
+        Obligation memory obligationFromId = morphoV2.idToObligation(_id);
+        assertEq(_obligation.loanToken, obligationFromId.loanToken, "loanToken");
+        assertEq(_obligation.maturity, obligationFromId.maturity, "maturity");
+        assertEq(_obligation.collaterals.length, obligationFromId.collaterals.length, "collaterals length");
+        for (uint256 i = 0; i < obligationFromId.collaterals.length; i++) {
+            assertEq(_obligation.collaterals[i].token, obligationFromId.collaterals[i].token, "collateral token");
+            assertEq(_obligation.collaterals[i].lltv, obligationFromId.collaterals[i].lltv, "lltv");
+            assertEq(_obligation.collaterals[i].oracle, obligationFromId.collaterals[i].oracle, "oracle");
+        }
+    }
+
     function testShuffleSession(address user) public {
         vm.prank(user);
         morphoV2.shuffleSession();
