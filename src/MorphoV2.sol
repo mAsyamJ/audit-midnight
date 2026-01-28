@@ -500,12 +500,11 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 id = toId(obligation);
         uint256 debt = debtOf[id][borrower];
         uint256 maxDebt;
-        for (uint256 i = 0; i < obligation.collaterals.length; i++) {
-            if (maxDebt >= debt) return true;
-            Collateral memory _collateral = obligation.collaterals[i];
-            uint256 price = IOracle(_collateral.oracle).price();
-            maxDebt += collateralOf[borrower][id][_collateral.token].mulDivDown(price, ORACLE_PRICE_SCALE)
-                .mulDivDown(_collateral.lltv, WAD);
+        for (uint256 i = 0; i < obligation.collaterals.length && maxDebt < debt; i++) {
+            Collateral memory collateral = obligation.collaterals[i];
+            uint256 price = IOracle(collateral.oracle).price();
+            maxDebt += collateralOf[id][borrower][collateral.token].mulDivDown(price, ORACLE_PRICE_SCALE)
+                .mulDivDown(collateral.lltv, WAD);
         }
         return maxDebt >= debt;
     }
