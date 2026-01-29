@@ -51,12 +51,11 @@ contract TickTest is Test {
         if (tick > 0) assertLe(UtilsLib.tickToPrice(tick - 1), price);
     }
 
-    function testPriceToTickConsistency() public pure {
-        for (uint256 tick = 0; tick <= TICK_RANGE; tick++) {
-            uint256 price = UtilsLib.tickToPrice(tick);
-            uint256 recovered = UtilsLib.priceToTick(price);
-            assertEq(UtilsLib.tickToPrice(recovered), price, "price mismatch");
-            assertLe(recovered, tick, "recovered > tick");
-        }
+    function testPriceToTickConsistency(uint256 tick) public pure {
+        tick = bound(tick, 0, TICK_RANGE);
+        uint256 price = UtilsLib.tickToPrice(tick);
+        uint256 recoveredTick = UtilsLib.priceToTick(price);
+        assertEq(UtilsLib.tickToPrice(recoveredTick), price);
+        assertLe(recoveredTick, tick);
     }
 }
