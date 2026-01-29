@@ -499,18 +499,14 @@ contract MorphoV2 is IMorphoV2 {
     function isHealthy(Obligation memory obligation, address borrower) public view returns (bool) {
         bytes32 id = toId(obligation);
         uint256 debt = debtOf[id][borrower];
-        if (debt == 0) {
-            return true;
-        } else {
-            uint256 maxDebt;
-            for (uint256 i = 0; i < obligation.collaterals.length; i++) {
-                Collateral memory _collateral = obligation.collaterals[i];
-                maxDebt += collateralOf[id][borrower][_collateral.token]
-                    .mulDivDown(IOracle(_collateral.oracle).price(), ORACLE_PRICE_SCALE)
-                    .mulDivDown(_collateral.lltv, WAD);
-            }
-            return debt <= maxDebt;
+        uint256 maxDebt;
+        for (uint256 i = 0; i < obligation.collaterals.length && maxDebt < debt; i++) {
+            Collateral memory collateral = obligation.collaterals[i];
+            uint256 price = IOracle(collateral.oracle).price();
+            maxDebt += collateralOf[id][borrower][collateral.token].mulDivDown(price, ORACLE_PRICE_SCALE)
+                .mulDivDown(collateral.lltv, WAD);
         }
+        return maxDebt >= debt;
     }
 
     function domainSeparator() internal view returns (bytes32) {
