@@ -9,4 +9,3 @@ wrap_comments = true
 
 [lint]
 exclude_lints = ["asm-keccak256", "incorrect-shift"]
-ignore = ['test/**/*.sol']

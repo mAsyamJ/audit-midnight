@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import {Test, stdError} from "../lib/forge-std/src/Test.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
-import {console} from "../lib/forge-std/src/console.sol";
-import {LN_ONE_PLUS_DELTA} from "../src/libraries/ConstantsLib.sol";
 
 contract UtilsLibTest is Test {
     function testAtMostOneNonZero(uint256 x, uint256 y) public pure {
@@ -117,12 +115,12 @@ contract UtilsLibTest is Test {
         assertApproxEqRel(UtilsLib.wExp(-12 ether), 0.000006144212353328 ether, 0.001 ether, "exp(-12)");
         assertApproxEqRel(UtilsLib.wExp(-11 ether), 0.000016701700790246 ether, 0.001 ether, "exp(-11)");
         assertApproxEqRel(UtilsLib.wExp(-10 ether), 0.000045399929762485 ether, 0.001 ether, "exp(-10)");
-        assertApproxEqRel(UtilsLib.wExp(-9 ether), 0.000123409804086680 ether, 0.001 ether, "exp(-9)");
+        assertApproxEqRel(UtilsLib.wExp(-9 ether), 0.00012340980408668 ether, 0.001 ether, "exp(-9)");
         assertApproxEqRel(UtilsLib.wExp(-8 ether), 0.000335462627902512 ether, 0.001 ether, "exp(-8)");
         assertApproxEqRel(UtilsLib.wExp(-7 ether), 0.000911881965554516 ether, 0.001 ether, "exp(-7)");
         assertApproxEqRel(UtilsLib.wExp(-6 ether), 0.002478752176666359 ether, 0.001 ether, "exp(-6)");
         assertApproxEqRel(UtilsLib.wExp(-5 ether), 0.006737946999085467 ether, 0.001 ether, "exp(-5)");
-        assertApproxEqRel(UtilsLib.wExp(-4 ether), 0.018315638888734180 ether, 0.001 ether, "exp(-4)");
+        assertApproxEqRel(UtilsLib.wExp(-4 ether), 0.01831563888873418 ether, 0.001 ether, "exp(-4)");
         assertApproxEqRel(UtilsLib.wExp(-3 ether), 0.049787068367863944 ether, 0.001 ether, "exp(-3)");
         assertApproxEqRel(UtilsLib.wExp(-2 ether), 0.135335283236612692 ether, 0.001 ether, "exp(-2)");
         assertApproxEqRel(UtilsLib.wExp(-1 ether), 0.367879441171442322 ether, 0.001 ether, "exp(-1)");
@@ -130,7 +128,7 @@ contract UtilsLibTest is Test {
         assertApproxEqRel(UtilsLib.wExp(1 ether), 2.718281828459045235 ether, 0.001 ether, "exp(1)");
         assertApproxEqRel(UtilsLib.wExp(2 ether), 7.389056098930649644 ether, 0.001 ether, "exp(2)");
         assertApproxEqRel(UtilsLib.wExp(3 ether), 20.085536923187667741 ether, 0.001 ether, "exp(3)");
-        assertApproxEqRel(UtilsLib.wExp(4 ether), 54.598150033144236160 ether, 0.001 ether, "exp(4)");
+        assertApproxEqRel(UtilsLib.wExp(4 ether), 54.59815003314423616 ether, 0.001 ether, "exp(4)");
         assertApproxEqRel(UtilsLib.wExp(5 ether), 148.413159102576603421 ether, 0.001 ether, "exp(5)");
         assertApproxEqRel(UtilsLib.wExp(6 ether), 403.428793492735122608 ether, 0.001 ether, "exp(6)");
         assertApproxEqRel(UtilsLib.wExp(7 ether), 1096.633158428458599264 ether, 0.001 ether, "exp(7)");
@@ -139,13 +137,13 @@ contract UtilsLibTest is Test {
         assertApproxEqRel(UtilsLib.wExp(10 ether), 22026.465794806716516958 ether, 0.001 ether, "exp(10)");
         assertApproxEqRel(UtilsLib.wExp(11 ether), 59874.141715197818455327 ether, 0.001 ether, "exp(11)");
         assertApproxEqRel(UtilsLib.wExp(12 ether), 162754.791419003920505928 ether, 0.001 ether, "exp(12)");
-        assertApproxEqRel(UtilsLib.wExp(13 ether), 442413.392008920472049280 ether, 0.001 ether, "exp(13)");
+        assertApproxEqRel(UtilsLib.wExp(13 ether), 442413.39200892047204928 ether, 0.001 ether, "exp(13)");
         assertApproxEqRel(UtilsLib.wExp(14 ether), 1202604.284164776777749504 ether, 0.001 ether, "exp(14)");
         assertApproxEqRel(UtilsLib.wExp(15 ether), 3269017.372472110789246976 ether, 0.001 ether, "exp(15)");
-        assertApproxEqRel(UtilsLib.wExp(16 ether), 8886110.520507872636682240 ether, 0.001 ether, "exp(16)");
-        assertApproxEqRel(UtilsLib.wExp(17 ether), 24154952.753668492496814080 ether, 0.001 ether, "exp(17)");
+        assertApproxEqRel(UtilsLib.wExp(16 ether), 8886110.52050787263668224 ether, 0.001 ether, "exp(16)");
+        assertApproxEqRel(UtilsLib.wExp(17 ether), 24154952.75366849249681408 ether, 0.001 ether, "exp(17)");
         assertApproxEqRel(UtilsLib.wExp(18 ether), 65659969.137330511139838976 ether, 0.001 ether, "exp(18)");
-        assertApproxEqRel(UtilsLib.wExp(19 ether), 178482300.963187260928696320 ether, 0.001 ether, "exp(19)");
+        assertApproxEqRel(UtilsLib.wExp(19 ether), 178482300.96318726092869632 ether, 0.001 ether, "exp(19)");
         assertApproxEqRel(UtilsLib.wExp(20 ether), 485165195.409790277969936384 ether, 0.001 ether, "exp(20)");
     }
 }
