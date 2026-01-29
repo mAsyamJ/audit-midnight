@@ -175,7 +175,7 @@ contract MorphoV2 is IMorphoV2 {
             ? (offer.maker, offer.callback, offer.callbackData, taker, takerCallback, takerCallbackData)
             : (taker, takerCallback, takerCallbackData, offer.maker, offer.callback, offer.callbackData);
 
-        uint256 offerPrice = tickToPrice(offer.tick);
+        uint256 offerPrice = UtilsLib.tickToPrice(offer.tick);
         uint256 timeToMaturity = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
         uint256 _tradingFee = tradingFee(id, timeToMaturity);
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
@@ -475,12 +475,6 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     /// VIEW FUNCTIONS ///
-
-    function tickToPrice(uint256 tick) public pure returns (uint256) {
-        // forge-lint: disable-next-item(unsafe-typecast) tick is always less than TICK_RANGE
-        return
-            (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (495 - int256(tick))))).mulDivUp(1, 1e13) * 1e13;
-    }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
         return obligationState[id].totalUnits;

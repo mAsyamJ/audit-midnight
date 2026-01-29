@@ -169,17 +169,17 @@ contract OtherFunctionsTest is BaseTest {
     }
 
     function testTickToPriceMinMax() public view {
-        assertEq(morphoV2.tickToPrice(0), 0.00001e18, "tick 0");
-        assertEq(morphoV2.tickToPrice(TICK_RANGE - 1), 0.99999e18, "tick max - 1");
-        assertEq(morphoV2.tickToPrice(TICK_RANGE), WAD, "tick max");
+        assertEq(UtilsLib.tickToPrice(0), 0.00001e18, "tick 0");
+        assertEq(UtilsLib.tickToPrice(TICK_RANGE - 1), 0.99999e18, "tick max - 1");
+        assertEq(UtilsLib.tickToPrice(TICK_RANGE), WAD, "tick max");
     }
 
     // works between tick 200 and TICK_RANGE
     function testReturnJumps() public view {
-        uint256 price = morphoV2.tickToPrice(200);
+        uint256 price = UtilsLib.tickToPrice(200);
         uint256 previousReturn = _return(price);
         for (uint256 i = 200; i <= 700; i++) {
-            uint256 currentReturn = _return(morphoV2.tickToPrice(i));
+            uint256 currentReturn = _return(UtilsLib.tickToPrice(i));
             assertApproxEqRel(currentReturn, previousReturn.mulDivDown(WAD, 1.025e18), 0.05e18, "tick i");
             previousReturn = currentReturn;
         }
@@ -191,13 +191,13 @@ contract OtherFunctionsTest is BaseTest {
 
     function testTickMonotonicity() public view {
         for (uint256 i = 0; i < TICK_RANGE; i++) {
-            assertGe(morphoV2.tickToPrice(i + 1), morphoV2.tickToPrice(i));
+            assertGe(UtilsLib.tickToPrice(i + 1), UtilsLib.tickToPrice(i));
         }
     }
 
     function testTickToPriceRange() public view {
         for (uint256 i = 0; i <= TICK_RANGE; i++) {
-            console.log(morphoV2.tickToPrice(i));
+            console.log(UtilsLib.tickToPrice(i));
         }
     }
 }

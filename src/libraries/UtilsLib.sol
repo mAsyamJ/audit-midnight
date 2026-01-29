@@ -2,7 +2,11 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
+import {TICK_RANGE, LN_ONE_PLUS_DELTA} from "./ConstantsLib.sol";
+
 library UtilsLib {
+    using UtilsLib for uint256;
+
     /// @dev Returns true if at most one of `x` and `y` is nonzero.
     function atMostOneNonZero(uint256 x, uint256 y) internal pure returns (bool z) {
         assembly {
@@ -47,6 +51,13 @@ library UtilsLib {
         return (x * y + (d - 1)) / d;
     }
 
+    /// @dev Returns (`x` + `d` - 1) / `d` rounded up, without checking for overflow.
+    function divUpUnchecked(uint256 x, uint256 d) internal pure returns (uint256) {
+        unchecked {
+            return (x + (d - 1)) / d;
+        }
+    }
+
     /// @dev Returns hash(... hash(leafHash, proof[0]), ..., proof[n]) == root.
     /// @dev Hash sorts the inputs lexicographically.
     function isLeaf(bytes32 root, bytes32 leafHash, bytes32[] memory proof) internal pure returns (bool) {
@@ -63,19 +74,29 @@ library UtilsLib {
     }
 
     function wExp(int256 x) internal pure returns (uint256) {
-        if (x < 0) {
-            return 1e36 / wExp(-x);
-        } else {
-            int256 ln2 = 0.693147180559945309e18;
-            int256 q = (x + ln2 / 2) / ln2;
-            int256 r = x - q * ln2;
-            int256 secondTerm = r * r / (2 * 1e18);
-            int256 thirdTerm = secondTerm * r / (3 * 1e18);
-            int256 expR = 1e18 + r + secondTerm + thirdTerm;
-            // forge-lint: disable-next-item(unsafe-typecast)
-            // - q is positive because x is positive in this branch
-            // - expR is positive?? (TODO)
-            return uint256(expR) << uint256(q);
+        unchecked {
+            if (x < 0) {
+                return 1e36 / wExp(-x);
+            } else {
+                int256 ln2 = 0.693147180559945309e18;
+                int256 q = (x + ln2 / 2) / ln2;
+                int256 r = x - q * ln2;
+                int256 secondTerm = r * r / (2 * 1e18);
+                int256 thirdTerm = secondTerm * r / (3 * 1e18);
+                int256 expR = 1e18 + r + secondTerm + thirdTerm;
+                // forge-lint: disable-next-item(unsafe-typecast)
+                // - q is positive because x is positive in this branch
+                // - expR is positive?? (TODO)
+                return uint256(expR) << uint256(q);
+            }
+        }
+    }
+
+    function tickToPrice(uint256 tick) internal pure returns (uint256) {
+        unchecked {
+            return uint256(1e36)
+                    .divUpUnchecked(1e18 + wExp(LN_ONE_PLUS_DELTA * (int256(TICK_RANGE / 2) - int256(tick))))
+                    .divUpUnchecked(1e13) * 1e13;
         }
     }
 
