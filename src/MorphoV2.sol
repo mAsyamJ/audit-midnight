@@ -103,7 +103,7 @@ contract MorphoV2 is IMorphoV2 {
             newTradingFee <= uint256(obligationStorage[id].fees[index]) * FEE_STEP,
             "New trading fee is higher than current"
         );
-        // forge-lint: disable-next-line(unsafe-typecast) as newTradingFee is less than MAX_FEE
+        // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee is less than MAX_FEE
         obligationStorage[id].fees[index] = uint16(newTradingFee / FEE_STEP);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
     }
@@ -114,7 +114,7 @@ contract MorphoV2 is IMorphoV2 {
         require(newTradingFee <= MAX_FEE, "Trading fee too high");
         require(index <= 5, "Invalid index");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
-        // forge-lint: disable-next-line(unsafe-typecast) as newTradingFee is less than MAX_FEE
+        // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee is less than MAX_FEE
         defaultFees[loanToken][index] = uint16(newTradingFee / FEE_STEP);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
@@ -476,9 +476,9 @@ contract MorphoV2 is IMorphoV2 {
     /// VIEW FUNCTIONS ///
 
     function tickToPrice(uint256 tick) public pure returns (uint256) {
-        return // forge-lint: disable-next-line(unsafe-typecast) tick is always less than 1176
-                (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12)
-                * 1e12;
+        // forge-lint: disable-next-item(unsafe-typecast) tick is always less than 1176
+        return
+            (WAD.mulDivUp(WAD, WAD + UtilsLib.wExp(LN_ONE_PLUS_DELTA * (588 - int256(tick))))).mulDivUp(1, 1e12) * 1e12;
     }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
