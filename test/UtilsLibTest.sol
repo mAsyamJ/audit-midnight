@@ -106,16 +106,16 @@ contract UtilsLibTest is Test {
     }
 
     function testWExp() public pure {
-        assertApproxEqRel(UtilsLib.wExp(-10e18), 0.000045e18, 0.1e18, "exp(-10)");
-        assertApproxEqRel(UtilsLib.wExp(-9e18), 0.000123e18, 0.1e18, "exp(-9)");
-        assertApproxEqRel(UtilsLib.wExp(-8e18), 0.000335e18, 0.001e18, "exp(-8)");
-        assertApproxEqRel(UtilsLib.wExp(-7e18), 0.000911e18, 0.03e18, "exp(-7)");
-        assertApproxEqRel(UtilsLib.wExp(-6e18), 0.002478e18, 0.003e18, "exp(-6)");
-        assertApproxEqRel(UtilsLib.wExp(-5e18), 0.006737e18, 0.05e18, "exp(-5)");
-        assertApproxEqRel(UtilsLib.wExp(-4e18), 0.018315e18, 0.006e18, "exp(-4)");
-        assertApproxEqRel(UtilsLib.wExp(-3e18), 0.049787e18, 0.07e18, "exp(-3)");
-        assertApproxEqRel(UtilsLib.wExp(-2e18), 0.135335e18, 0.01e18, "exp(-2)");
-        assertApproxEqRel(UtilsLib.wExp(-1e18), 0.367879e18, 0.1e18, "exp(-1)");
+        assertApproxEqRel(UtilsLib.wExp(-10e18), 0.00004539992e18, 0.001e18, "exp(-10)");
+        assertApproxEqRel(UtilsLib.wExp(-9e18), 0.0001234098e18, 0.001e18, "exp(-9)");
+        assertApproxEqRel(UtilsLib.wExp(-8e18), 0.00033546262e18, 0.001e18, "exp(-8)");
+        assertApproxEqRel(UtilsLib.wExp(-7e18), 0.00091188197e18, 0.001e18, "exp(-7)");
+        assertApproxEqRel(UtilsLib.wExp(-6e18), 0.00247875217e18, 0.001e18, "exp(-6)");
+        assertApproxEqRel(UtilsLib.wExp(-5e18), 0.00673794699e18, 0.001e18, "exp(-5)");
+        assertApproxEqRel(UtilsLib.wExp(-4e18), 0.01831563888e18, 0.001e18, "exp(-4)");
+        assertApproxEqRel(UtilsLib.wExp(-3e18), 0.04978706836e18, 0.001e18, "exp(-3)");
+        assertApproxEqRel(UtilsLib.wExp(-2e18), 0.13533528323e18, 0.001e18, "exp(-2)");
+        assertApproxEqRel(UtilsLib.wExp(-1e18), 0.36787944117e18, 0.001e18, "exp(-1)");
         assertEq(UtilsLib.wExp(0), 1e18, "exp(0)");
         assertApproxEqRel(UtilsLib.wExp(1e18), 2.71828e18, 0.001e18, "exp(1)");
         assertApproxEqRel(UtilsLib.wExp(2e18), 7.38905e18, 0.001e18, "exp(2)");

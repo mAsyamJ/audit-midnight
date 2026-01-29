@@ -65,16 +65,18 @@ library UtilsLib {
     }
 
     function wExp(int256 x) internal pure returns (uint256) {
-        int256 ln2 = 0.693147180559945309e18;
-        int256 q = (x + ln2 / 2) / ln2;
-        int256 r = x - q * ln2;
-        int256 secondTerm = r * r / (2 * WAD_INT);
-        int256 thirdTerm = secondTerm * r / (3 * WAD_INT);
-        int256 expR = WAD_INT + r + secondTerm + thirdTerm;
-        // forge-lint: disable-next-line(unsafe-typecast)
-        if (q > 0) return uint256(expR) << uint256(q);
-        // forge-lint: disable-next-line(unsafe-typecast)
-        else return uint256(expR) >> uint256(-q);
+        if (x < 0) {
+            return 1e36 / wExp(-x);
+        } else {
+            int256 ln2 = 0.693147180559945309e18;
+            int256 q = (x + ln2 / 2) / ln2;
+            int256 r = x - q * ln2;
+            int256 secondTerm = r * r / (2 * WAD_INT);
+            int256 thirdTerm = secondTerm * r / (3 * WAD_INT);
+            int256 expR = WAD_INT + r + secondTerm + thirdTerm;
+            // forge-lint: disable-next-line(unsafe-typecast)
+            return uint256(expR) << uint256(q);
+        }
     }
 
     function toUint128(uint256 x) internal pure returns (uint128) {

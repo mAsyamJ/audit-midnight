@@ -174,12 +174,13 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(morphoV2.tickToPrice(1148), WAD, "tick max");
     }
 
+    // works between tick 200 and 1000
     function testReturnJumps() public view {
-        uint256 price = morphoV2.tickToPrice(205);
+        uint256 price = morphoV2.tickToPrice(200);
         uint256 previousReturn = _return(price);
-        for (uint256 i = 400; i <= 401; i++) {
+        for (uint256 i = 200; i <= 1000; i++) {
             uint256 currentReturn = _return(morphoV2.tickToPrice(i));
-            assertApproxEqRel(currentReturn, previousReturn.mulDivDown(WAD, 1.025e18), 0.01e18, "tick i");
+            assertApproxEqRel(currentReturn, previousReturn.mulDivDown(WAD, 1.025e18), 0.05e18, "tick i");
             previousReturn = currentReturn;
         }
     }

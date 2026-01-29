@@ -155,7 +155,7 @@ contract MorphoV2 is IMorphoV2 {
         );
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
-        require(offer.tick <= 1176, "start tick too high");
+        require(offer.tick <= 1176, "tick too high");
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(signer(root, sig) == offer.maker, "invalid signature");
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
