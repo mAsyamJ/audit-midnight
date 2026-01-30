@@ -6,6 +6,7 @@ import {Test} from "../lib/forge-std/src/Test.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
+import {IdLib} from "../src/libraries/IdLib.sol";
 import {WAD, ORACLE_PRICE_SCALE, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Offer, Signature, Collateral, Seizure} from "../src/interfaces/IMorphoV2.sol";
 import {MorphoV2} from "../src/MorphoV2.sol";
@@ -157,10 +158,7 @@ abstract contract BaseTest is Test {
     }
 
     function toId(Obligation memory obligation) internal view returns (bytes32) {
-        bytes memory creationCode = abi.encodePacked(
-            type(ObligationDeployer).creationCode, abi.encode(obligation, block.chainid, address(morphoV2))
-        );
-        return keccak256(creationCode);
+        return IdLib.toId(address(morphoV2), obligation);
     }
 
     function root(Offer[1] memory offers) internal pure returns (bytes32) {

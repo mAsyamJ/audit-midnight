@@ -3,6 +3,7 @@
 pragma solidity 0.8.31;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
+import {IdLib} from "./libraries/IdLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
 import {
     WAD,
@@ -454,7 +455,7 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Returns the obligation id and creates the obligation if it doesn't exist yet.
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
-        bytes32 id = toId(obligation);
+        bytes32 id = IdLib.toId(address(this), obligation);
         if (!obligationState[id].created) {
             address previousCollateralToken;
             for (uint256 i = 0; i < obligation.collaterals.length; i++) {
@@ -474,15 +475,6 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     /// VIEW FUNCTIONS ///
-
-    function idToObligationContract(bytes32 id) public view returns (address) {
-        return address(uint160(uint256(keccak256(abi.encodePacked(uint8(0xff), address(this), bytes32(0), id)))));
-    }
-
-    function idToObligation(bytes32 id) external view returns (Obligation memory) {
-        address obligationContract = idToObligationContract(id);
-        return abi.decode(obligationContract.code, (Obligation));
-    }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
         return obligationState[id].totalUnits;
@@ -504,15 +496,8 @@ contract MorphoV2 is IMorphoV2 {
         return obligationState[id].fees;
     }
 
-    function toId(Obligation memory obligation) public view returns (bytes32) {
-        bytes memory creationCode = abi.encodePacked(
-            type(ObligationDeployer).creationCode, abi.encode(obligation, block.chainid, address(this))
-        );
-        return keccak256(creationCode);
-    }
-
     function isHealthy(Obligation memory obligation, address borrower) public view returns (bool) {
-        bytes32 id = toId(obligation);
+        bytes32 id = IdLib.toId(address(this), obligation);
         uint256 debt = debtOf[id][borrower];
         uint256 maxDebt;
         for (uint256 i = 0; i < obligation.collaterals.length && maxDebt < debt; i++) {

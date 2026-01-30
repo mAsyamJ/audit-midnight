@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
+import {IdLib} from "../src/libraries/IdLib.sol";
 import {Obligation, Collateral} from "../src/interfaces/IMorphoV2.sol";
 
 import {ERC20} from "./helpers/ERC20.sol";
@@ -166,7 +167,7 @@ contract OtherFunctionsTest is BaseTest {
         _obligation.collaterals = collaterals;
 
         bytes32 _id = morphoV2.touchObligation(_obligation);
-        Obligation memory obligationFromId = morphoV2.idToObligation(_id);
+        Obligation memory obligationFromId = IdLib.idToObligation(address(morphoV2), _id);
         assertEq(_obligation.loanToken, obligationFromId.loanToken, "loanToken");
         assertEq(_obligation.maturity, obligationFromId.maturity, "maturity");
         assertEq(_obligation.collaterals.length, obligationFromId.collaterals.length, "collaterals length");
