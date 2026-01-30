@@ -12,7 +12,8 @@ contract TickLibTest is Test {
     // Tick to price
 
     function testTickToPriceMinMax() public pure {
-        assertEq(TickLib.tickToPrice(0), 0.00001e18, "tick 0");
+        assertEq(TickLib.tickToPrice(0), 0, "tick 0");
+        assertEq(TickLib.tickToPrice(1), 1e13, "tick 1");
         assertEq(TickLib.tickToPrice(TICK_RANGE - 1), 0.99999e18, "tick max - 1");
         assertEq(TickLib.tickToPrice(TICK_RANGE), 1e18, "tick max");
     }

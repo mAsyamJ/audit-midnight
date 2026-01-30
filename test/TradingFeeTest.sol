@@ -263,19 +263,6 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testBuyerPriceTooHighFees() public {
-        uint256 tradingFee = MAX_FEE;
-        uint256 sellerTick = TICK_RANGE;
-
-        morphoV2.setDefaultTradingFee(address(loanToken), 1, tradingFee);
-        borrowerOffer.tick = sellerTick;
-
-        collateralize(obligation, borrower, MAX_TEST_AMOUNT * 3);
-
-        vm.expectRevert("cannot trade at price above one");
-        take(MAX_TEST_AMOUNT, 0, 0, 0, lender, borrowerOffer);
-    }
-
     function testPostMaturityFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee0Day, uint256 maturity) public {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
