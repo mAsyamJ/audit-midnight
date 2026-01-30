@@ -2,11 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {TICK_RANGE, LN_ONE_PLUS_DELTA} from "./ConstantsLib.sol";
-
 library UtilsLib {
-    using UtilsLib for uint256;
-
     /// @dev Returns true if at most one of `x` and `y` is nonzero.
     function atMostOneNonZero(uint256 x, uint256 y) internal pure returns (bool z) {
         assembly {
@@ -51,13 +47,6 @@ library UtilsLib {
         return (x * y + (d - 1)) / d;
     }
 
-    /// @dev Returns (`x` + `d` - 1) / `d` rounded up, without checking for overflow.
-    function divUpUnchecked(uint256 x, uint256 d) internal pure returns (uint256) {
-        unchecked {
-            return (x + (d - 1)) / d;
-        }
-    }
-
     /// @dev Returns hash(... hash(leafHash, proof[0]), ..., proof[n]) == root.
     /// @dev Hash sorts the inputs lexicographically.
     function isLeaf(bytes32 root, bytes32 leafHash, bytes32[] memory proof) internal pure returns (bool) {
@@ -71,49 +60,6 @@ library UtilsLib {
     /// @dev Returns the concatenation of x and y, sorted lexicographically.
     function sort(bytes32 x, bytes32 y) internal pure returns (bytes memory) {
         return x < y ? abi.encodePacked(x, y) : abi.encodePacked(y, x);
-    }
-
-    function wExp(int256 x) internal pure returns (uint256) {
-        unchecked {
-            if (x < 0) {
-                return 1e36 / wExp(-x);
-            } else {
-                int256 ln2 = 0.693147180559945309e18;
-                int256 q = (x + ln2 / 2) / ln2;
-                int256 r = x - q * ln2;
-                int256 secondTerm = r * r / (2 * 1e18);
-                int256 thirdTerm = secondTerm * r / (3 * 1e18);
-                int256 expR = 1e18 + r + secondTerm + thirdTerm;
-                // forge-lint: disable-next-item(unsafe-typecast)
-                // - q is non-negative because x is non-negative in this branch
-                // - expR is positive because |r| < ln2 < 1e18 and |secondTerm| > |thirdTerm|
-                return uint256(expR) << uint256(q);
-            }
-        }
-    }
-
-    function tickToPrice(uint256 tick) internal pure returns (uint256) {
-        unchecked {
-            // forge-lint: disable-next-item(unsafe-typecast)
-            return uint256(1e36)
-                    .divUpUnchecked(1e18 + wExp(LN_ONE_PLUS_DELTA * (int256(TICK_RANGE / 2) - int256(tick))))
-                    .divUpUnchecked(1e13) * 1e13;
-        }
-    }
-
-    /// @dev Returns the lowest tick with a higher price.
-    function priceToTick(uint256 price) internal pure returns (uint256) {
-        require(price <= 1e18, "Price is greater than one");
-        uint256 low = 0;
-        uint256 high = TICK_RANGE;
-        while (low != high) {
-            unchecked {
-                uint256 mid = (low + high) / 2;
-                if (tickToPrice(mid) < price) low = mid + 1;
-                else high = mid;
-            }
-        }
-        return low;
     }
 
     function toUint128(uint256 x) internal pure returns (uint128) {

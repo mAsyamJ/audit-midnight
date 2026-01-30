@@ -3,6 +3,7 @@
 pragma solidity 0.8.31;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
+import {TickLib, TICK_RANGE} from "./libraries/TickLib.sol";
 import {SafeTransferLib} from "./libraries/SafeTransferLib.sol";
 import {
     WAD,
@@ -12,8 +13,7 @@ import {
     MAX_LIF,
     TIME_TO_MAX_LIF,
     EIP712_DOMAIN_TYPEHASH,
-    ROOT_TYPEHASH,
-    TICK_RANGE
+    ROOT_TYPEHASH
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {
@@ -172,7 +172,7 @@ contract MorphoV2 is IMorphoV2 {
             ? (offer.maker, offer.callback, offer.callbackData, taker, takerCallback, takerCallbackData)
             : (taker, takerCallback, takerCallbackData, offer.maker, offer.callback, offer.callbackData);
 
-        uint256 offerPrice = UtilsLib.tickToPrice(offer.tick);
+        uint256 offerPrice = TickLib.tickToPrice(offer.tick);
         uint256 timeToMaturity = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
         uint256 _tradingFee = tradingFee(id, timeToMaturity);
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
