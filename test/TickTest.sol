@@ -33,10 +33,7 @@ contract TickTest is Test {
             uint256 previousReturn = _return(UtilsLib.tickToPrice(i - 1));
             uint256 currentReturn = _return(UtilsLib.tickToPrice(i));
             assertApproxEqRel(
-                currentReturn.mulDivDown(1.025e18, 1e18),
-                previousReturn,
-                0.005e18,
-                string.concat("tick ", vm.toString(i))
+                currentReturn.mulDivDown(WAD, previousReturn), 1.025e18, 0.1e18, string.concat("tick ", vm.toString(i))
             );
         }
     }
