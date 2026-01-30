@@ -45,12 +45,12 @@ contract IdLibTest is Test {
     function testToIdIsInjectiveInMorphoV2(
         Obligation memory obligation,
         uint256 chainid,
-        address morphoV2_1,
-        address morphoV2_2
+        address morphoV2One,
+        address morphoV2Two
     ) public pure {
-        vm.assume(morphoV2_1 != morphoV2_2);
-        bytes32 id1 = IdLib.toId(obligation, chainid, morphoV2_1);
-        bytes32 id2 = IdLib.toId(obligation, chainid, morphoV2_2);
+        vm.assume(morphoV2One != morphoV2Two);
+        bytes32 id1 = IdLib.toId(obligation, chainid, morphoV2One);
+        bytes32 id2 = IdLib.toId(obligation, chainid, morphoV2Two);
         assertNotEq(id1, id2);
     }
 }
