@@ -89,21 +89,25 @@ contract TickLibTest is BaseTest {
     }
 
     function testTickToPriceAccuracy() public {
-        uint256 maxAbsErrorBps;
+        uint256 maxAbsErrorWad;
         uint256 maxRelErrorWad;
+        uint256 totalAbsErrorWad;
+        uint256 totalRelErrorWad;
 
         for (uint256 tick = 0; tick <= TICK_RANGE; tick++) {
             uint256 solPrice = TickLib.tickToPrice(tick);
             uint256 exactPrice = getExactPriceFromPython(tick);
 
-            uint256 absErrorBps = absDiff(solPrice, exactPrice) * 10000 / 1e18;
-            maxAbsErrorBps = max(maxAbsErrorBps, absErrorBps);
+            uint256 absErrorWad = absDiff(solPrice, exactPrice);
+            maxAbsErrorWad = max(maxAbsErrorWad, absErrorWad);
+            totalAbsErrorWad += absErrorWad;
             uint256 relErrorWad = absDiff(solPrice, exactPrice) * 1e18 / exactPrice;
+            totalRelErrorWad += relErrorWad;
             maxRelErrorWad = max(maxRelErrorWad, relErrorWad);
 
-            assertLe(absErrorBps, 1, string.concat("Tick ", vm.toString(tick), " error exceeds 1 bps"));
+            assertLe(absErrorWad, 0.00015e18, string.concat("Tick ", vm.toString(tick), " error exceeds 1.5 bps"));
             if (tick > TICK_RANGE / 2) {
-                assertLe(relErrorWad, 0.001e18, string.concat("Tick ", vm.toString(tick), " error exceeds 1%"));
+                assertLe(relErrorWad, 0.001e18, string.concat("Tick ", vm.toString(tick), " error exceeds 0.1%"));
             }
 
             // Check exact price is bracketed by adjacent sol prices (only where prices vary per-tick)
@@ -117,7 +121,9 @@ contract TickLibTest is BaseTest {
             }
         }
 
-        console.log("Max absolute error (bps):", maxAbsErrorBps);
+        console.log("Max absolute error (wad):", maxAbsErrorWad);
+        console.log("Avg absolute error (wad):", totalAbsErrorWad / TICK_RANGE);
         console.log("Max relative error (wad):", maxRelErrorWad);
+        console.log("Avg relative error (wad):", totalRelErrorWad / TICK_RANGE);
     }
 }
