@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {Test, console} from "forge-std/Test.sol";
+import {BaseTest} from "./BaseTest.sol";
+import {console} from "forge-std/Test.sol";
 import {TickLib} from "../src/libraries/TickLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TICK_RANGE} from "../src/libraries/TickLib.sol";
 
-contract TickLibTest is Test {
+contract TickLibTest is BaseTest {
     using UtilsLib for uint256;
 
     // Tick to price
@@ -75,5 +76,38 @@ contract TickLibTest is Test {
     function testGasPriceToTick(uint256 price) public pure {
         price = bound(price, 0, 1 ether);
         TickLib.priceToTick(price);
+    }
+
+    function getExactPriceFromPython(uint256 tick) internal returns (uint256) {
+        string[] memory inputs = new string[](3);
+        inputs[0] = "python3";
+        inputs[1] = "test/test_ticks.py";
+        inputs[2] = vm.toString(tick);
+
+        bytes memory result = vm.ffi(inputs);
+        return abi.decode(result, (uint256));
+    }
+
+    function testTickToPriceAccuracy() public {
+        uint256 maxAbsErrorBps;
+        uint256 maxRelErrorWad;
+
+        for (uint256 tick = 0; tick <= TICK_RANGE; tick++) {
+            uint256 solPrice = TickLib.tickToPrice(tick);
+            uint256 exactPrice = getExactPriceFromPython(tick);
+
+            uint256 absErrorBps = absDiff(solPrice, exactPrice) * 10000 / 1e18;
+            maxAbsErrorBps = max(maxAbsErrorBps, absErrorBps);
+            uint256 relErrorWad = absDiff(solPrice, exactPrice) * 1e18 / exactPrice;
+            maxRelErrorWad = max(maxRelErrorWad, relErrorWad);
+
+            assertLe(absErrorBps, 1, string.concat("Tick ", vm.toString(tick), " error exceeds 1 bps"));
+            if (tick > TICK_RANGE / 2) {
+                assertLe(relErrorWad, 0.001e18, string.concat("Tick ", vm.toString(tick), " error exceeds 1%"));
+            }
+        }
+
+        console.log("Max absolute error (bps):", maxAbsErrorBps);
+        console.log("Max relative error (wad):", maxRelErrorWad);
     }
 }
