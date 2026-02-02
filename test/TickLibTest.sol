@@ -78,17 +78,18 @@ contract TickLibTest is BaseTest {
         TickLib.priceToTick(price);
     }
 
-    function getExactPriceFromPython(uint256 tick) internal returns (uint256) {
-        string[] memory inputs = new string[](3);
-        inputs[0] = "python3";
-        inputs[1] = "test/test_ticks.py";
-        inputs[2] = vm.toString(tick);
-
-        bytes memory result = vm.ffi(inputs);
-        return abi.decode(result, (uint256));
+    function loadExactPrices() internal returns (uint256[] memory) {
+        uint256[] memory exactPrices = new uint256[](TICK_RANGE + 1);
+        string memory json = vm.readFile("test/ticks_exact.json");
+        string[] memory priceStrings = vm.parseJsonStringArray(json, ".prices");
+        for (uint256 i = 0; i < priceStrings.length; i++) {
+            exactPrices[i] = vm.parseUint(priceStrings[i]);
+        }
+        return exactPrices;
     }
 
     function testTickToPriceAccuracy() public {
+        uint256[] memory exactPrices = loadExactPrices();
         uint256 maxAbsErrorWad;
         uint256 maxRelErrorWad;
         uint256 totalAbsErrorWad;
@@ -96,7 +97,7 @@ contract TickLibTest is BaseTest {
 
         for (uint256 tick = 0; tick <= TICK_RANGE; tick++) {
             uint256 solPrice = TickLib.tickToPrice(tick);
-            uint256 exactPrice = getExactPriceFromPython(tick);
+            uint256 exactPrice = exactPrices[tick];
 
             uint256 absErrorWad = absDiff(solPrice, exactPrice);
             maxAbsErrorWad = max(maxAbsErrorWad, absErrorWad);
