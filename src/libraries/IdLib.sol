@@ -24,7 +24,7 @@ library IdLib {
         returns (bytes memory)
     {
         bytes memory prefix = hex"600b380380600b5f395ff3";
-        bytes memory sstore2Data = abi.encode(obligation, chainid, morphoV2);
+        bytes memory sstore2Data = abi.encode(chainid, morphoV2, obligation);
         return abi.encodePacked(prefix, sstore2Data);
     }
 
@@ -35,7 +35,7 @@ library IdLib {
     function idToObligation(address morphoV2, bytes32 id) internal view returns (Obligation memory) {
         address create2Address =
             address(uint160(uint256(keccak256(abi.encodePacked(uint8(0xff), morphoV2, bytes32(0), id)))));
-        (Obligation memory obligation,,) = abi.decode(create2Address.code, (Obligation, uint256, address));
+        (,, Obligation memory obligation) = abi.decode(create2Address.code, (uint256, address, Obligation));
         return obligation;
     }
 
