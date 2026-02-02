@@ -10,15 +10,15 @@ bytes constant SSTORE2_BYTECODE =
 
 library IdLib {
     function toId(Obligation memory obligation, uint256 chainid, address morphoV2) internal pure returns (bytes32) {
-        bytes memory encodedObligation = abi.encode(obligation, chainid, morphoV2);
-        bytes memory creationCode = abi.encodePacked(SSTORE2_BYTECODE, abi.encode(encodedObligation));
+        bytes memory sstore2Data = abi.encode(obligation, chainid, morphoV2);
+        bytes memory creationCode = abi.encodePacked(SSTORE2_BYTECODE, abi.encode(sstore2Data));
         return keccak256(creationCode);
     }
 
     function idToObligation(address morphoV2, bytes32 id) internal view returns (Obligation memory) {
         address create2Address =
             address(uint160(uint256(keccak256(abi.encodePacked(uint8(0xff), morphoV2, bytes32(0), id)))));
-        // The SStore2 contract code of an obligation also contains chainid and morphoV2, which are not needed.
+        // The SStore2 contract code of an obligation also contains chainid and morphoV2, which are discarded.
         return abi.decode(create2Address.code, (Obligation));
     }
 
