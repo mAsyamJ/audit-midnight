@@ -187,6 +187,17 @@ contract OtherFunctionsTest is BaseTest {
         }
     }
 
+    function testSstore2CodeStartsWithStop(Obligation memory _obligation) public {
+        _obligation = sortedAndUniqueCollateralsInObligation(_obligation);
+
+        bytes32 _id = morphoV2.touchObligation(_obligation);
+        address sstore2Address =
+            address(uint160(uint256(keccak256(abi.encodePacked(uint8(0xff), address(morphoV2), bytes32(0), _id)))));
+
+        assertGt(sstore2Address.code.length, 0, "code should exist");
+        assertEq(uint8(sstore2Address.code[0]), 0x00, "first byte should be STOP opcode");
+    }
+
     function testShuffleSession(address user) public {
         vm.prank(user);
         morphoV2.shuffleSession();
