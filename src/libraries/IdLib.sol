@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Obligation} from "../interfaces/IMorphoV2.sol";
 
 library IdLib {
-    /// @dev Minimal creation code that returns code after the prefix as runtime bytecode.
+    /// @dev Creation code that returns the code after the prefix as runtime bytecode, except for the first 52 bytes.
     /// @dev Explanation of the prefix:
     /// hex       opcode          stack              comments
     /// ------------------------------------------------------------------------------
