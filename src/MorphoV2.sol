@@ -238,16 +238,16 @@ contract MorphoV2 is IMorphoV2 {
         emit EventsLib.Take(
             msg.sender,
             id,
+            offer.maker,
+            taker,
+            offer.buy,
             buyerAssets,
             sellerAssets,
             obligationUnits,
             obligationShares,
-            taker,
             buyerIsLender,
             sellerIsBorrower,
-            offer.maker,
-            offer.group,
-            offer.buy
+            offer.group
         );
 
         if (buyerCallback != address(0)) {
