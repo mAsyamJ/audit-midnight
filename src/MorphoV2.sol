@@ -163,8 +163,16 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 id = touchObligation(offer.obligation);
         ObligationState storage _obligationState = obligationState[id];
 
-        address buyer = offer.buy ? offer.maker : taker;
-        address seller = offer.buy ? taker : offer.maker;
+        (
+            address buyer,
+            address buyerCallback,
+            bytes memory buyerCallbackData,
+            address seller,
+            address sellerCallback,
+            bytes memory sellerCallbackData
+        ) = offer.buy
+            ? (offer.maker, offer.callback, offer.callbackData, taker, takerCallback, takerCallbackData)
+            : (taker, takerCallback, takerCallbackData, offer.maker, offer.callback, offer.callbackData);
 
         uint256 offerPrice = TickLib.tickToPrice(offer.tick);
         uint256 timeToMaturity = UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp);
@@ -242,21 +250,17 @@ contract MorphoV2 is IMorphoV2 {
             sellerRecipient
         );
 
-        {
-            address buyerCallback = offer.buy ? offer.callback : takerCallback;
-            if (buyerCallback != address(0)) {
-                bytes memory buyerCallbackData = offer.buy ? offer.callbackData : takerCallbackData;
-                ICallbacks(buyerCallback)
-                    .onBuy(
-                        offer.obligation,
-                        buyer,
-                        buyerAssets,
-                        sellerAssets,
-                        obligationUnits,
-                        obligationShares,
-                        buyerCallbackData
-                    );
-            }
+        if (buyerCallback != address(0)) {
+            ICallbacks(buyerCallback)
+                .onBuy(
+                    offer.obligation,
+                    buyer,
+                    buyerAssets,
+                    sellerAssets,
+                    obligationUnits,
+                    obligationShares,
+                    buyerCallbackData
+                );
         }
 
         SafeTransferLib.safeTransferFrom(
@@ -264,21 +268,17 @@ contract MorphoV2 is IMorphoV2 {
         );
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, sellerRecipient, sellerAssets);
 
-        {
-            address sellerCallback = offer.buy ? takerCallback : offer.callback;
-            if (sellerCallback != address(0)) {
-                bytes memory sellerCallbackData = offer.buy ? takerCallbackData : offer.callbackData;
-                ICallbacks(sellerCallback)
-                    .onSell(
-                        offer.obligation,
-                        seller,
-                        buyerAssets,
-                        sellerAssets,
-                        obligationUnits,
-                        obligationShares,
-                        sellerCallbackData
-                    );
-            }
+        if (sellerCallback != address(0)) {
+            ICallbacks(sellerCallback)
+                .onSell(
+                    offer.obligation,
+                    seller,
+                    buyerAssets,
+                    sellerAssets,
+                    obligationUnits,
+                    obligationShares,
+                    sellerCallbackData
+                );
         }
 
         require(isHealthy(offer.obligation, id, seller), "Seller is unhealthy");
