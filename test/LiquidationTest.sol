@@ -328,7 +328,7 @@ contract LiquidationTest is BaseTest {
             address token = obligation.collaterals[i].token;
             deal(token, address(this), collateralAmount);
             ERC20(token).approve(address(morphoV2), collateralAmount);
-            morphoV2.supplyCollateral(obligation, token, collateralAmount, borrower);
+            morphoV2.supplyCollateral(obligation, i, collateralAmount, borrower);
         }
 
         setupObligation(obligation, units);
