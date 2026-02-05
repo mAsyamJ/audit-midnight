@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+using FlashLiquidateCallback as callback;
+
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
@@ -14,12 +16,28 @@ methods {
 
     function _.price() external => NONDET;
 
+    function _.onFlashLoan(address token, uint256 amount, bytes data) external => DISPATCHER(true);
+    function _.onLiquidate(MorphoV2.Seizure[] seizures, address borrower, address liquidator, bytes data) external => DISPATCHER(true);      
+
+    function FlashLiquidateCallback.startFlashloanForLiquidity(uint256 amount) internal => CVL_flashLoanStart(liquidateLoanToken, amount);
+    function FlashLiquidateCallback.endFlashloanForLiquidity(uint256 amount) internal => CVL_flashLoanEnd(liquidateLoanToken, amount);
+    function FlashLiquidateCallback.startFlashloan(address token, uint256 amount) internal => CVL_flashLoanStart(token, amount);
+    function FlashLiquidateCallback.endFlashloan(address token, uint256 amount) internal => CVL_flashLoanEnd(token, amount);
+
     // Check that this doesn't summarize any MorphoV2 functions...
     function _.decimals() external => CVL_decimals(calledContract) expect uint8;
     function _.balanceOf(address a) external => CVL_balanceOf(calledContract, a) expect uint256;
     function _.transfer(address a, uint256 v) external with(env e) => CVL_transferFrom(e, calledContract, e.msg.sender, a, v) expect bool;
     function _.transferFrom(address src, address a, uint256 v) external with(env e) => CVL_transferFrom(e, calledContract, src, a, v) expect bool;
 }
+
+/* Global Assumptions
+ * @global_assumption ERC20 tokens transfer correctly: no fee taking from sender or receiver, no rebasing, no blacklisting, no transfer limits.
+ */
+
+/*
+ * @properties Solvency: For any token, the balance of the contract is always greater than or equal to the sum of all collateral and withdrawable amounts for that token.
+ */
 
 // mappings from obligation id to loan token and collateral tokens
 ghost mapping(bytes32 => address) loantoken;
@@ -104,10 +122,33 @@ hook Sstore obligationState[KEY bytes32 id].withdrawable uint256 newWithdrawable
     withdrawableMirror[id][loantoken[id]] = newWithdrawable;
 }
 
+
+// mappings from token to flashloan amount
+// We use persistent ghost to ensure these values are not changed by the callback.
+// This is sound as we prove the rule flashLoansPaidBack which ensures that the flashloan amount after the callback is the same as before.
+persistent ghost mapping(address => mathint) flashloans {
+    init_state axiom (forall address token. flashloans[token] == 0);
+}
+
+// the loan token for which liquidate was called
+// persistent is fine, because this variable is only used in the preserved block in the spec.
+persistent ghost address liquidateLoanToken;
+
+function CVL_flashLoanStart(address token, uint256 amount) {
+    flashloans[token] = flashloans[token] + amount;
+}
+function CVL_flashLoanEnd(address token, uint256 amount) {
+    flashloans[token] = flashloans[token] - amount;
+}
+
 /// INVARIANTS ///
 
+/* @title Solvency of the contract
+ * @invariant For any token, the balance of the contract is always greater than or equal to the sum of all collateral and withdrawable amounts for that token minus the flash loaned amount.
+ */
 strong invariant tokenBalanceCorrect(address token)
-    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token)
+    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token) - flashloans[token]
+filtered { f -> f.contract != callback }
 {
     preserved with (env e) {
         require e.msg.sender != currentContract, "only external calls";
@@ -127,5 +168,27 @@ strong invariant tokenBalanceCorrect(address token)
         require taker != currentContract, "no trading with contract";
         require offer.maker != currentContract, "no trading with contract";
     }
+
+    preserved liquidate(MorphoV2.Obligation obligation, MorphoV2.Seizure[] seizures, address borrower, bytes data) with (env e) {
+        require e.msg.sender != currentContract, "only external calls";
+        liquidateLoanToken = obligation.loanToken;
+    }
 }
 
+
+/* @title Flash loan repayment
+ * @description For any token, the amount of flash loaned tokens before and after a call is the same.
+ */
+rule flashLoansPaidBack(method f, address token) {
+    env e;
+    calldataarg args;
+    mathint oldFlashLoan = flashloans[token];
+    f(e, args);
+    assert flashloans[token] == oldFlashLoan, "flashloan repaid";
+}
+
+/* @title Flash loans are temporary
+ * @invariant For any token, the amount of flash loaned tokens after a transaction is 0.
+ */
+weak invariant flashLoansZero(address token)
+    flashloans[token] == 0;
