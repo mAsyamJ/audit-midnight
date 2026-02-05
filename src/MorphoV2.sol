@@ -313,20 +313,14 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), obligationUnits);
     }
 
-    function supplyCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
+    function supplyCollateral(Obligation memory obligation, uint256 collateralIndex, uint256 assets, address onBehalf)
         external
     {
         bytes32 id = touchObligation(obligation);
+        address collateral = obligation.collaterals[collateralIndex].token;
 
         collateralOf[id][onBehalf][collateral] += assets;
 
-        uint256 collateralIndex = 0;
-        for (
-            ;
-            collateralIndex < obligation.collaterals.length
-                && obligation.collaterals[collateralIndex].token != collateral;
-            collateralIndex++
-        ) {}
         uint256 collateralPrice = IOracle(obligation.collaterals[collateralIndex].oracle).price();
         uint256 collateralValue = collateralOf[id][onBehalf][collateral].mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
 
@@ -340,22 +334,16 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransferFrom(collateral, msg.sender, address(this), assets);
     }
 
-    function withdrawCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
+    function withdrawCollateral(Obligation memory obligation, uint256 collateralIndex, uint256 assets, address onBehalf)
         external
     {
         bytes32 id = touchObligation(obligation);
+        address collateral = obligation.collaterals[collateralIndex].token;
 
         collateralOf[id][onBehalf][collateral] -= assets;
 
         require(isHealthy(obligation, id, onBehalf), "Unhealthy borrower");
 
-        uint256 collateralIndex = 0;
-        for (
-            ;
-            collateralIndex < obligation.collaterals.length
-                && obligation.collaterals[collateralIndex].token != collateral;
-            collateralIndex++
-        ) {}
         uint256 collateralPrice = IOracle(obligation.collaterals[collateralIndex].oracle).price();
         uint256 collateralValue = collateralOf[id][onBehalf][collateral].mulDivDown(collateralPrice, ORACLE_PRICE_SCALE);
         require(

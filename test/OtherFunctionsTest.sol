@@ -41,11 +41,11 @@ contract OtherFunctionsTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         deal(collateralToken, address(this), additionalCollateral);
-        morphoV2.supplyCollateral(obligation, collateralToken, additionalCollateral, borrower);
+        morphoV2.supplyCollateral(obligation, 0, additionalCollateral, borrower);
         withdraw = bound(withdraw, 0, additionalCollateral);
         uint256 initialCollateral = morphoV2.collateralOf(id, borrower, collateralToken);
 
-        morphoV2.withdrawCollateral(obligation, collateralToken, withdraw, borrower);
+        morphoV2.withdrawCollateral(obligation, 0, withdraw, borrower);
 
         assertEq(morphoV2.collateralOf(id, borrower, collateralToken), initialCollateral - withdraw, "collateral of");
         assertEq(
@@ -63,12 +63,12 @@ contract OtherFunctionsTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         deal(collateralToken, address(this), additionalCollateral);
-        morphoV2.supplyCollateral(obligation, collateralToken, additionalCollateral, borrower);
+        morphoV2.supplyCollateral(obligation, 0, additionalCollateral, borrower);
         uint256 initialCollateral = morphoV2.collateralOf(id, borrower, collateralToken);
         withdraw = bound(withdraw, additionalCollateral + 1, initialCollateral);
 
         vm.expectRevert("Unhealthy borrower");
-        morphoV2.withdrawCollateral(obligation, collateralToken, withdraw, borrower);
+        morphoV2.withdrawCollateral(obligation, 0, withdraw, borrower);
     }
 
     function testRepay(uint256 units, uint256 repaid) public {
@@ -191,7 +191,7 @@ contract OtherFunctionsTest is BaseTest {
         deal(collateralToken, address(this), collateral);
         ERC20(collateralToken).approve(address(morphoV2), collateral);
         vm.expectRevert("Below min collateral");
-        morphoV2.supplyCollateral(obligation, collateralToken, collateral, borrower);
+        morphoV2.supplyCollateral(obligation, 0, collateral, borrower);
     }
 
     function testMinCollateralInWithdrawCollateral(
@@ -219,9 +219,9 @@ contract OtherFunctionsTest is BaseTest {
         address collateralToken = obligation.collaterals[0].token;
         deal(collateralToken, address(this), collateral);
         ERC20(collateralToken).approve(address(morphoV2), collateral);
-        morphoV2.supplyCollateral(obligation, collateralToken, collateral, borrower);
+        morphoV2.supplyCollateral(obligation, 0, collateral, borrower);
 
         vm.expectRevert("Below min collateral");
-        morphoV2.withdrawCollateral(obligation, collateralToken, withdrawnCollateral, borrower);
+        morphoV2.withdrawCollateral(obligation, 0, withdrawnCollateral, borrower);
     }
 }
