@@ -2,10 +2,11 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Collateral} from "../src/interfaces/IMorphoV2.sol";
+import {Obligation, Collateral, Offer} from "../src/interfaces/IMorphoV2.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {ERC20} from "./helpers/ERC20.sol";
+import {TICK_RANGE} from "../src/libraries/TickLib.sol";
 
 contract AuthorizationTest is BaseTest {
     using UtilsLib for uint256;
@@ -153,5 +154,74 @@ contract AuthorizationTest is BaseTest {
         morphoV2.withdrawCollateral(obligation, collateralToken, collateralAmount, user);
 
         assertEq(ERC20(collateralToken).balanceOf(user), collateralAmount);
+    }
+
+    function testTakeUnauthorized() public {
+        uint256 assets = 1000;
+        address taker = makeAddr("taker");
+
+        Offer memory offer;
+        offer.buy = true;
+        offer.maker = lender;
+        offer.assets = assets;
+        offer.obligation = obligation;
+        offer.expiry = block.timestamp + 200;
+        offer.tick = TICK_RANGE;
+
+        deal(address(loanToken), lender, assets);
+        collateralize(obligation, borrower, assets);
+
+        // Attacker tries to take on behalf of taker
+        address attacker = makeAddr("attacker");
+        vm.prank(attacker);
+        vm.expectRevert("UNAUTHORIZED");
+        morphoV2.take(assets, 0, 0, 0, taker, offer, sig([offer]), root([offer]), proof([offer]), address(0), hex"");
+    }
+
+    function testTakeAuthorized() public {
+        uint256 assets = 1000;
+        address taker = makeAddr("taker");
+        address operator = makeAddr("operator");
+
+        Offer memory offer;
+        offer.buy = true;
+        offer.maker = lender;
+        offer.assets = assets;
+        offer.obligation = obligation;
+        offer.expiry = block.timestamp + 200;
+        offer.tick = TICK_RANGE;
+
+        deal(address(loanToken), lender, assets);
+        collateralize(obligation, taker, assets);
+
+        // Taker authorizes operator
+        vm.prank(taker);
+        morphoV2.setIsAuthorized(operator, true);
+
+        // Operator can take on behalf of taker
+        vm.prank(operator);
+        morphoV2.take(assets, 0, 0, 0, taker, offer, sig([offer]), root([offer]), proof([offer]), address(0), hex"");
+
+        assertEq(morphoV2.debtOf(id, taker), assets);
+    }
+
+    function testTakeSelf() public {
+        uint256 assets = 1000;
+
+        Offer memory offer;
+        offer.buy = true;
+        offer.maker = lender;
+        offer.assets = assets;
+        offer.obligation = obligation;
+        offer.expiry = block.timestamp + 200;
+        offer.tick = TICK_RANGE;
+
+        deal(address(loanToken), lender, assets);
+        collateralize(obligation, borrower, assets);
+
+        // Borrower can take for themselves (no authorization needed)
+        take(assets, 0, 0, 0, borrower, offer);
+
+        assertEq(morphoV2.debtOf(id, borrower), assets);
     }
 }

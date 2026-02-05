@@ -147,6 +147,7 @@ contract MorphoV2 is IMorphoV2 {
         address takerCallback,
         bytes memory takerCallbackData
     ) public returns (uint256, uint256, uint256, uint256) {
+        require(taker == msg.sender || isAuthorized[taker][msg.sender], "UNAUTHORIZED");
         require(
             UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
             "inconsistent input"
@@ -291,7 +292,7 @@ contract MorphoV2 is IMorphoV2 {
         external
         returns (uint256, uint256)
     {
-        require(isSenderAuthorized(onBehalf), "UNAUTHORIZED");
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "UNAUTHORIZED");
         require(UtilsLib.atMostOneNonZero(obligationUnits, shares), "INCONSISTENT_INPUT");
         bytes32 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
@@ -340,7 +341,7 @@ contract MorphoV2 is IMorphoV2 {
     function withdrawCollateral(Obligation memory obligation, address collateral, uint256 assets, address onBehalf)
         external
     {
-        require(isSenderAuthorized(onBehalf), "UNAUTHORIZED");
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "UNAUTHORIZED");
         bytes32 id = touchObligation(obligation);
 
         collateralOf[id][onBehalf][collateral] -= assets;
@@ -501,10 +502,6 @@ contract MorphoV2 is IMorphoV2 {
 
     function fees(bytes32 id) external view returns (uint16[6] memory) {
         return obligationState[id].fees;
-    }
-
-    function isSenderAuthorized(address onBehalf) internal view returns (bool) {
-        return msg.sender == onBehalf || isAuthorized[onBehalf][msg.sender];
     }
 
     /// @dev This function should be called with the id corresponding to the obligation.
