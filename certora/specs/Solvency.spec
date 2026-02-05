@@ -63,8 +63,6 @@ function CVL_balanceOf(address token, address a) returns uint256 {
 }
 
 function CVL_transferFrom(env e, address token, address src, address dest, uint256 value) returns bool {
-//    lastTransferredToken = token;
-    // TODO Do we need to check authorization here?
     if (tokenBalances[token][src] < value || tokenBalances[token][dest] + value >= 2^256) {
         revert();
     }
@@ -76,8 +74,7 @@ function CVL_transferFrom(env e, address token, address src, address dest, uint2
     return success;
 }
 
-//ghost mapping(bytes32 => mapping(mathint => address)) collateraltoken;
-
+// ghost mirrors for collateralOf, debtOf and withdrawable
 ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) debtOfMirror {
     init_state axiom (forall bytes32 id. forall address owner. forall address token. debtOfMirror[id][owner][token] == 0);
     init_state axiom (forall address token. debtOfSum(token) == 0);
@@ -171,13 +168,14 @@ filtered { f -> f.contract != callback }
 
     preserved liquidate(MorphoV2.Obligation obligation, MorphoV2.Seizure[] seizures, address borrower, bytes data) with (env e) {
         require e.msg.sender != currentContract, "only external calls";
+        // remember the loan token for flash loan accounting
         liquidateLoanToken = obligation.loanToken;
     }
 }
 
 
 /* @title Flash loan repayment
- * @description For any token, the amount of flash loaned tokens before and after a call is the same.
+ * @description For any token, the flash loans before and after a call is the same.
  */
 rule flashLoansPaidBack(method f, address token) {
     env e;
@@ -188,7 +186,7 @@ rule flashLoansPaidBack(method f, address token) {
 }
 
 /* @title Flash loans are temporary
- * @invariant For any token, the amount of flash loaned tokens after a transaction is 0.
+ * @invariant For any token, the amount of flash loans after a transaction is 0.
  */
 weak invariant flashLoansZero(address token)
     flashloans[token] == 0;
