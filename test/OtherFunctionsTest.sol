@@ -7,6 +7,7 @@ import {Obligation, Collateral} from "../src/interfaces/IMorphoV2.sol";
 
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
+import {RevertingOracle} from "./helpers/RevertingOracle.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 import {ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
@@ -223,5 +224,56 @@ contract OtherFunctionsTest is BaseTest {
 
         vm.expectRevert("Below min collateral");
         morphoV2.withdrawCollateral(obligation, 0, withdrawnCollateral, borrower);
+    }
+
+    function testSupplyCollateralZeroDoesNotCallOracle() public {
+        RevertingOracle revertingOracle = new RevertingOracle();
+        Collateral[] memory collaterals = new Collateral[](1);
+        collaterals[0] = Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(revertingOracle)});
+
+        Obligation memory obligationWithRevertingOracle;
+        obligationWithRevertingOracle.loanToken = address(loanToken);
+        obligationWithRevertingOracle.maturity = block.timestamp + 100;
+        obligationWithRevertingOracle.collaterals = collaterals;
+
+        // Make the oracle revert.
+        revertingOracle.stopOracle();
+
+        // Should succeed if oracle is not called.
+        morphoV2.supplyCollateral(obligationWithRevertingOracle, 0, 0, borrower);
+
+        vm.expectRevert("Oracle should not be called");
+        morphoV2.supplyCollateral(obligationWithRevertingOracle, 0, 1, borrower);
+    }
+
+    function testWithdrawCollateralToZeroDoesNotCallOracle(uint256 collateral) public {
+        collateral = bound(collateral, 1, MAX_TEST_AMOUNT);
+
+        RevertingOracle revertingOracle = new RevertingOracle();
+        Collateral[] memory collaterals = new Collateral[](1);
+        collaterals[0] = Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(revertingOracle)});
+
+        Obligation memory obligationWithRevertingOracle;
+        obligationWithRevertingOracle.loanToken = address(loanToken);
+        obligationWithRevertingOracle.maturity = block.timestamp + 100;
+        obligationWithRevertingOracle.collaterals = collaterals;
+
+        deal(address(collateralToken1), address(this), collateral);
+        morphoV2.supplyCollateral(obligationWithRevertingOracle, 0, collateral, borrower);
+
+        bytes32 _id = toId(obligationWithRevertingOracle);
+        assertEq(
+            morphoV2.collateralOf(_id, borrower, address(collateralToken1)), collateral, "collateral should be set"
+        );
+
+        revertingOracle.stopOracle();
+
+        morphoV2.withdrawCollateral(obligationWithRevertingOracle, 0, collateral, borrower);
+
+        assertEq(
+            morphoV2.collateralOf(_id, borrower, address(collateralToken1)),
+            0,
+            "collateral should be 0 after withdrawal"
+        );
     }
 }
