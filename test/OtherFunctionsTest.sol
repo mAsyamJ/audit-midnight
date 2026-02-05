@@ -3,13 +3,12 @@
 pragma solidity ^0.8.0;
 
 import {IdLib} from "../src/libraries/IdLib.sol";
-import {Obligation, Collateral, Offer} from "../src/interfaces/IMorphoV2.sol";
+import {Obligation, Collateral} from "../src/interfaces/IMorphoV2.sol";
 
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
-import {WAD, ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
-import {TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 
 contract OtherFunctionsTest is BaseTest {
