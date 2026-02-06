@@ -1355,10 +1355,10 @@ contract TakeTest is BaseTest {
         borrowerOffer.obligationUnits = units;
         collateralize(obligation, borrower, units);
         (uint256 buyerAssets, uint256 sellerAssets,,) = take(0, 0, units, 0, lender, borrowerOffer);
-        assertEq(buyerAssets, 0, "fee=0, sell, units: buyer paid 0");
-        assertEq(sellerAssets, 0, "fee=0, sell, units: seller received 0");
-        assertGt(morphoV2.sharesOf(id, lender), 0, "fee=0, sell, units: lender got shares");
-        assertGt(morphoV2.debtOf(id, borrower), 0, "fee=0, sell, units: borrower got debt");
+        assertEq(buyerAssets, 0, "fee=0, sell, units: buyerAssets");
+        assertEq(sellerAssets, 0, "fee=0, sell, units: sellerAssets");
+        assertEq(morphoV2.sharesOf(id, lender), shares, "fee=0, sell, units: shares");
+        assertEq(morphoV2.debtOf(id, borrower), units, "fee=0, sell, units: debt");
         vm.revertToState(snap);
 
         // fee=0, sell, shares
@@ -1367,10 +1367,11 @@ contract TakeTest is BaseTest {
         borrowerOffer.obligationShares = shares;
         collateralize(obligation, borrower, units);
         (buyerAssets, sellerAssets,,) = take(0, 0, 0, shares, lender, borrowerOffer);
-        assertEq(buyerAssets, 0, "fee=0, sell, shares: buyer paid 0");
-        assertEq(sellerAssets, 0, "fee=0, sell, shares: seller received 0");
-        assertGt(morphoV2.sharesOf(id, lender), 0, "fee=0, sell, shares: lender got shares");
-        assertGt(morphoV2.debtOf(id, borrower), 0, "fee=0, sell, shares: borrower got debt");
+        uint256 expectedUnits = shares.mulDivDown(initialUnits + 1, initialShares + 1);
+        assertEq(buyerAssets, 0, "fee=0, sell, shares: buyerAssets");
+        assertEq(sellerAssets, 0, "fee=0, sell, shares: sellerAssets");
+        assertEq(morphoV2.sharesOf(id, lender), shares, "fee=0, sell, shares: shares");
+        assertEq(morphoV2.debtOf(id, borrower), expectedUnits, "fee=0, sell, shares: debt");
         vm.revertToState(snap);
 
         // fee>0, buy, units
@@ -1395,8 +1396,10 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, fee);
         collateralize(obligation, borrower, units);
         (buyerAssets, sellerAssets,,) = take(fee, 0, 0, 0, lender, borrowerOffer);
-        assertEq(buyerAssets, fee, "fee>0, sell, buyer assets: buyer paid fee");
-        assertEq(sellerAssets, 0, "fee>0, sell, buyer assets: seller received 0");
+        assertEq(buyerAssets, fee, "fee>0, sell, buyer assets: buyerAssets");
+        assertEq(sellerAssets, 0, "fee>0, sell, buyer assets: sellerAssets");
+        assertEq(morphoV2.sharesOf(id, lender), shares, "fee>0, sell, buyer assets: shares");
+        assertEq(morphoV2.debtOf(id, borrower), units, "fee>0, sell, buyer assets: debt");
         vm.revertToState(snap);
 
         // fee>0, sell, seller assets
@@ -1420,8 +1423,10 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, expectedBuyerAssets);
         collateralize(obligation, borrower, units);
         (buyerAssets, sellerAssets,,) = take(0, 0, units, 0, lender, borrowerOffer);
-        assertEq(buyerAssets, expectedBuyerAssets, "fee>0, sell, units: buyer paid fee");
-        assertEq(sellerAssets, 0, "fee>0, sell, units: seller received 0");
+        assertEq(buyerAssets, expectedBuyerAssets, "fee>0, sell, units: buyerAssets");
+        assertEq(sellerAssets, 0, "fee>0, sell, units: sellerAssets");
+        assertEq(morphoV2.sharesOf(id, lender), shares, "fee>0, sell, units: shares");
+        assertEq(morphoV2.debtOf(id, borrower), units, "fee>0, sell, units: debt");
         vm.revertToState(snap);
 
         // fee>0, sell, shares
@@ -1430,11 +1435,15 @@ contract TakeTest is BaseTest {
         borrowerOffer.tick = 0;
         borrowerOffer.assets = 0;
         borrowerOffer.obligationShares = shares;
+        expectedUnits = shares.mulDivDown(initialUnits + 1, initialShares + 1);
+        expectedBuyerAssets = expectedUnits.mulDivDown(fee, WAD);
         deal(address(loanToken), lender, expectedBuyerAssets);
-        collateralize(obligation, borrower, units);
+        collateralize(obligation, borrower, expectedUnits);
         (buyerAssets, sellerAssets,,) = take(0, 0, 0, shares, lender, borrowerOffer);
-        assertGt(buyerAssets, 0, "fee>0, sell, shares: buyer paid fee");
-        assertEq(sellerAssets, 0, "fee>0, sell, shares: seller received 0");
+        assertEq(buyerAssets, expectedBuyerAssets, "fee>0, sell, shares: buyerAssets");
+        assertEq(sellerAssets, 0, "fee>0, sell, shares: sellerAssets");
+        assertEq(morphoV2.sharesOf(id, lender), shares, "fee>0, sell, shares: shares");
+        assertEq(morphoV2.debtOf(id, borrower), expectedUnits, "fee>0, sell, shares: debt");
     }
 }
 
