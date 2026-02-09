@@ -323,7 +323,6 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), obligationUnits);
     }
 
-    /// @dev This function does not call the oracle if the collateral balance is 0 after the update.
     function supplyCollateral(Obligation memory obligation, uint256 collateralIndex, uint256 assets, address onBehalf)
         external
     {
@@ -345,7 +344,7 @@ contract MorphoV2 is IMorphoV2 {
         SafeTransferLib.safeTransferFrom(collateralToken, msg.sender, address(this), assets);
     }
 
-    /// @dev This function does not call the oracle if the collateral balance is 0 after the update.
+    /// @dev This function does not call any oracle if all the collateral is withdrawn and the borrower has no debt.
     function withdrawCollateral(Obligation memory obligation, uint256 collateralIndex, uint256 assets, address onBehalf)
         external
     {
