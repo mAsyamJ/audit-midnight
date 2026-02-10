@@ -1210,8 +1210,8 @@ contract TakeTest is BaseTest {
             hex"",
             borrower,
             lenderOffer,
-            sig([lenderOffer]),
-            root([lenderOffer]),
+            sig([lenderOffer, otherOffer]),
+            root([lenderOffer, otherOffer]),
             proof
         );
     }
