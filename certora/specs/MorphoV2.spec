@@ -12,6 +12,8 @@ methods {
 
     function _.price() external => NONDET;
     function IdLib.toId(MorphoV2.Obligation memory, uint256, address) internal returns (bytes32) => NONDET;
+    function UtilsLib.mulDivDown(uint256, uint256, uint256) internal returns (uint256) => NONDET;
+    function UtilsLib.mulDivUp(uint256, uint256, uint256) internal returns (uint256) => NONDET;
 }
 
 /// HELPERS ///
