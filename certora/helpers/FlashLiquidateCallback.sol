@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import {Seizure} from "../../src/interfaces/IMorphoV2.sol";
 
-interface DummyCallback {
-    function doSomething() external;
+interface IHavoc {
+    function havoc() external;
 }
 
 contract FlashLiquidateCallback {
@@ -32,14 +32,14 @@ contract FlashLiquidateCallback {
         }
         startFlashloanForLiquidity(totalAmount);
         address account = abi.decode(data, (address));
-        (DummyCallback(account)).doSomething();
+        IHavoc(account).havoc();
         endFlashloanForLiquidity(totalAmount);
     }
 
     function onFlashLoan(address token, uint256 amount, bytes calldata data) external {
         startFlashloan(token, amount);
         address account = abi.decode(data, (address));
-        (DummyCallback(account)).doSomething();
+        IHavoc(account).havoc();
         endFlashloan(token, amount);
     }
 }
