@@ -141,6 +141,7 @@ strong invariant tokenBalanceCorrect(address token)
     }
 
 // For any token, the flash loans before and after a call is the same.
+// This rule is useful to prove that using persistent ghost for the flashloans mapping is sound.
 rule flashLoansPaidBack(method f, address token) {
     env e;
     calldataarg args;
