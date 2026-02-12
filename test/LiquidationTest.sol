@@ -163,6 +163,7 @@ contract LiquidationTest is BaseTest {
         repaid = bound(repaid, units + 1, MAX_TEST_AMOUNT);
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
+        vm.warp(obligation.maturity + TIME_TO_MAX_LIF); // Warp to post-maturity to bypass recovery close factor.
         Oracle(obligation.collaterals[0].oracle).setPrice(1e36 - 1);
         deal(address(loanToken), address(this), units);
         deal(address(loanToken), address(this), units);
@@ -175,6 +176,7 @@ contract LiquidationTest is BaseTest {
         units = bound(units, 10, MAX_TEST_AMOUNT - 1);
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
+        vm.warp(obligation.maturity + TIME_TO_MAX_LIF); // Warp to post-maturity to bypass recovery close factor.
         seized = bound(
             seized, morphoV2.collateralOf(id, borrower, obligation.collaterals[0].token) + 1, MAX_TEST_AMOUNT * 2
         );
