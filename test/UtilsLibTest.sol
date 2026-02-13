@@ -6,6 +6,16 @@ import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib} from "../src/libraries/TickLib.sol";
 
 contract UtilsLibTest is Test {
+    function testFuzzCountBits(uint256 bitmap) public pure {
+        uint256 expected;
+        uint256 word = bitmap;
+        while (word != 0) {
+            word &= word - 1;
+            expected++;
+        }
+        assertEq(UtilsLib.countBits(bitmap), expected);
+    }
+
     function testAtMostOneNonZero(uint256 x, uint256 y) public pure {
         assertEq(UtilsLib.atMostOneNonZero(x, y), (x != 0 ? 1 : 0) + (y != 0 ? 1 : 0) <= 1);
     }
