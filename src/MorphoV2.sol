@@ -398,7 +398,8 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev At least one of `repaidUnits` or `seizedAssets` should be equal to zero.
     /// @dev Accounts are liquidatable if they are unhealthy or if the maturity is reached.
     /// @dev Before maturity, the liquidation cannot put the borrower back into health (recovery close factor).
-    /// @dev We want b - s*P/LIF >= maxDebt - s*P*LLTV <=> s <= (b-maxDebt) / (P(1/LIF-LLTV)).
+    /// @dev In that case, we want debtOf - repaidUnits >= maxDebt - repaidUnits*LIF*LLTV, which is equivalent to
+    /// repaidUnits <= (debtOf-maxDebt) / (1 - LIF*LLTV).
     /// @dev If an account is healthy, the LIF grows linearly from 1 at maturity to MAX_LIF at maturity +
     /// TIME_TO_MAX_LIF.
     /// @dev Returns repaid units and seized assets.
@@ -453,9 +454,8 @@ contract MorphoV2 is IMorphoV2 {
                 uint256 lltv = obligation.collaterals[collateralIndex].lltv;
                 // Rounded up to avoid consecutive max liquidations.
                 // Acknowledged that the position could be slightly healthy after a liquidation.
-                uint256 maxSeized = (debtOf[id][borrower] - maxDebt)
-                .mulDivUp(WAD, (WAD.mulDivDown(WAD, lif) - lltv).mulDivDown(liquidatedCollatPrice, ORACLE_PRICE_SCALE));
-                require(seizedAssets <= maxSeized, "recovery close factor violated");
+                uint256 maxRepaid = (debtOf[id][borrower] - maxDebt).mulDivUp(WAD, WAD - lif.mulDivUp(lltv, WAD));
+                require(repaidUnits <= maxRepaid, "recovery close factor violated");
             }
 
             collateralOf[id][borrower][liquidatedCollatToken] -= seizedAssets;
