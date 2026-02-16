@@ -39,7 +39,7 @@ contract MorphoV2 is IMorphoV2 {
     /// STORAGE ///
 
     mapping(bytes32 id => mapping(address user => uint256)) public sharesOf;
-    mapping(bytes32 id => mapping(address user => BorrowerState)) internal _borrowerState;
+    mapping(bytes32 id => mapping(address user => BorrowerState)) public borrowerState;
     mapping(bytes32 id => mapping(address user => mapping(address collateralToken => uint256))) public collateralOf;
     mapping(bytes32 id => ObligationState) public obligationState;
 
@@ -236,12 +236,12 @@ contract MorphoV2 is IMorphoV2 {
             require(newConsumed <= offer.obligationShares, "consumed");
         }
 
-        bool buyerIsLender = (_borrowerState[id][buyer].debt == 0);
+        bool buyerIsLender = (borrowerState[id][buyer].debt == 0);
         bool sellerIsBorrower = (sharesOf[id][seller] == 0);
         if (buyerIsLender && sellerIsBorrower) {
             // Lender enters + borrower enters.
             sharesOf[id][buyer] += obligationShares;
-            _borrowerState[id][seller].debt += UtilsLib.toUint128(obligationUnits);
+            borrowerState[id][seller].debt += UtilsLib.toUint128(obligationUnits);
             _obligationState.totalShares += UtilsLib.toUint128(obligationShares);
             _obligationState.totalUnits += UtilsLib.toUint128(obligationUnits);
         } else if (buyerIsLender && !sellerIsBorrower) {
@@ -250,11 +250,11 @@ contract MorphoV2 is IMorphoV2 {
             sharesOf[id][seller] -= obligationShares;
         } else if (!buyerIsLender && sellerIsBorrower) {
             // Borrower exits + borrower enters.
-            _borrowerState[id][buyer].debt -= UtilsLib.toUint128(obligationUnits);
-            _borrowerState[id][seller].debt += UtilsLib.toUint128(obligationUnits);
+            borrowerState[id][buyer].debt -= UtilsLib.toUint128(obligationUnits);
+            borrowerState[id][seller].debt += UtilsLib.toUint128(obligationUnits);
         } else {
             // Borrower exits + lender exits.
-            _borrowerState[id][buyer].debt -= UtilsLib.toUint128(obligationUnits);
+            borrowerState[id][buyer].debt -= UtilsLib.toUint128(obligationUnits);
             sharesOf[id][seller] -= obligationShares;
             _obligationState.totalShares -= UtilsLib.toUint128(obligationShares);
             _obligationState.totalUnits -= UtilsLib.toUint128(obligationUnits);
@@ -347,7 +347,7 @@ contract MorphoV2 is IMorphoV2 {
     function repay(Obligation memory obligation, uint256 obligationUnits, address onBehalf) external {
         bytes32 id = touchObligation(obligation);
 
-        _borrowerState[id][onBehalf].debt -= UtilsLib.toUint128(obligationUnits);
+        borrowerState[id][onBehalf].debt -= UtilsLib.toUint128(obligationUnits);
         obligationState[id].withdrawable += obligationUnits;
 
         emit EventsLib.Repay(msg.sender, id, obligationUnits, onBehalf);
@@ -365,8 +365,8 @@ contract MorphoV2 is IMorphoV2 {
 
         if (collateralOf[id][onBehalf][collateralToken] != 0) {
             // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
-            uint128 newBitmap = _borrowerState[id][onBehalf].activatedCollaterals | uint128(1 << collateralIndex);
-            _borrowerState[id][onBehalf].activatedCollaterals = newBitmap;
+            uint128 newBitmap = borrowerState[id][onBehalf].activatedCollaterals | uint128(1 << collateralIndex);
+            borrowerState[id][onBehalf].activatedCollaterals = newBitmap;
             require(UtilsLib.countBits(newBitmap) <= MAX_COLLATERALS_PER_BORROWER, "too many collaterals per borrower");
         }
 
@@ -398,7 +398,7 @@ contract MorphoV2 is IMorphoV2 {
         collateralOf[id][onBehalf][collateralToken] -= assets;
         if (collateralOf[id][onBehalf][collateralToken] == 0) {
             // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
-            _borrowerState[id][onBehalf].activatedCollaterals &= ~uint128(1 << collateralIndex);
+            borrowerState[id][onBehalf].activatedCollaterals &= ~uint128(1 << collateralIndex);
         }
 
         require(isHealthy(obligation, id, onBehalf), "Unhealthy borrower");
@@ -440,7 +440,7 @@ contract MorphoV2 is IMorphoV2 {
         uint256 repayableDebt;
         uint256 maxDebt;
         uint256 liquidatedCollatPrice;
-        BorrowerState storage _state = _borrowerState[id][borrower];
+        BorrowerState storage _state = borrowerState[id][borrower];
         uint256 bitmap = _state.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.ctz(bitmap);
@@ -559,11 +559,11 @@ contract MorphoV2 is IMorphoV2 {
     /// VIEW FUNCTIONS ///
 
     function debtOf(bytes32 id, address user) external view returns (uint256) {
-        return _borrowerState[id][user].debt;
+        return borrowerState[id][user].debt;
     }
 
     function activatedCollaterals(bytes32 id, address user) external view returns (uint256) {
-        return _borrowerState[id][user].activatedCollaterals;
+        return borrowerState[id][user].activatedCollaterals;
     }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
@@ -589,7 +589,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev This function should be called with the id corresponding to the obligation.
     /// @dev This function does not call any oracle if debt is 0.
     function isHealthy(Obligation memory obligation, bytes32 id, address borrower) public view returns (bool) {
-        BorrowerState storage _state = _borrowerState[id][borrower];
+        BorrowerState storage _state = borrowerState[id][borrower];
         uint256 debt = _state.debt;
         uint256 maxDebt;
         uint256 bitmap = _state.activatedCollaterals;
