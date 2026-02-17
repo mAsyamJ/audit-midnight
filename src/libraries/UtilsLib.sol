@@ -79,9 +79,9 @@ library UtilsLib {
         }
     }
 
-    function ctz(uint256 bitmap) internal pure returns (uint256 res) {
+    function msb(uint256 bitmap) internal pure returns (uint256 res) {
         assembly {
-            res := sub(255, clz(and(bitmap, sub(0, bitmap))))
+            res := sub(255, clz(bitmap))
         }
     }
 }

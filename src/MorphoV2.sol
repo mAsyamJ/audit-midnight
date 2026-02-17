@@ -399,7 +399,7 @@ contract MorphoV2 is IMorphoV2 {
         uint256 newCollateralOf = collateralOf[id][onBehalf][collateralToken] - assets;
         collateralOf[id][onBehalf][collateralToken] = newCollateralOf;
 
-        if (newCollateralOf == 0) {
+        if (newCollateralOf == 0 && assets > 0) {
             // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
             borrowerState[id][onBehalf].activatedCollaterals &= ~uint128(1 << collateralIndex);
         }
@@ -445,14 +445,14 @@ contract MorphoV2 is IMorphoV2 {
         BorrowerState storage _state = borrowerState[id][borrower];
         uint256 bitmap = _state.activatedCollaterals;
         while (bitmap != 0) {
-            uint256 i = UtilsLib.ctz(bitmap);
+            uint256 i = UtilsLib.msb(bitmap);
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
             uint256 _collateralOf = collateralOf[id][borrower][_collateral.token];
             maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
             repayableDebt += _collateralOf.mulDivUp(WAD, MAX_LIF).mulDivUp(price, ORACLE_PRICE_SCALE);
-            bitmap &= bitmap - 1;
+            bitmap ^= (1 << i);
         }
 
         uint256 originalDebt = _state.debt;
@@ -486,7 +486,7 @@ contract MorphoV2 is IMorphoV2 {
             }
 
             collateralOf[id][borrower][liquidatedCollatToken] -= seizedAssets;
-            if (collateralOf[id][borrower][liquidatedCollatToken] == 0) {
+            if (collateralOf[id][borrower][liquidatedCollatToken] == 0 && seizedAssets > 0) {
                 // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
                 _state.activatedCollaterals &= ~uint128(1 << collateralIndex);
             }
@@ -596,12 +596,12 @@ contract MorphoV2 is IMorphoV2 {
         uint256 maxDebt;
         uint256 bitmap = _borrowerState.activatedCollaterals;
         while (maxDebt < debt && bitmap != 0) {
-            uint256 i = UtilsLib.ctz(bitmap);
+            uint256 i = UtilsLib.msb(bitmap);
             Collateral memory collateral = obligation.collaterals[i];
             uint256 price = IOracle(collateral.oracle).price();
             maxDebt += collateralOf[id][borrower][collateral.token].mulDivDown(price, ORACLE_PRICE_SCALE)
                 .mulDivDown(collateral.lltv, WAD);
-            bitmap &= bitmap - 1;
+            bitmap ^= (1 << i);
         }
         return maxDebt >= debt;
     }
