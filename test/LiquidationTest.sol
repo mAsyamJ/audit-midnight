@@ -386,7 +386,7 @@ contract LiquidationTest is BaseTest {
 
     /// @dev Recovery close factor with two collaterals contributing to maxDebt.
     /// Drops price of the lower-lltv collateral to make position unhealthy, then liquidates it.
-    function testRecoveryCloseFactorMultipleCollaterals(uint256 units, uint256 droppedPrice) public {
+    function testRecoveryCloseFactorMultipleCollaterals(uint256 units) public {
         units = bound(units, 100, MAX_TEST_AMOUNT);
 
         uint256 lltv0 = obligation.collaterals[0].lltv;
