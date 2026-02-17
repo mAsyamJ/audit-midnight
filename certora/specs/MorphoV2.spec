@@ -42,6 +42,14 @@ rule takeInputOutputConsistency(env e, uint256 buyerAssets, uint256 sellerAssets
 
     buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, buyerAssets, sellerAssets, obligationUnits, obligationShares, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
 
+    // At most one of the input arguments can be zero.
+    mathint buyerAssetsIsNonZero = buyerAssets > 0 ? 1 : 0;
+    mathint sellerAssetsIsNonZero = sellerAssets > 0 ? 1 : 0;
+    mathint obligationUnitsIsNonZero = obligationUnits > 0 ? 1 : 0;
+    mathint obligationSharesIsNonZero = obligationShares > 0 ? 1 : 0;
+    assert buyerAssetsIsNonZero + sellerAssetsIsNonZero + obligationUnitsIsNonZero + obligationSharesIsNonZero <= 1;
+
+    // The output arguments are equal to the input arguments if the input arguments are non-zero.
     assert buyerAssets == 0 || buyerAssetsOutput == buyerAssets;
     assert sellerAssets == 0 || sellerAssetsOutput == sellerAssets;
     assert obligationUnits == 0 || obligationUnitsOutput == obligationUnits;
@@ -84,8 +92,15 @@ rule liquidateInputOutputConsistency(env e, MorphoV2.Obligation obligation, uint
 
     seizedAssetsOutput, repaidUnitsOutput = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
 
+    // At most one of the input arguments can be zero.
+    assert seizedAssets == 0 || repaidUnits == 0;
+
+    // The output arguments are equal to the input arguments if the input arguments are non-zero.
     assert seizedAssets == 0 || seizedAssetsOutput == seizedAssets;
     assert repaidUnits == 0 || repaidUnitsOutput == repaidUnits;
+
+    // If all the input arguments are zero, all the output arguments are zero.
+    assert repaidUnits == 0 && seizedAssets == 0 => seizedAssetsOutput == 0 && repaidUnitsOutput == 0;
 }
 
 /// INVARIANTS ///
