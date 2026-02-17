@@ -78,6 +78,16 @@ rule offerInputsLimit(env e, uint256 buyerAssets, uint256 sellerAssets, uint256 
     assert offer.obligationShares == 0 || obligationSharesOutput <= offer.obligationShares - consumedBefore;
 }
 
+rule liquidateInputOutputConsistency(env e, MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) {
+    uint256 seizedAssetsOutput;
+    uint256 repaidUnitsOutput;
+
+    seizedAssetsOutput, repaidUnitsOutput = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
+
+    assert seizedAssets == 0 || seizedAssetsOutput == seizedAssets;
+    assert repaidUnits == 0 || repaidUnitsOutput == repaidUnits;
+}
+
 /// INVARIANTS ///
 
 strong invariant notBorrowerAndLender(bytes32 id, address user)
