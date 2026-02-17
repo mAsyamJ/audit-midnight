@@ -13,26 +13,33 @@ methods {
     function UtilsLib.mulDivDown(uint256, uint256, uint256) internal returns (uint256) => NONDET;
     function UtilsLib.mulDivUp(uint256, uint256, uint256) internal returns (uint256) => NONDET;
 
-    function IdLib.toId(MorphoV2.Obligation memory obligation, uint256, address) internal returns (bytes32) => summaryToId(obligation);
+    // Summary is required because abi.encodePacked doesn't ensure injectivity of the hash function in CVL, for an unknown reason.
+    function IdLib.toId(MorphoV2.Obligation memory obligation, uint256 chainId, address morphoV2) internal returns (bytes32) => summaryToId(obligation, chainId, morphoV2);
 }
 
 persistent ghost uint256 ghostChainId;
 
 hook CHAINID() uint256 chainId {
-    require chainId == ghostChainId;
+    require chainId == ghostChainId, "chain id is constant";
 }
 
-function summaryToId(MorphoV2.Obligation obligation) returns (bytes32) {
+function summaryToId(MorphoV2.Obligation obligation, uint256 chainId, address morphoV2) returns (bytes32) {
+    assert chainId == ghostChainId;
+    assert morphoV2 == MorphoV2;
     return Utils.toId(obligation, ghostChainId, MorphoV2);
+}
+
+function obligationIsCreated(MorphoV2.Obligation obligation) returns (bool) {
+    return MorphoV2.obligationCreated(summaryToId(obligation, ghostChainId, MorphoV2));
 }
 
 // Show that a created obligation has sorted collaterals.
 invariant createdObligationsHaveSortedCollaterals(MorphoV2.Obligation obligation, uint256 i, uint256 j)
-    MorphoV2.obligationCreated(summaryToId(obligation)) => i < j => j < obligation.collaterals.length => obligation.collaterals[i].token < obligation.collaterals[j].token;
+    obligationIsCreated(obligation) => i < j => j < obligation.collaterals.length => obligation.collaterals[i].token < obligation.collaterals[j].token;
 
 // Show that a created obligation has non-zero collaterals.
 invariant createdObligationsHaveNonZeroCollaterals(MorphoV2.Obligation obligation, uint256 i)
-    MorphoV2.obligationCreated(summaryToId(obligation)) => i < obligation.collaterals.length => obligation.collaterals[i].token != 0;
+    obligationIsCreated(obligation) => i < obligation.collaterals.length => obligation.collaterals[i].token != 0;
 
 // Show that a created obligation cannot be deleted.
 rule obligationCannotBeDeleted(env e, method f, calldataarg args, bytes32 id) {
@@ -45,35 +52,35 @@ rule obligationCannotBeDeleted(env e, method f, calldataarg args, bytes32 id) {
 
 rule obligationIsCreatedAfterTouchObligation(env e, MorphoV2.Obligation obligation) {
     MorphoV2.touchObligation(e, obligation);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
 
 rule obligationIsCreatedAfterTake(env e, uint256 buyerAssets, uint256 sellerAssets, uint256 obligationUnits, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, MorphoV2.Offer offer, MorphoV2.Signature signature, bytes32 root, bytes32[] proof) {
     MorphoV2.take(e, buyerAssets, sellerAssets, obligationUnits, obligationShares, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, signature, root, proof);
-    assert MorphoV2.obligationCreated(summaryToId(offer.obligation));
+    assert obligationIsCreated(offer.obligation);
 }
 
 rule obligationIsCreatedAfterWithdraw(env e, MorphoV2.Obligation obligation, uint256 obligationUnits, uint256 shares, address onBehalf, address receiver) {
     MorphoV2.withdraw(e, obligation, obligationUnits, shares, onBehalf, receiver);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
 
 rule obligationIsCreatedAfterRepay(env e, MorphoV2.Obligation obligation, uint256 obligationUnits, address onBehalf) {
     MorphoV2.repay(e, obligation, obligationUnits, onBehalf);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
 
 rule obligationIsCreatedAfterSupplyCollateral(env e, MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf) {
     MorphoV2.supplyCollateral(e, obligation, collateralIndex, assets, onBehalf);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
 
 rule obligationIsCreatedAfterWithdrawCollateral(env e, MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver) {
     MorphoV2.withdrawCollateral(e, obligation, collateralIndex, assets, onBehalf, receiver);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
 
 rule obligationIsCreatedAfterLiquidate(env e, MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) {
     MorphoV2.liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
-    assert MorphoV2.obligationCreated(summaryToId(obligation));
+    assert obligationIsCreated(obligation);
 }
