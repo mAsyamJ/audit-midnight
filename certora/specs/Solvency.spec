@@ -67,10 +67,6 @@ function CVL_toId(MorphoV2.Obligation obligation, uint256 chainId, address morph
 
 // Callbacks summaries.
 
-// The loan token for which liquidate was called, passed as argument to the onLiquidate callback.
-// The persistent keyword is fine, because this variable is only used in the preserved block in the spec.
-persistent ghost address liquidateLoanToken;
-
 // Mapping from token to flashloan amount.
 // We use persistent ghost to ensure these values are not changed by the callback.
 // This is sound as we prove the rule flashLoansPaidBack which ensures that the flashloan amount after the callback is the same as before.
