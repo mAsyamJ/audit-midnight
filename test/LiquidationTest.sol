@@ -198,8 +198,8 @@ contract LiquidationTest is BaseTest {
         setupObligation(obligation, units);
         uint256 oraclePrice = 0.5e36;
         Oracle(obligation.collaterals[0].oracle).setPrice(oraclePrice); // TODO fuzz
-        uint256 repayable = morphoV2.collateralOf(id, borrower, obligation.collaterals[0].token).mulDivDown(WAD, MAX_LIF)
-            .mulDivDown(oraclePrice, ORACLE_PRICE_SCALE);
+        uint256 repayable = morphoV2.collateralOf(id, borrower, obligation.collaterals[0].token)
+            .mulDivDown(WAD, MAX_LIF).mulDivDown(oraclePrice, ORACLE_PRICE_SCALE);
         uint256 expectedBadDebt = units - repayable;
 
         morphoV2.liquidate(obligation, 0, 0, 0, borrower, "");
@@ -222,8 +222,10 @@ contract LiquidationTest is BaseTest {
         uint256 maxDebt = initialCollateral.mulDivDown(oraclePrice, ORACLE_PRICE_SCALE)
             .mulDivDown(obligation.collaterals[0].lltv, WAD);
         vm.assume(repayable > maxDebt); // So that some repayment is allowed by recovery close factor.
-        uint256 maxRepaidUncapped = (repayable - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
-        uint256 maxRepaid = maxRepaidUncapped > repayable ? repayable : maxRepaidUncapped; // Cannot repay more than debt.
+        uint256 maxRepaidUncapped =
+            (repayable - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
+        uint256 maxRepaid = maxRepaidUncapped > repayable ? repayable : maxRepaidUncapped; // Cannot repay more than
+        // debt.
         uint256 maxSeized = maxRepaid.mulDivDown(MAX_LIF, WAD).mulDivDown(ORACLE_PRICE_SCALE, oraclePrice);
         seized = bound(seized, 0, maxSeized > initialCollateral ? initialCollateral : maxSeized);
         uint256 repaid = seized.mulDivUp(WAD, MAX_LIF).mulDivUp(oraclePrice, ORACLE_PRICE_SCALE);
@@ -242,9 +244,13 @@ contract LiquidationTest is BaseTest {
         Oracle(obligation.collaterals[0].oracle).setPrice(0.5e36);
         uint256 repayableDebt = _repayableDebt();
         uint256 collatAmount = morphoV2.collateralOf(id, borrower, obligation.collaterals[0].token);
-        uint256 maxDebt = collatAmount.mulDivDown(0.5e36, ORACLE_PRICE_SCALE).mulDivDown(obligation.collaterals[0].lltv, WAD);
-        uint256 maxRepaid = (repayableDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
-        repaid = bound(repaid, 0, repayableDebt > maxDebt ? (maxRepaid < repayableDebt - 1 ? maxRepaid : repayableDebt - 1) : 0);
+        uint256 maxDebt =
+            collatAmount.mulDivDown(0.5e36, ORACLE_PRICE_SCALE).mulDivDown(obligation.collaterals[0].lltv, WAD);
+        uint256 maxRepaid =
+            (repayableDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
+        repaid = bound(
+            repaid, 0, repayableDebt > maxDebt ? (maxRepaid < repayableDebt - 1 ? maxRepaid : repayableDebt - 1) : 0
+        );
         uint256 expectedBadDebt = units - repayableDebt;
 
         morphoV2.liquidate(obligation, 0, 0, repaid, borrower, "");
@@ -266,7 +272,8 @@ contract LiquidationTest is BaseTest {
         uint256 maxDebt = collatAmount.mulDivDown(ORACLE_PRICE_SCALE / 2, ORACLE_PRICE_SCALE)
             .mulDivDown(obligation.collaterals[0].lltv, WAD);
         vm.assume(repayableDebt > maxDebt); // So maxRepaid is defined.
-        uint256 maxRepaid = (repayableDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
+        uint256 maxRepaid =
+            (repayableDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
         vm.assume(maxRepaid >= repayableDebt); // Recovery close factor allows repaying all remaining debt in one go.
 
         morphoV2.liquidate(obligation, 0, 0, repayableDebt, borrower, "");
