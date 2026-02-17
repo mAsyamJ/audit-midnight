@@ -5,6 +5,10 @@ methods {
 
     function _.price() external => NONDET;
 
+    // Summarize mulDivUp and mulDivDown by ghost functions. This is for performance of the prover.
+    function UtilsLib.mulDivDown(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivDown(a, b, denominator);
+    function UtilsLib.mulDivUp(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivUp(a, b, denominator);
+
     // Summarize toId, this adds no assumption but allows to retrieve the loan token from the obligation id.
     function IdLib.toId(MorphoV2.Obligation memory obligation, uint256 chainId, address morphoV2) internal returns (bytes32) => CVL_toId(obligation, chainId, morphoV2);
 
@@ -47,6 +51,11 @@ function CVL_transferFrom(env e, address token, address src, address dest, uint2
     }
     return success;
 }
+
+// UtilsLib summaries.
+
+ghost CVL_mulDivDown(uint256, uint256, uint256) returns uint256;
+ghost CVL_mulDivUp(uint256, uint256, uint256) returns uint256;
 
 // IdLib summaries.
 
