@@ -10,9 +10,7 @@ methods {
 
     // Hook on callbacks, this adds no assumption: see FlashLiquidateCallback.sol and the summaries below.
     function _.onFlashLoan(address token, uint256 amount, bytes data) external => DISPATCHER(true);
-    function _.onLiquidate(MorphoV2.Seizure[] seizures, address borrower, address liquidator, bytes data) external => DISPATCHER(true);
-    function FlashLiquidateCallback.startFlashloanForLiquidity(uint256 amount) internal => CVL_flashLoanStart(liquidateLoanToken, amount);
-    function FlashLiquidateCallback.endFlashloanForLiquidity(uint256 amount) internal => CVL_flashLoanEnd(liquidateLoanToken, amount);
+    function _.onLiquidate(MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => DISPATCHER(true);
     function FlashLiquidateCallback.startFlashloan(address token, uint256 amount) internal => CVL_flashLoanStart(token, amount);
     function FlashLiquidateCallback.endFlashloan(address token, uint256 amount) internal => CVL_flashLoanEnd(token, amount);
 
@@ -130,13 +128,9 @@ strong invariant tokenBalanceCorrect(address token)
         preserved with (env e) {
             require e.msg.sender != currentContract, "only external calls";
         }
-        preserved take(uint256 buyerAssets, uint256 sellerAssets, uint256 obligationUnits, uint256 obligationShares, address taker, MorphoV2.Offer offer, MorphoV2.Signature signature, bytes32 root, bytes32[] proof, address takerCallback, bytes takerCallbackData) with (env e) {
+        preserved take(uint256 buyerAssets, uint256 sellerAssets, uint256 obligationUnits, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, MorphoV2.Offer offer, MorphoV2.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
             require taker != currentContract, "no trading with contract";
             require offer.maker != currentContract, "no trading with contract";
-        }
-        preserved liquidate(MorphoV2.Obligation obligation, MorphoV2.Seizure[] seizures, address borrower, bytes data) with (env e) {
-            require e.msg.sender != currentContract, "only external calls";
-            liquidateLoanToken = obligation.loanToken;
         }
     }
 
