@@ -149,7 +149,7 @@ contract MorphoV2 is IMorphoV2 {
         Signature memory sig,
         bytes32 root,
         bytes32[] memory proof
-    ) public returns (uint256, uint256, uint256, uint256) {
+    ) external returns (uint256, uint256, uint256, uint256) {
         require(taker == msg.sender || isAuthorized[taker][msg.sender], "UNAUTHORIZED");
         require(
             UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
