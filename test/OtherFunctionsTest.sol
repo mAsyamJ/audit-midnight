@@ -391,7 +391,7 @@ contract OtherFunctionsTest is BaseTest {
 
         bytes32 _id = toId(_obligation);
         uint256 bitmap = morphoV2.activatedCollaterals(_id, borrower);
-        assertEq(UtilsLib.countBits(bitmap), k, "countBits should equal number of supplied collaterals");
+        assertEq(UtilsLib.countBits(uint128(bitmap)), k, "countBits should equal number of supplied collaterals");
         assertEq(UtilsLib.msb(bitmap), k - 1, "msb should equal number of supplied collaterals - 1");
     }
 
@@ -409,14 +409,16 @@ contract OtherFunctionsTest is BaseTest {
         }
 
         bytes32 _id = toId(_obligation);
-        assertEq(UtilsLib.countBits(morphoV2.activatedCollaterals(_id, borrower)), numCollaterals, "all bits set");
+        assertEq(
+            UtilsLib.countBits(uint128(morphoV2.activatedCollaterals(_id, borrower))), numCollaterals, "all bits set"
+        );
 
         // Withdraw one collateral fully.
         vm.prank(borrower);
         morphoV2.withdrawCollateral(_obligation, collateralIndex, 1e18, borrower, borrower);
 
         uint256 bitmap = morphoV2.activatedCollaterals(_id, borrower);
-        assertEq(UtilsLib.countBits(bitmap), numCollaterals - 1, "one bit cleared");
+        assertEq(UtilsLib.countBits(uint128(bitmap)), numCollaterals - 1, "one bit cleared");
         assertEq(bitmap & (1 << collateralIndex), 0, "withdrawn collateral bit should be cleared");
     }
 }
