@@ -62,6 +62,7 @@ ghost CVL_mulDivUp(uint256, uint256, uint256) returns uint256;
 // Mapping from obligation id to its loan token.
 ghost mapping(bytes32 => address) loantoken;
 
+// Mapping from obligation id and collateral index to the corresponding collateral token.
 ghost mapping(bytes32 => mapping(uint128 => address)) collateralToken;
 
 ghost hash(address, uint256, uint256, address) returns bytes32;
@@ -103,20 +104,12 @@ ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) collat
     init_state axiom (forall address token. collateralSum(token) == 0);
 }
 
-hook Sload uint128 value collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 index] {
-    require value == collateralOfMirror[id][owner][collateralToken[id][assert_uint128(2 * index)]], "ghost mirror";
+hook Sload uint128 value collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 collateralIndex] {
+    require value == collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]], "ghost mirror";
 }
 
-hook Sload uint128 value collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 index].(offset 16) {
-    require value == collateralOfMirror[id][owner][collateralToken[id][assert_uint128(2 * index + 1)]], "ghost mirror";
-}
-
-hook Sstore collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 index] uint128 newCollateral (uint128 oldCollateral) {
-    collateralOfMirror[id][owner][collateralToken[id][assert_uint128(2 * index)]] = newCollateral;
-}
-
-hook Sstore collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 index].(offset 16) uint128 newCollateral (uint128 oldCollateral) {
-    collateralOfMirror[id][owner][collateralToken[id][assert_uint128(2 * index + 1)]] = newCollateral;
+hook Sstore collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 collateralIndex] uint128 newCollateral (uint128 oldCollateral) {
+    collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]] = newCollateral;
 }
 
 definition withdrawableSum(address token) returns mathint = usum bytes32 id. withdrawableMirror[id][token];
