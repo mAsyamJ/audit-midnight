@@ -21,8 +21,8 @@ library IdLib {
     bytes constant SSTORE2_PREFIX = hex"600b380380600b5f395ff3";
 
     function toId(Obligation memory obligation, uint256 chainId, address morphoV2) internal pure returns (bytes32) {
-        bytes32 create2Hash = keccak256(abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation)));
-        return keccak256(abi.encodePacked(uint8(0xff), morphoV2, chainId, create2Hash));
+        bytes32 initCodeHash = keccak256(abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation)));
+        return keccak256(abi.encodePacked(uint8(0xff), morphoV2, chainId, initCodeHash));
     }
 
     /// @dev Attempts to decode the data at the last 20 bytes of id into an obligation.
