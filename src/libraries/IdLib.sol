@@ -7,18 +7,15 @@ import {UtilsLib} from "./UtilsLib.sol";
 
 library IdLib {
     function toId(Obligation memory obligation, uint256 chainId, address morphoV2) internal pure returns (bytes20) {
-        return bytes20(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            uint8(0xff),
-                            morphoV2,
-                            chainId,
-                            keccak256(abi.encodePacked(UtilsLib.SSTORE2_PREFIX, abi.encode(obligation)))
-                        )
-                    )
-                )
+        bytes32 create2Hash = keccak256(
+            abi.encodePacked(
+                uint8(0xff),
+                morphoV2,
+                chainId,
+                keccak256(abi.encodePacked(UtilsLib.SSTORE2_PREFIX, abi.encode(obligation)))
+            )
+        );
+        return bytes20(uint160(uint256(create2Hash)));
             )
         );
     }
