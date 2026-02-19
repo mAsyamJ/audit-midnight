@@ -150,11 +150,7 @@ contract LiquidationTest is BaseTest {
         assertEq(seizedAssets, seized, "seized assets");
 
         assertEq(morphoV2.debtOf(id, borrower), debtAfterBadDebt - repaidUnits, "debt");
-        assertEq(
-            morphoV2.collateralOf(id, borrower, 0),
-            initialCollateral - seizedAssets,
-            "collateral"
-        );
+        assertEq(morphoV2.collateralOf(id, borrower, 0), initialCollateral - seizedAssets, "collateral");
     }
 
     function testLiquidateCallback(uint256 units, uint256 repaid, uint256 liquidationOraclePrice, bytes memory data)
@@ -213,8 +209,8 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-        uint256 repayable = uint256(morphoV2.collateralOf(id, borrower, 0))
-            .mulDivDown(WAD, MAX_LIF).mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE);
+        uint256 repayable = uint256(morphoV2.collateralOf(id, borrower, 0)).mulDivDown(WAD, MAX_LIF)
+            .mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE);
         uint256 expectedBadDebt = units - repayable;
 
         morphoV2.liquidate(obligation, 0, 0, 0, borrower, "");
