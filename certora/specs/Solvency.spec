@@ -19,7 +19,6 @@ methods {
     function FlashLiquidateCallback.endFlashloan(address token, uint256 amount) internal => CVL_flashLoanEnd(token, amount);
 
     // Assume ERC20 tokens transfer correctly: no fee taking from sender or receiver, no rebasing, no blacklisting, no transfer limits.
-    function _.balanceOf(address a) external => CVL_balanceOf(calledContract, a) expect(uint256);
     function _.transfer(address a, uint256 v) external with(env e) => CVL_transferFrom(e, calledContract, e.msg.sender, a, v) expect(bool);
     function _.transferFrom(address src, address a, uint256 v) external with(env e) => CVL_transferFrom(e, calledContract, src, a, v) expect(bool);
 }
@@ -30,12 +29,6 @@ methods {
 
 // Token balances: token => user => balance.
 ghost mapping(address => mapping(address => uint256)) tokenBalances;
-
-ghost CVL_decimals(address) returns uint8;
-
-function CVL_balanceOf(address token, address a) returns uint256 {
-    return tokenBalances[token][a];
-}
 
 function CVL_transferFrom(env e, address token, address src, address dest, uint256 value) returns bool {
     if (tokenBalances[token][src] < value || tokenBalances[token][dest] + value >= 2 ^ 256) {
@@ -104,10 +97,12 @@ ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) collat
     init_state axiom (forall address token. collateralSum(token) == 0);
 }
 
+// Safe require as obligations limit the number of collaterals.
 hook Sload uint128 value collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 collateralIndex] {
     require value == collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]], "ghost mirror";
 }
 
+// Safe require as obligations limit the number of collaterals.
 hook Sstore collateralOf[KEY bytes32 id][KEY address owner][INDEX uint256 collateralIndex] uint128 newCollateral (uint128 oldCollateral) {
     collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]] = newCollateral;
 }
