@@ -34,12 +34,13 @@ library IdLib {
     }
 
     /// @dev Stores the data in the code of the contract at the given address.
+    /// @dev Uses the chain id as salt.
     /// @dev It is recommended to give data that starts with STOP (0x00).
-    function storeInCode(bytes memory data, uint256 salt) internal returns (address addr) {
-        bytes memory creationCode = abi.encodePacked(SSTORE2_PREFIX, data);
+    function storeInCode(Obligation memory obligation) internal returns (address create2Address) {
+        bytes memory creationCode = abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation));
         assembly ("memory-safe") {
-            addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
+            create2Address := create2(0, add(creationCode, 0x20), mload(creationCode), chainid())
         }
-        require(addr != address(0), "create2 failed");
+        require(create2Address != address(0), "Failed to create SStore2 contract");
     }
 }
