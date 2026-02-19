@@ -2,6 +2,8 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
+import {SSTORE2_PREFIX} from "./ConstantsLib.sol";
+
 library UtilsLib {
     /// @dev Returns true if at most one of `x` and `y` is nonzero.
     function atMostOneNonZero(uint256 x, uint256 y) internal pure returns (bool z) {
@@ -85,30 +87,10 @@ library UtilsLib {
         }
     }
 
-    /// @dev Creation code that deploys data as runtime bytecode.
-    /// @dev Explanation of the prefix:
-    /// hex       opcode          stack              comments
-    /// ------------------------------------------------------------------------------
-    /// 60 0b     PUSH1 0x0b      [11]               11 = length(prefix)
-    /// 38        CODESIZE        [codesize, 11]
-    /// 03        SUB             [len]              with len = codesize - 11
-    /// 80        DUP1            [len, len]
-    /// 60 0b     PUSH1 0x0b      [11, len, len]     code offset = 11
-    /// 5f        PUSH0           [0, 11, len, len]  mem offset = 0
-    /// 39        CODECOPY        [len]              mem[0:len] <- code[11:11+len]
-    /// 5f        PUSH0           [0, len]           return offset = 0
-    /// f3        RETURN          []                 mem[0:len] is returned
-    function sstore2Code(bytes memory data) internal pure returns (bytes memory) {
-        require(data[0] == 0x00, "data must start with STOP");
-        return abi.encodePacked(hex"600b380380600b5f395ff3", data);
-    }
-
-    /// @dev Returns the hash that truncates to the CREATE2 address for the given parameters.
-    function create2Hash(address deployer, uint256 salt, bytes memory creationCode) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(uint8(0xff), deployer, salt, keccak256(creationCode)));
-    }
-
-    function create2Deploy(bytes memory creationCode, uint256 salt) internal returns (address addr) {
+    /// @dev Deploys a contract with the given creation code and salt.
+    /// @dev It is recommended to give data that starts with STOP (0x00).
+    function create2Deploy(bytes memory data, uint256 salt) internal returns (address addr) {
+        bytes memory creationCode = abi.encodePacked(SSTORE2_PREFIX, data);
         assembly ("memory-safe") {
             addr := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
         }

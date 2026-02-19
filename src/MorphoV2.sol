@@ -538,8 +538,7 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Returns the obligation id and creates the obligation if it doesn't exist yet.
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
-        bytes memory creationCode = UtilsLib.sstore2Code(abi.encode(obligation));
-        bytes32 id = UtilsLib.create2Hash(address(this), block.chainid, creationCode);
+        bytes32 id = IdLib.toId(obligation, block.chainid, address(this));
         if (address(uint160(uint256(id))).code.length == 0) {
             require(obligation.collaterals.length <= MAX_COLLATERALS, "too many collaterals");
             address previousCollateralToken;
@@ -553,7 +552,7 @@ contract MorphoV2 is IMorphoV2 {
             obligationState[id].created = true;
             obligationState[id].fees = defaultFees[obligation.loanToken];
             // The deployed code begins with 0x00 (STOP), because the first word is the offset of the obligation.
-            UtilsLib.create2Deploy(creationCode, block.chainid);
+            UtilsLib.create2Deploy(abi.encode(obligation), block.chainid);
 
             emit EventsLib.ObligationCreated(id, obligation);
         }
