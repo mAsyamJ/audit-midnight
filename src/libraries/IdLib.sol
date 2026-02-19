@@ -21,11 +21,8 @@ library IdLib {
     bytes constant SSTORE2_PREFIX = hex"600b380380600b5f395ff3";
 
     function toId(Obligation memory obligation, uint256 chainId, address morphoV2) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                uint8(0xff), morphoV2, chainId, keccak256(abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation)))
-            )
-        );
+        bytes memory creationCode = abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation));
+        return keccak256(abi.encodePacked(uint8(0xff), morphoV2, chainId, keccak256(creationCode)));
     }
 
     /// @dev Attempts to decode the data at the last 20 bytes of id into an obligation.
@@ -35,7 +32,6 @@ library IdLib {
 
     /// @dev Stores the data in the code of the contract at the given address.
     /// @dev Uses the chain id as salt.
-    /// @dev It is recommended to give data that starts with STOP (0x00).
     function storeInCode(Obligation memory obligation) internal returns (address create2Address) {
         bytes memory creationCode = abi.encodePacked(SSTORE2_PREFIX, abi.encode(obligation));
         assembly ("memory-safe") {
