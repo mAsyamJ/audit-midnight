@@ -437,7 +437,6 @@ contract MorphoV2 is IMorphoV2 {
         require(UtilsLib.atMostOneNonZero(repaidUnits, seizedAssets), "INCONSISTENT_INPUT");
         bytes32 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
-        address liquidatedCollatToken = obligation.collaterals[collateralIndex].token;
 
         uint256 repayableDebt;
         uint256 maxDebt;
@@ -496,7 +495,7 @@ contract MorphoV2 is IMorphoV2 {
 
         emit EventsLib.Liquidate(msg.sender, id, collateralIndex, seizedAssets, repaidUnits, borrower, badDebt);
 
-        SafeTransferLib.safeTransfer(liquidatedCollatToken, msg.sender, seizedAssets);
+        SafeTransferLib.safeTransfer(obligation.collaterals[collateralIndex].token, msg.sender, seizedAssets);
 
         if (data.length > 0) {
             ICallbacks(msg.sender).onLiquidate(obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);

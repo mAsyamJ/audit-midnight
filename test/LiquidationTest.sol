@@ -37,6 +37,11 @@ contract LiquidationTest is BaseTest {
     }
 
     function testLiquidateInvalidCollateralIndex() public {
+        uint256 units = 100e18;
+        collateralize(obligation, borrower, units);
+        setupObligation(obligation, units);
+        Oracle(obligation.collaterals[0].oracle).setPrice(1e36 - 1);
+
         vm.expectRevert(stdError.indexOOBError);
         morphoV2.liquidate(obligation, 2, 0, 0, borrower, "");
     }
