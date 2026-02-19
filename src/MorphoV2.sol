@@ -539,7 +539,7 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Returns the obligation id and creates the obligation if it doesn't exist yet.
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
         bytes32 id = IdLib.toId(obligation, block.chainid, address(this));
-        if (address(uint160(uint256(id))).code.length == 0) {
+        if (!obligationState[id].created) {
             require(obligation.collaterals.length <= MAX_COLLATERALS, "too many collaterals");
             address previousCollateralToken;
             for (uint256 i = 0; i < obligation.collaterals.length; i++) {
