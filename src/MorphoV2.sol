@@ -560,8 +560,9 @@ contract MorphoV2 is IMorphoV2 {
 
     /// VIEW FUNCTIONS ///
 
-    /// @dev Returns the obligation with the given id if it was touched before.
-    /// @dev Reverts otherwise.
+    /// @dev For valid ids of touched obligations, returns the corresponding obligation.
+    /// @dev Reverts if the code cannot be abi-decoded as an obligation.
+    /// @dev If the id given is not the result of toId, the returned obligation is arbitrary.
     function toObligation(bytes32 id) public view returns (Obligation memory) {
         return IdLib.toObligation(id);
     }

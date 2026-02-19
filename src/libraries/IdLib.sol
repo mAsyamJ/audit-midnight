@@ -17,6 +17,7 @@ library IdLib {
         );
     }
 
+    /// @dev Attempts to decode the data at the last 20 bytes of id into an obligation.
     function toObligation(bytes32 id) internal view returns (Obligation memory) {
         return abi.decode(address(uint160(uint256(id))).code, (Obligation));
     }
