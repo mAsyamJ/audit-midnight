@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Obligation} from "../interfaces/IMorphoV2.sol";
 
-/// @dev id is used by indexers so id_ is used to avoid naming conflicts.
+/// @dev id_ is used to avoid naming conflicts in indexers.
 library EventsLib {
     event Constructor(address indexed owner);
 
