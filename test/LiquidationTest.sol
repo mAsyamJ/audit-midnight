@@ -10,6 +10,7 @@ import {ERC20} from "./helpers/ERC20.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 import {stdError} from "../lib/forge-std/src/StdError.sol";
 import {console} from "../lib/forge-std/src/console.sol";
+
 contract LiquidationTest is BaseTest {
     using UtilsLib for uint256;
 
@@ -229,14 +230,16 @@ contract LiquidationTest is BaseTest {
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
 
         uint256 debtAfterBadDebt = units - _badDebt();
-        uint256 maxDebt = initialCollateral.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(obligation.collaterals[0].lltv, WAD);
-        uint256 maxRepaid = (debtAfterBadDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
+        uint256 maxDebt = initialCollateral.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE)
+            .mulDivDown(obligation.collaterals[0].lltv, WAD);
+        uint256 maxRepaid =
+            (debtAfterBadDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
         uint256 maxSeized = maxRepaid.mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice).mulDivDown(MAX_LIF, WAD);
         // guarantee the recovery close factor is not violated
         seized = bound(seized, 0, maxSeized);
 
-
-        uint256 maxSeizedByDebt = debtAfterBadDebt.mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice).mulDivDown(MAX_LIF, WAD);
+        uint256 maxSeizedByDebt =
+            debtAfterBadDebt.mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice).mulDivDown(MAX_LIF, WAD);
         // guarantee repaid <= debtAfterBadDebt
         seized = bound(seized, 0, maxSeizedByDebt);
 
@@ -257,13 +260,11 @@ contract LiquidationTest is BaseTest {
 
         uint256 debtAfterBadDebt = units - _badDebt();
         uint256 collatAmount = morphoV2.collateralOf(id, borrower, 0);
-        uint256 maxDebt =
-            collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(obligation.collaterals[0].lltv, WAD);
+        uint256 maxDebt = collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE)
+            .mulDivDown(obligation.collaterals[0].lltv, WAD);
         uint256 maxRepaid =
             (debtAfterBadDebt - maxDebt).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
-        repaid = bound(
-            repaid, 0, debtAfterBadDebt
-        );
+        repaid = bound(repaid, 0, debtAfterBadDebt);
         repaid = bound(repaid, 0, maxRepaid);
 
         morphoV2.liquidate(obligation, 0, 0, repaid, borrower, "");
@@ -284,16 +285,19 @@ contract LiquidationTest is BaseTest {
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
 
         uint256 debtAfterBadDebt = units - _badDebt();
-        
+
         uint256 collatAmount = morphoV2.collateralOf(id, borrower, 0);
-        uint256 maxDebt = collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(obligation.collaterals[0].lltv, WAD);
-        uint256 maxRepaid =
-            (debtAfterBadDebt.zeroFloorSub(maxDebt)).mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
-        uint256 maxCollateralRepayable = collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, MAX_LIF);
+        uint256 maxDebt = collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE)
+            .mulDivDown(obligation.collaterals[0].lltv, WAD);
+        uint256 maxRepaid = (debtAfterBadDebt.zeroFloorSub(maxDebt))
+        .mulDivUp(WAD, WAD - MAX_LIF.mulDivUp(obligation.collaterals[0].lltv, WAD));
+        uint256 maxCollateralRepayable =
+            collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, MAX_LIF);
 
         uint256 repaidAmount = debtAfterBadDebt;
         repaidAmount = repaidAmount > maxRepaid ? maxRepaid : repaidAmount; // capped by the recovery close factor
-        repaidAmount = repaidAmount > maxCollateralRepayable ? maxCollateralRepayable : repaidAmount; // capped by the collateral amount
+        repaidAmount = repaidAmount > maxCollateralRepayable ? maxCollateralRepayable : repaidAmount; // capped by the
+        // collateral amount
 
         morphoV2.liquidate(obligation, 0, 0, repaidAmount, borrower, "");
 
