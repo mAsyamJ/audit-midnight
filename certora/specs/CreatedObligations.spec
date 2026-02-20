@@ -25,7 +25,7 @@ hook CHAINID() uint256 chainId {
     require chainId == ghostChainId, "chain id is constant";
 }
 
-ghost mapping(bytes32 => bytes20) rehash {
+persistent ghost mapping(bytes32 => bytes20) rehash {
     axiom forall bytes32 h1. forall bytes32 h2. h1 != h2 => rehash[h1] != rehash[h2];
 }
 
