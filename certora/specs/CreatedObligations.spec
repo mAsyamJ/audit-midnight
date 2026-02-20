@@ -7,16 +7,16 @@ methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
     function _.price() external => NONDET;
 
-    function MorphoV2.obligationCreated(bytes32) external returns (bool) envfree;
-    function Utils.toId(MorphoV2.Obligation, uint256, address) external returns (bytes32) envfree;
+    function MorphoV2.obligationCreated(bytes20) external returns (bool) envfree;
+    function Utils.toId(MorphoV2.Obligation, uint256, address) external returns (bytes20) envfree;
 
     function UtilsLib.mulDivDown(uint256, uint256, uint256) internal returns (uint256) => NONDET;
     function UtilsLib.mulDivUp(uint256, uint256, uint256) internal returns (uint256) => NONDET;
     function UtilsLib.msb(uint256) internal returns (uint256) => NONDET;
-    function UtilsLib.countBits(uint256) internal returns (uint256) => NONDET;
+    function UtilsLib.countBits(uint128) internal returns (uint256) => NONDET;
 
     // Summary is required because abi.encodePacked doesn't ensure injectivity of the hash function in CVL, for an unknown reason.
-    function IdLib.toId(MorphoV2.Obligation memory obligation, uint256 chainId, address morphoV2) internal returns (bytes32) => summaryToId(obligation, chainId, morphoV2);
+    function IdLib.toId(MorphoV2.Obligation memory obligation, uint256 chainId, address morphoV2) internal returns (bytes20) => summaryToId(obligation, chainId, morphoV2);
 }
 
 persistent ghost uint256 ghostChainId;
@@ -25,7 +25,7 @@ hook CHAINID() uint256 chainId {
     require chainId == ghostChainId, "chain id is constant";
 }
 
-function summaryToId(MorphoV2.Obligation obligation, uint256 chainId, address morphoV2) returns (bytes32) {
+function summaryToId(MorphoV2.Obligation obligation, uint256 chainId, address morphoV2) returns (bytes20) {
     assert chainId == ghostChainId;
     assert morphoV2 == MorphoV2;
     return Utils.toId(obligation, ghostChainId, MorphoV2);
@@ -44,7 +44,7 @@ invariant createdObligationsHaveNonZeroCollaterals(MorphoV2.Obligation obligatio
     obligationIsCreated(obligation) => i < obligation.collaterals.length => obligation.collaterals[i].token != 0;
 
 // Show that a created obligation cannot be deleted.
-rule obligationCannotBeDeleted(env e, method f, calldataarg args, bytes32 id) {
+rule obligationCannotBeDeleted(env e, method f, calldataarg args, bytes20 id) {
     require MorphoV2.obligationCreated(id), "Assume that the obligation is created";
     f(e, args);
     assert MorphoV2.obligationCreated(id);
