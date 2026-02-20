@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 
 interface IHavoc {
-    function havoc() external;
+    function havocAll() external;
 }
 
 contract Havoc {
 
     function callHavoc(address account) external {
-        (IHavoc(account)).havoc();
+        (IHavoc(account)).havocAll();
     }
 }

@@ -18,6 +18,7 @@ methods {
     function IdLib.toId(MorphoV2.Obligation memory obligation, uint256 chainId, address morpho) internal returns (bytes32) => summaryToId(obligation, chainId, morpho);
     function UtilsLib.mulDivDown(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivDown(x, y, d);
     function UtilsLib.mulDivUp(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivUp(x, y, d);
+    function _.havocAll() external => HAVOC_ALL;
 
     function _.transferFrom(address from, address to, uint256 amount) external with(env e) => genericCallbackBool() expect (bool);
     function _.transfer(address to, uint256 amount) external with(env e) => genericCallbackBool() expect (bool);
@@ -41,15 +42,21 @@ persistent ghost summaryMulDivDownM(mathint,mathint,mathint) returns mathint {
 //    axiom forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. d > 0 && a1 <= a2 =>
 //        summaryMulDivDownM(a2 - a1, b, d) <= summaryMulDivDownM(a2, b, d) - summaryMulDivDownM(a1, b, d);
 }
-persistent ghost summaryMulDivUpM(mathint,mathint,mathint) returns mathint {
+persistent ghost summaryMulDivUpM(mathint,mathint,mathint) returns mathint; // {
 //    axiom forall mathint a. forall mathint b. forall mathint d. forall mathint x. b > 0 && d > 0 =>
 //        a <= summaryMulDivDownM(summaryMulDivUpM(a, b, d), d, b);
-    axiom forall mathint a. forall mathint b. forall mathint d. forall mathint x. b > 0 && d > 0 =>
-        a >= summaryMulDivUpM(summaryMulDivDownM(a, b, d), d, b);
+//    axiom forall mathint a. forall mathint b. forall mathint d. forall mathint x. b > 0 && d > 0 =>
+//        a >= summaryMulDivUpM(summaryMulDivDownM(a, b, d), d, b);
 
-    axiom forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. d > 0 && a1 <= a2 =>
-        summaryMulDivDownM(a2 - a1, b, d) >= summaryMulDivDownM(a2, b, d) - summaryMulDivUpM(a1, b, d);
-}
+//    axiom forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. d > 0 && a1 <= a2 =>
+//        summaryMulDivDownM(a2 - a1, b, d) >= summaryMulDivDownM(a2, b, d) - summaryMulDivUpM(a1, b, d);
+//}
+
+definition mulUpAxioms(mathint a, mathint b, mathint d) returns bool =
+    a <= summaryMulDivDownM(summaryMulDivUpM(a, b, d), d, b) &&
+    (forall mathint a2. a <= a2 =>
+       summaryMulDivDownM(a2 - a, b, d) >= summaryMulDivDownM(a2, b, d) - summaryMulDivUpM(a, b, d)) &&
+    (forall mathint a2. summaryMulDivDownM(a2, b, d) >= a => a2 >= summaryMulDivUpM(a, d, b));
 
 function summaryMulDivDown(uint256 a, uint256 b, uint256 d) returns uint256 {
     bool overflow;
@@ -63,6 +70,7 @@ function summaryMulDivUp(uint256 a, uint256 b, uint256 d) returns uint256 {
     if (overflow || d == 0) {
         revert();
     }
+    require mulUpAxioms(a,b,d);
     return require_uint256(summaryMulDivUpM(a, b, d));
 }
 
@@ -135,7 +143,7 @@ rule stayHealthy(env e, method f, calldataarg args) {
 
     require forall uint256 a. forall uint256 lif. forall uint256 i. 
         0 <= i && i < globalObligationCollateralLength && lif <= MAX_LIF() =>
-        summaryMulDivUpM(a, WAD(), lif)  >= summaryMulDivUpM(a, obligation.collaterals[i].lltv, WAD()),
+        summaryMulDivUpM(a, WAD(), lif)  >= summaryMulDivUpM(a, globalObligationCollateralLLTV[i], WAD()),
         "collateral lltv must be less then 1/MAX_LIF";
 
 //    require forall uint256 i. 0 <= i && i < globalObligationCollateralLength =>
