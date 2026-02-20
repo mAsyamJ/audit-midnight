@@ -7,7 +7,7 @@ struct Obligation {
     // Must be sorted by address.
     Collateral[] collaterals;
     uint256 maturity;
-    // Recovery close factor threshold (quoted in loan token). Below this remaining debt, full liquidation is allowed.
+    // Recovery close factor threshold: below this remaining debt, full liquidation is allowed.
     uint256 rcfThreshold;
 }
 
