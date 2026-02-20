@@ -9,7 +9,6 @@ import {Oracle} from "./helpers/Oracle.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 import {stdError} from "../lib/forge-std/src/StdError.sol";
-import {console} from "../lib/forge-std/src/console.sol";
 
 contract LiquidationTest is BaseTest {
     using UtilsLib for uint256;
