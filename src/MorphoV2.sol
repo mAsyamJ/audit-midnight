@@ -371,14 +371,6 @@ contract MorphoV2 is IMorphoV2 {
             require(UtilsLib.countBits(newBitmap) <= MAX_COLLATERALS_PER_BORROWER, "too many collaterals per borrower");
         }
 
-        require(
-            newCollateralOf == 0
-                || newCollateralOf.mulDivDown(
-                        IOracle(obligation.collaterals[collateralIndex].oracle).price(), ORACLE_PRICE_SCALE
-                    ) >= obligation.minCollatValue,
-            "Below min collateral"
-        );
-
         emit EventsLib.SupplyCollateral(msg.sender, id, collateralToken, assets, onBehalf);
 
         SafeTransferLib.safeTransferFrom(collateralToken, msg.sender, address(this), assets);
@@ -405,13 +397,6 @@ contract MorphoV2 is IMorphoV2 {
         }
 
         require(isHealthy(obligation, id, onBehalf), "Unhealthy borrower");
-        require(
-            newCollateralOf == 0
-                || newCollateralOf.mulDivDown(
-                        IOracle(obligation.collaterals[collateralIndex].oracle).price(), ORACLE_PRICE_SCALE
-                    ) >= obligation.minCollatValue,
-            "Below min collateral"
-        );
 
         emit EventsLib.WithdrawCollateral(msg.sender, id, collateralToken, assets, onBehalf, receiver);
 
@@ -483,7 +468,7 @@ contract MorphoV2 is IMorphoV2 {
                 // Acknowledged that the position could be slightly healthy after a liquidation.
                 uint256 maxRepaid = (debt - maxDebt).mulDivUp(WAD, WAD - lif.mulDivUp(lltv, WAD));
                 require(
-                    repaidUnits <= maxRepaid || debt.zeroFloorSub(maxRepaid) < obligation.minCollatValue,
+                    repaidUnits <= maxRepaid || debt.zeroFloorSub(maxRepaid) < obligation.rcfThreshold,
                     "recovery close factor violated"
                 );
             }

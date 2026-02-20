@@ -7,8 +7,8 @@ struct Obligation {
     // Must be sorted by address.
     Collateral[] collaterals;
     uint256 maturity;
-    // Minimum collateral value (quoted in loan token) to be left on supply & withdraw collateral.
-    uint256 minCollatValue;
+    // Recovery close factor threshold (quoted in loan token). Below this remaining debt, full liquidation is allowed.
+    uint256 rcfThreshold;
 }
 
 struct Collateral {
