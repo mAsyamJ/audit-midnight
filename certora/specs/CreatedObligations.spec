@@ -7,6 +7,10 @@ methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
     function _.price() external => NONDET;
 
+    function MorphoV2.totalUnits(bytes20) external returns (uint256) envfree;
+    function MorphoV2.totalShares(bytes20) external returns (uint256) envfree;
+    function MorphoV2.withdrawable(bytes20) external returns (uint256) envfree;
+    function MorphoV2.fees(bytes20) external returns (uint16[6]) envfree;
     function MorphoV2.obligationCreated(bytes20) external returns (bool) envfree;
     function Utils.hashObligation(MorphoV2.Obligation) external returns (bytes32) envfree;
 
@@ -82,4 +86,24 @@ rule obligationIsCreatedAfterWithdrawCollateral(env e, MorphoV2.Obligation oblig
 rule obligationIsCreatedAfterLiquidate(env e, MorphoV2.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) {
     MorphoV2.liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
     assert obligationIsCreated(obligation);
+}
+
+// Show that an obligation state is empty if it is not created.
+invariant obligationStateIsEmptyIfNotCreated(bytes20 id)
+    !MorphoV2.obligationCreated(id) => obligationStateIsEmpty(id);
+
+function obligationStateIsEmptyExceptFees(bytes20 id) returns (bool) {
+    if (MorphoV2.totalUnits(id) != 0) return false;
+    if (MorphoV2.totalShares(id) != 0) return false;
+    if (MorphoV2.withdrawable(id) != 0) return false;
+
+    uint16[6] fees = MorphoV2.fees(id);
+    if (fees[0] != 0) return false;
+    if (fees[1] != 0) return false;
+    if (fees[2] != 0) return false;
+    if (fees[3] != 0) return false;
+    if (fees[4] != 0) return false;
+    if (fees[5] != 0) return false;
+
+    return true;
 }
