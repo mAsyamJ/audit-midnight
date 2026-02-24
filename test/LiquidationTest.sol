@@ -244,10 +244,12 @@ contract LiquidationTest is BaseTest {
 
     function testLiquidateWithBadDebtSeizedInput(uint256 units, uint256 seized, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
+        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
+
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         uint256 initialCollateral = morphoV2.collateralOf(id, borrower, 0);
-        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
+    
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
 
         uint256 debtAfterBadDebt = units - _badDebt();
@@ -273,10 +275,11 @@ contract LiquidationTest is BaseTest {
 
     function testLiquidateWithBadDebtRepaidInput(uint256 units, uint256 repaid, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
+        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
+
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
 
-        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
 
         uint256 debtAfterBadDebt = units - _badDebt();
@@ -298,11 +301,11 @@ contract LiquidationTest is BaseTest {
     // Check that if there is bad debt it is possible to repay all debt.
     function testLiquidateWithBadDebtRepayAll(uint256 units, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT);
-
+        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
+        
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
 
-        liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
 
         uint256 debtAfterBadDebt = units - _badDebt();
