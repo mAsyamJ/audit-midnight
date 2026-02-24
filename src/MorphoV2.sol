@@ -204,28 +204,29 @@ contract MorphoV2 is IMorphoV2 {
 
         bool buyerIsLender = borrowerState[id][buyer].debt == 0;
         bool sellerIsBorrower = sharesOf[id][seller] == 0;
-        bool roundDownShares = buyerIsLender && sellerIsBorrower;
+        // To ensure the share price increases, the shares should be rounded down when buyerIsLender & sellerIsBorrower,
+        // and rounded up when !buyerIsLender & !sellerIsBorrower, so buyerIsLender discriminates between the two cases.
         if (buyerAssets > 0) {
             obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);
             sellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);
             obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, roundDownShares
+                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
             );
         } else if (sellerAssets > 0) {
             obligationUnits = sellerAssets.mulDivDown(WAD, sellerPrice);
             buyerAssets = sellerAssets.mulDivDown(buyerPrice, sellerPrice);
             obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, roundDownShares
+                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
             );
         } else if (obligationUnits > 0) {
             buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
             sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
             obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, roundDownShares
+                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
             );
         } else {
             obligationUnits = obligationShares.mulDiv(
-                _obligationState.totalUnits + 1, _obligationState.totalShares + 1, !roundDownShares
+                _obligationState.totalUnits + 1, _obligationState.totalShares + 1, !buyerIsLender
             );
             buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
             sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
