@@ -137,9 +137,6 @@ contract MorphoV2 is IMorphoV2 {
     /// @dev Neither the taker nor the maker can pass from having shares to having debt in one take.
     /// @dev The taker might not get the price they expected if the trading fee was just changed.
     function take(
-        uint256 buyerAssets,
-        uint256 sellerAssets,
-        uint256 obligationUnits,
         uint256 obligationShares,
         address taker,
         address takerCallback,
@@ -151,14 +148,6 @@ contract MorphoV2 is IMorphoV2 {
         bytes32[] memory proof
     ) external returns (uint256, uint256, uint256, uint256) {
         require(taker == msg.sender || isAuthorized[taker][msg.sender], "UNAUTHORIZED");
-        require(
-            UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
-            "inconsistent input"
-        );
-        require(
-            UtilsLib.atMostOneNonZero(offer.assets, offer.obligationUnits, offer.obligationShares),
-            "inconsistent offer input"
-        );
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
         require(offer.maker != taker, "buyer and seller cannot be the same");
@@ -207,43 +196,12 @@ contract MorphoV2 is IMorphoV2 {
         // To ensure that the share price does not decrease, shares should be rounded down (units should be rounded up)
         // when buyerIsLender & sellerIsBorrower, and rounded up (units should be rounded down) when !buyerIsLender &
         // !sellerIsBorrower. The variable buyerIsLender is used to discriminate between the two cases.
-        if (buyerAssets > 0) {
-            obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);
-            sellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else if (sellerAssets > 0) {
-            obligationUnits = sellerAssets.mulDivDown(WAD, sellerPrice);
-            buyerAssets = sellerAssets.mulDivDown(buyerPrice, sellerPrice);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else if (obligationUnits > 0) {
-            buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
-            sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else {
-            obligationUnits = obligationShares.mulDiv(
-                _obligationState.totalUnits + 1, _obligationState.totalShares + 1, !buyerIsLender
-            );
-            buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
-            sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
-        }
-
-        uint256 newConsumed;
-        if (offer.assets > 0) {
-            newConsumed = consumed[offer.maker][offer.group] += offer.buy ? buyerAssets : sellerAssets;
-            require(newConsumed <= offer.assets, "consumed");
-        } else if (offer.obligationUnits > 0) {
-            newConsumed = consumed[offer.maker][offer.group] += obligationUnits;
-            require(newConsumed <= offer.obligationUnits, "consumed");
-        } else {
-            newConsumed = consumed[offer.maker][offer.group] += obligationShares;
-            require(newConsumed <= offer.obligationShares, "consumed");
-        }
+        uint256 obligationUnits =
+            obligationShares.mulDiv(_obligationState.totalUnits + 1, _obligationState.totalShares + 1, !buyerIsLender);
+        uint256 buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
+        uint256 sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
+        uint256 newConsumed = consumed[offer.maker][offer.group] += obligationShares;
+        require(newConsumed <= offer.obligationShares, "consumed");
 
         if (buyerIsLender && sellerIsBorrower) {
             // Lender enters + borrower enters.
