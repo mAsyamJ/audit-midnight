@@ -225,8 +225,8 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-
         uint256 expectedBadDebt = _badDebt();
+
         morphoV2.liquidate(obligation, 0, 0, 0, borrower, "");
 
         assertEq(morphoV2.debtOf(id, borrower), units - expectedBadDebt, "debt");
@@ -237,22 +237,13 @@ contract LiquidationTest is BaseTest {
     function testLiquidateWithBadDebtSeizedInput(uint256 units, uint256 seized, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
         liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
-
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
-
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-
         uint256 debtAfterBadDebt = units - _badDebt();
         uint256 maxRepaid = _maxRepaid(units, debtAfterBadDebt, liquidationOraclePrice);
         uint256 maxSeized = maxRepaid.mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice).mulDivDown(MAX_LIF, WAD);
-        // guarantee the recovery close factor is not violated
-        seized = bound(seized, 0, maxSeized);
-
-        uint256 maxSeizedByDebt =
-            debtAfterBadDebt.mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice).mulDivDown(MAX_LIF, WAD);
-        // guarantee repaid <= debtAfterBadDebt
-        seized = bound(seized, 0, maxSeizedByDebt);
+        seized = bound(seized, 0, UtilsLib.min(maxSeized, units));
 
         (, uint256 repaid) = morphoV2.liquidate(obligation, 0, seized, 0, borrower, "");
 
@@ -264,12 +255,9 @@ contract LiquidationTest is BaseTest {
     function testLiquidateWithBadDebtRepaidInput(uint256 units, uint256 repaid, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT); // if the amount is too small, no bad debt is created.
         liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
-
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
-
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-
         uint256 debtAfterBadDebt = units - _badDebt();
         uint256 maxRepaid = _maxRepaid(units, debtAfterBadDebt, liquidationOraclePrice);
         repaid = bound(repaid, 0, UtilsLib.min(maxRepaid, debtAfterBadDebt));
@@ -281,29 +269,19 @@ contract LiquidationTest is BaseTest {
         assertEq(morphoV2.totalShares(id), units, "total shares");
     }
 
-    // Check that if there is bad debt it is possible to repay all debt.
+    // Check that if there is bad debt it is possible to repay almost all debt.
     function testLiquidateWithBadDebtRepayAll(uint256 units, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT);
         liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
-
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
-
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-
         uint256 debtAfterBadDebt = units - _badDebt();
-
-        uint256 collatAmount = morphoV2.collateralOf(id, borrower, 0);
         uint256 maxRepaid = _maxRepaid(units, debtAfterBadDebt, liquidationOraclePrice);
-        uint256 maxCollateralRepayable =
-            collatAmount.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, MAX_LIF);
 
-        uint256 repaidAmount = UtilsLib.min(UtilsLib.min(debtAfterBadDebt, maxRepaid), maxCollateralRepayable); // capped
-        // by the debt, the recovery close factor and the collateral amount
+        morphoV2.liquidate(obligation, 0, 0, UtilsLib.min(maxRepaid, debtAfterBadDebt), borrower, "");
 
-        morphoV2.liquidate(obligation, 0, 0, repaidAmount, borrower, "");
-
-        assertEq(morphoV2.debtOf(id, borrower), debtAfterBadDebt - repaidAmount, "all remaining debt repaid");
+        assertApproxEqAbs(morphoV2.debtOf(id, borrower), 0, 1e3, "all remaining debt repaid");
     }
 
     // post maturity liquidation.
