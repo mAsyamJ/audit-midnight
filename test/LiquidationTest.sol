@@ -572,7 +572,7 @@ contract LiquidationTest is BaseTest {
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
             uint256 _collateralOf = morphoV2.collateralOf(id, borrower, i);
-            badDebt = badDebt.zeroFloorSub(_collateralOf.mulDivDown(WAD, MAX_LIF).mulDivDown(price, ORACLE_PRICE_SCALE));
+            badDebt = badDebt.zeroFloorSub(_collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(WAD, MAX_LIF));
             bitmap ^= (1 << i);
         }
         return badDebt;
@@ -587,7 +587,7 @@ contract LiquidationTest is BaseTest {
     function badDebtPriceUp(uint256 units) internal view returns (uint256) {
         uint256 lltv = obligation.collaterals[0].lltv;
         uint256 collateral = units.mulDivUp(WAD, lltv);
-        return units.mulDivUp(ORACLE_PRICE_SCALE, collateral.mulDivDown(WAD, MAX_LIF));
+        return units.mulDivUp(MAX_LIF, WAD).mulDivUp(ORACLE_PRICE_SCALE, collateral);
     }
 
     function _maxRepaid(uint256 units, uint256 debt, uint256 oraclePrice) internal view returns (uint256) {
