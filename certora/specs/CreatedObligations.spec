@@ -10,7 +10,7 @@ methods {
     function MorphoV2.totalUnits(bytes20) external returns (uint256) envfree;
     function MorphoV2.totalShares(bytes20) external returns (uint256) envfree;
     function MorphoV2.withdrawable(bytes20) external returns (uint256) envfree;
-    function MorphoV2.fees(bytes20) external returns (uint16[6]) envfree;
+    function MorphoV2.fees(bytes20) external returns (uint16[7]) envfree;
     function MorphoV2.obligationCreated(bytes20) external returns (bool) envfree;
     function MorphoV2.sharesOf(bytes20, address) external returns (uint256) envfree;
     function Utils.hashObligation(MorphoV2.Obligation) external returns (bytes32) envfree;
@@ -95,7 +95,9 @@ invariant obligationStateIsEmptyIfNotCreated(bytes20 id, address user, uint256 c
 
 definition obligationStateIsEmpty(bytes20 id, address user, uint256 collateralIndex) returns bool = MorphoV2.totalUnits(id) == 0 && MorphoV2.totalShares(id) == 0 && MorphoV2.withdrawable(id) == 0 && noFeesAreSet(id) && MorphoV2.sharesOf(id, user) == 0 && userHasNoDebt(id, user) && userHasNoActivatedCollaterals(id, user) && userCollateralIsNotActivated(id, user, collateralIndex);
 
-definition noFeesAreSet(bytes20 id) returns bool = MorphoV2.fees(id)[0] == 0 && MorphoV2.fees(id)[1] == 0 && MorphoV2.fees(id)[2] == 0 && MorphoV2.fees(id)[3] == 0 && MorphoV2.fees(id)[4] == 0 && MorphoV2.fees(id)[5] == 0;
+function noFeesAreSet(bytes20 id) returns (bool) {
+    return MorphoV2.fees(id)[0] == 0 && MorphoV2.fees(id)[1] == 0 && MorphoV2.fees(id)[2] == 0 && MorphoV2.fees(id)[3] == 0 && MorphoV2.fees(id)[4] == 0 && MorphoV2.fees(id)[5] == 0 && MorphoV2.fees(id)[6] == 0;
+}
 
 definition userHasNoDebt(bytes20 id, address user) returns bool = currentContract.borrowerState[id][user].debt == 0;
 
