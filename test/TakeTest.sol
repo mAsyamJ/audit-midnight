@@ -1140,17 +1140,18 @@ contract TakeTest is BaseTest {
         take(100, 0, 0, 0, borrower, lenderOffer);
     }
 
-    function testTakeInconsistentInput(uint256 buyerAssets, uint256 sellerAssets) public {
-        vm.assume(buyerAssets != 0 && sellerAssets != 0);
+    function testTakeInconsistentInput(uint256 buyerAssets, uint256 sellerAssets, uint256 obligationUnits, uint256 obligationShares) public {
+        vm.assume(!UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares));
         vm.expectRevert("inconsistent input");
-        take(buyerAssets, sellerAssets, 0, 0, borrower, lenderOffer);
+        take(buyerAssets, sellerAssets, obligationUnits, obligationShares, borrower, lenderOffer);
     }
 
-    function testTakeInconsistentOfferInput(uint256 assets, uint256 obligationUnits) public {
-        vm.assume(assets != 0 && obligationUnits != 0);
+    function testTakeInconsistentOfferInput(uint256 assets, uint256 obligationUnits, uint256 obligationShares) public {
+        vm.assume(!UtilsLib.atMostOneNonZero(assets, obligationUnits, obligationShares));
         Offer memory badOffer = lenderOffer;
         badOffer.assets = assets;
         badOffer.obligationUnits = obligationUnits;
+        badOffer.obligationShares = obligationShares;
         vm.expectRevert("inconsistent offer input");
         take(0, 0, 0, 0, borrower, badOffer);
     }
