@@ -374,13 +374,12 @@ contract LiquidationTest is BaseTest {
         _setupUnhealthy(units, liquidationOraclePrice);
 
         uint256 maxR = _maxRepaid(units, units, liquidationOraclePrice);
-        vm.assume(maxR < units);
 
-        repaid = bound(repaid, maxR + 1, units);
+        repaid = bound(repaid, maxR + 1, max(units, maxR + 1));
         vm.expectRevert("recovery close factor conditions violated");
         morphoV2.liquidate(obligation, 0, 0, repaid, borrower, "");
 
-        repaid = bound(repaid, 1, maxR);
+        repaid = bound(repaid, 0, min(maxR, units));
         morphoV2.liquidate(obligation, 0, 0, repaid, borrower, "");
     }
 
@@ -391,9 +390,8 @@ contract LiquidationTest is BaseTest {
         _setupUnhealthy(units, liquidationOraclePrice);
 
         uint256 maxR = _maxRepaid(units, units, liquidationOraclePrice);
-        vm.assume(maxR < units);
 
-        morphoV2.liquidate(obligation, 0, 0, maxR, borrower, "");
+        morphoV2.liquidate(obligation, 0, 0, min(maxR, units), borrower, "");
 
         uint256 remainingCollateral = morphoV2.collateralOf(id, borrower, 0);
         uint256 remainingDebt = morphoV2.debtOf(id, borrower);
@@ -421,8 +419,6 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
-        uint256 maxR = _maxRepaid(units, units, liquidationOraclePrice);
-        vm.assume(maxR < units);
 
         // Full liquidation should succeed because remaining debt < rcfThreshold.
         morphoV2.liquidate(obligation, 0, 0, units, borrower, "");
@@ -464,12 +460,13 @@ contract LiquidationTest is BaseTest {
         setupObligation(obligation, units);
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
         uint256 maxRepaid = _maxRepaid(units, units, liquidationOraclePrice);
-        vm.assume(maxRepaid < units);
 
         // At exact maturity: recovery close factor applies.
-        vm.warp(obligation.maturity);
-        vm.expectRevert("recovery close factor conditions violated");
-        morphoV2.liquidate(obligation, 0, 0, units, borrower, "");
+        if (maxRepaid < units) {
+            vm.warp(obligation.maturity);
+            vm.expectRevert("recovery close factor conditions violated");
+            morphoV2.liquidate(obligation, 0, 0, units, borrower, "");
+        }
 
         // One second later: recovery close factor no longer applies.
         vm.warp(obligation.maturity + 1);
