@@ -55,10 +55,11 @@ contract TickLibTest is BaseTest {
         TickLib.tickToPrice(tick);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testTickToPriceOutOfRange(uint256 tick) public {
         tick = bound(tick, TICK_RANGE + 1, type(uint256).max);
         vm.expectRevert("tick out of range");
-        this.tickToPrice(tick);
+        TickLib.tickToPrice(tick);
     }
 
     // Price to tick
@@ -84,17 +85,10 @@ contract TickLibTest is BaseTest {
         TickLib.priceToTick(price);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testPriceToTickPriceGreaterThanOne(uint256 price) public {
         price = bound(price, 1e18 + 1, type(uint256).max);
         vm.expectRevert("Price is greater than one");
-        this.priceToTick(price);
-    }
-
-    function tickToPrice(uint256 tick) external pure {
-        TickLib.tickToPrice(tick);
-    }
-
-    function priceToTick(uint256 price) external pure {
         TickLib.priceToTick(price);
     }
 
