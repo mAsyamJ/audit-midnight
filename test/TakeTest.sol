@@ -1140,7 +1140,12 @@ contract TakeTest is BaseTest {
         take(100, 0, 0, 0, borrower, lenderOffer);
     }
 
-    function testTakeInconsistentInput(uint256 buyerAssets, uint256 sellerAssets, uint256 obligationUnits, uint256 obligationShares) public {
+    function testTakeInconsistentInput(
+        uint256 buyerAssets,
+        uint256 sellerAssets,
+        uint256 obligationUnits,
+        uint256 obligationShares
+    ) public {
         vm.assume(!UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares));
         vm.expectRevert("inconsistent input");
         take(buyerAssets, sellerAssets, obligationUnits, obligationShares, borrower, lenderOffer);
@@ -1161,20 +1166,24 @@ contract TakeTest is BaseTest {
         Offer memory badOffer = lenderOffer;
         badOffer.start = start;
         vm.expectRevert("offer not started");
-        take(0, 0, 1, 0, borrower, badOffer);
+        take(0, 0, 0, 0, borrower, badOffer);
     }
 
     function testTakeOfferExpired(uint256 elapsed) public {
         elapsed = bound(elapsed, 1, type(uint64).max);
         vm.warp(lenderOffer.expiry + elapsed);
         vm.expectRevert("offer expired");
-        take(0, 0, 1, 0, borrower, lenderOffer);
+        take(0, 0, 0, 0, borrower, lenderOffer);
     }
 
-    function testTakeBuyerAndSellerSame(uint256 obligationUnits) public {
-        obligationUnits = bound(obligationUnits, 0, maxAssets);
+    function testTakeBuyerAndSellerSame(uint256 pkey) public {
+        pkey = bound(pkey, 1, type(uint128).max);
+        address taker = vm.addr(pkey);
+        privateKey[taker] = pkey;
+        lenderOffer.maker = taker;
+
         vm.expectRevert("buyer and seller cannot be the same");
-        take(0, 0, obligationUnits, 0, lender, lenderOffer);
+        take(0, 0, 0, 0, taker, lenderOffer);
     }
 
     // test tree / signatures.
