@@ -287,23 +287,23 @@ contract TradingFeeTest is BaseTest {
         assertApproxEqAbs(loanToken.balanceOf(feeRecipient), expectedFee, 100, "fee recipient balance");
     }
 
-    function testEarlyFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee180Days, uint256 maturity) public {
+    function testEarlyFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee360Days, uint256 maturity) public {
         buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
-        fee180Days = bound(fee180Days, 0, morphoV2.maxTradingFee(5)) / 1e12 * 1e12;
-        maturity = bound(maturity, block.timestamp + 180 days, block.timestamp + 36500 days);
+        fee360Days = bound(fee360Days, 0, morphoV2.maxTradingFee(6)) / 1e12 * 1e12;
+        maturity = bound(maturity, block.timestamp + 360 days, block.timestamp + 36500 days);
 
         obligation.maturity = maturity;
         id = toId(obligation);
         lenderOffer.obligation = obligation;
         borrowerOffer.obligation = obligation;
 
-        morphoV2.setDefaultTradingFee(address(loanToken), 5, fee180Days);
+        morphoV2.setDefaultTradingFee(address(loanToken), 6, fee360Days);
         borrowerOffer.tick = sellerTick;
 
-        uint256 tradingFee = fee180Days;
+        uint256 tradingFee = fee360Days;
 
         uint256 buyerPrice = sellerPrice + tradingFee;
         uint256 expectedSellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);

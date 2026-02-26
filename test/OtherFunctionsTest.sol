@@ -174,8 +174,8 @@ contract OtherFunctionsTest is BaseTest {
 
         bytes20 _id = morphoV2.touchObligation(_obligation);
         assertEq(morphoV2.obligationCreated(_id), true, "obligation created");
-        uint16[6] memory fees = morphoV2.fees(_id);
-        for (uint256 i = 0; i < 6; i++) {
+        uint16[7] memory fees = morphoV2.fees(_id);
+        for (uint256 i = 0; i < 7; i++) {
             assertEq(fees[i], morphoV2.defaultFees(_obligation.loanToken, i), "fees");
         }
     }
