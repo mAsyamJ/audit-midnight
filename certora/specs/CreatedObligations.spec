@@ -91,7 +91,7 @@ rule obligationIsCreatedAfterLiquidate(env e, MorphoV2.Obligation obligation, ui
 
 // Show that an obligation state is empty if it is not created.
 invariant obligationStateIsEmptyIfNotCreated(bytes20 id, address user)
-    !MorphoV2.obligationCreated(id) => obligationStateIsEmpty(id, user, collateralIndex);
+    !MorphoV2.obligationCreated(id) => obligationStateIsEmpty(id, user);
 
 definition obligationStateIsEmpty(bytes20 id, address user) returns bool = MorphoV2.totalUnits(id) == 0 && MorphoV2.totalShares(id) == 0 && MorphoV2.withdrawable(id) == 0 && noFeesAreSet(id) && MorphoV2.sharesOf(id, user) == 0 && userHasNoDebt(id, user) && userHasNoActivatedCollaterals(id, user);
 
