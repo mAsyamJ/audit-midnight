@@ -1140,6 +1140,42 @@ contract TakeTest is BaseTest {
         take(100, 0, 0, 0, borrower, lenderOffer);
     }
 
+    function testTakeInconsistentInput(uint256 buyerAssets, uint256 sellerAssets) public {
+        vm.assume(buyerAssets != 0 && sellerAssets != 0);
+        vm.expectRevert("inconsistent input");
+        take(buyerAssets, sellerAssets, 0, 0, borrower, lenderOffer);
+    }
+
+    function testTakeInconsistentOfferInput(uint256 assets, uint256 obligationUnits) public {
+        vm.assume(assets != 0 && obligationUnits != 0);
+        Offer memory badOffer = lenderOffer;
+        badOffer.assets = assets;
+        badOffer.obligationUnits = obligationUnits;
+        vm.expectRevert("inconsistent offer input");
+        take(0, 0, 0, 0, borrower, badOffer);
+    }
+
+    function testTakeOfferNotStarted(uint256 start) public {
+        start = bound(start, block.timestamp + 1, type(uint256).max);
+        Offer memory badOffer = lenderOffer;
+        badOffer.start = start;
+        vm.expectRevert("offer not started");
+        take(0, 0, 1, 0, borrower, badOffer);
+    }
+
+    function testTakeOfferExpired(uint256 elapsed) public {
+        elapsed = bound(elapsed, 1, type(uint64).max);
+        vm.warp(lenderOffer.expiry + elapsed);
+        vm.expectRevert("offer expired");
+        take(0, 0, 1, 0, borrower, lenderOffer);
+    }
+
+    function testTakeBuyerAndSellerSame(uint256 obligationUnits) public {
+        obligationUnits = bound(obligationUnits, 0, maxAssets);
+        vm.expectRevert("buyer and seller cannot be the same");
+        take(0, 0, obligationUnits, 0, lender, lenderOffer);
+    }
+
     // test tree / signatures.
 
     function testTakeWrongRoot() public {
