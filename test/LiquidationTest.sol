@@ -269,7 +269,7 @@ contract LiquidationTest is BaseTest {
         assertEq(morphoV2.totalShares(id), units, "total shares");
     }
 
-    // Check that if there is bad debt it is possible to repay almost all debt.
+    // Check that if there is bad debt it is possible to repay almost all debt and seize almost all collateral.
     function testLiquidateWithBadDebtRepayAll(uint256 units, uint256 liquidationOraclePrice) public {
         units = bound(units, 10, MAX_TEST_AMOUNT);
         liquidationOraclePrice = bound(liquidationOraclePrice, 1, badDebtPriceDown());
@@ -282,6 +282,7 @@ contract LiquidationTest is BaseTest {
         morphoV2.liquidate(obligation, 0, 0, UtilsLib.min(maxRepaid, debtAfterBadDebt), borrower, "");
 
         assertApproxEqAbs(morphoV2.debtOf(id, borrower), 0, 1e3, "all remaining debt repaid");
+        assertApproxEqAbs(morphoV2.collateralOf(id, borrower, 0), 0, 1e3, "all remaining collateral seized");
     }
 
     // post maturity liquidation.
