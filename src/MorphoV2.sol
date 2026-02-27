@@ -440,26 +440,25 @@ contract MorphoV2 is IMorphoV2 {
         bytes20 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
 
-        uint256 repayableDebt;
         uint256 maxDebt;
         uint256 liquidatedCollatPrice;
         BorrowerState storage _state = borrowerState[id][borrower];
+        uint256 originalDebt = _state.debt;
+        uint256 badDebt = originalDebt;
         uint256 bitmap = _state.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
-            uint256 _collateralOf = collateralOf[id][borrower][i];
-            maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
-            repayableDebt += _collateralOf.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, MAX_LIF);
+            uint256 collateralQuoted = collateralOf[id][borrower][i].mulDivDown(price, ORACLE_PRICE_SCALE);
+            maxDebt += collateralQuoted.mulDivDown(_collateral.lltv, WAD);
+            badDebt = badDebt.zeroFloorSub(collateralQuoted.mulDivDown(WAD, MAX_LIF));
             bitmap ^= (1 << i);
         }
 
-        uint256 originalDebt = _state.debt;
         require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
 
-        uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
         if (badDebt > 0) {
             _state.debt -= UtilsLib.toUint128(badDebt);
             _obligationState.totalUnits -= UtilsLib.toUint128(badDebt);
@@ -482,6 +481,7 @@ contract MorphoV2 is IMorphoV2 {
                 uint256 lltv = obligation.collaterals[collateralIndex].lltv;
                 // Rounded up to avoid consecutive max liquidations.
                 // Acknowledged that the position could be slightly healthy after a liquidation.
+                // Note that debt >= Σ collateralQuoted * 1 / lif >= Σ collateralQuoted * lltv = maxDebt.
                 uint256 maxRepaid = (_state.debt - maxDebt).mulDivUp(WAD, WAD - lif.mulDivUp(lltv, WAD));
                 require(
                     repaidUnits <= maxRepaid
