@@ -150,7 +150,13 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
         uint256 initialCollateral = morphoV2.collateralOf(id, borrower, 0);
-        seized = bound(seized, 0, UtilsLib.min(units.mulDivDown(MAX_LIF, WAD).mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice), initialCollateral));
+        seized = bound(
+            seized,
+            0,
+            UtilsLib.min(
+                units.mulDivDown(MAX_LIF, WAD).mulDivDown(ORACLE_PRICE_SCALE, liquidationOraclePrice), initialCollateral
+            )
+        );
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
         vm.warp(obligation.maturity + TIME_TO_MAX_LIF); // Warp to post-maturity to bypass recovery close factor.
 
