@@ -155,8 +155,8 @@ contract MorphoV2 is IMorphoV2 {
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
         bytes20 id = touchObligation(offer.obligation);
-        _slash(id, buyer);
-        _slash(id, seller);
+        _slash(id, offer.maker);
+        _slash(id, taker);
         ObligationState storage _obligationState = obligationState[id];
 
         (
