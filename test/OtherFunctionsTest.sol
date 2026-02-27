@@ -174,8 +174,8 @@ contract OtherFunctionsTest is BaseTest {
 
         bytes20 _id = morphoV2.touchObligation(_obligation);
         assertEq(morphoV2.obligationCreated(_id), true, "obligation created");
-        uint16[6] memory fees = morphoV2.fees(_id);
-        for (uint256 i = 0; i < 6; i++) {
+        uint16[7] memory fees = morphoV2.fees(_id);
+        for (uint256 i = 0; i < 7; i++) {
             assertEq(fees[i], morphoV2.defaultFees(_obligation.loanToken, i), "fees");
         }
     }
@@ -287,6 +287,29 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation = _createMultiCollateralObligation(numCollaterals);
 
         vm.expectRevert("too many collaterals");
+        morphoV2.touchObligation(_obligation);
+    }
+
+    function testCollateralsNotSorted() public {
+        Obligation memory _obligation;
+        _obligation.loanToken = address(loanToken);
+        _obligation.maturity = block.timestamp + 100;
+        Collateral[] memory collaterals = new Collateral[](2);
+        collaterals[0] = Collateral({token: address(uint160(2)), lltv: 0.75e18, oracle: address(oracle1)});
+        collaterals[1] = Collateral({token: address(uint160(1)), lltv: 0.75e18, oracle: address(oracle2)});
+        _obligation.collaterals = collaterals;
+        vm.expectRevert("collaterals not sorted");
+        morphoV2.touchObligation(_obligation);
+    }
+
+    function testLltvTooHighOrLIFTooHigh() public {
+        Obligation memory _obligation;
+        _obligation.loanToken = address(loanToken);
+        _obligation.maturity = block.timestamp + 100;
+        Collateral[] memory collaterals = new Collateral[](1);
+        collaterals[0] = Collateral({token: address(collateralToken1), lltv: 1e18, oracle: address(oracle1)});
+        _obligation.collaterals = collaterals;
+        vm.expectRevert("lltv too high or LIF too high");
         morphoV2.touchObligation(_obligation);
     }
 
