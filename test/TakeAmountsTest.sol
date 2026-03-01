@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Offer, Collateral} from "../src/interfaces/IMorphoV2.sol";
+import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {WAD} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, TICK_RANGE} from "../src/libraries/TickLib.sol";
@@ -53,18 +53,18 @@ contract TakeAmountsTest is BaseTest {
     function testBuyerAssetsToUnitsSellOffer(uint256 targetBuyerAssets, uint256 tick, uint256 fee0, uint256 fee1)
         public
     {
-        fee0 = bound(fee0, 0, morphoV2.maxTradingFee(0)) / 1e12 * 1e12;
-        fee1 = bound(fee1, 0, morphoV2.maxTradingFee(1)) / 1e12 * 1e12;
+        fee0 = bound(fee0, 0, midnight.maxTradingFee(0)) / 1e12 * 1e12;
+        fee1 = bound(fee1, 0, midnight.maxTradingFee(1)) / 1e12 * 1e12;
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        morphoV2.touchObligation(obligation);
-        morphoV2.setObligationTradingFee(id, 0, fee0);
-        morphoV2.setObligationTradingFee(id, 1, fee1);
+        midnight.touchObligation(obligation);
+        midnight.setObligationTradingFee(id, 0, fee0);
+        midnight.setObligationTradingFee(id, 1, fee1);
         deal(address(loanToken), lender, type(uint256).max);
         borrowerOffer.tick = tick;
         // borrowerOffer.buy = false → buyerPrice = price + fee.
-        uint256 buyerPrice = TickLib.tickToPrice(tick) + morphoV2.tradingFee(id, obligation.maturity - block.timestamp);
+        uint256 buyerPrice = TickLib.tickToPrice(tick) + midnight.tradingFee(id, obligation.maturity - block.timestamp);
         vm.assume(buyerPrice <= WAD);
         uint256 units = TakeAmountsLib.buyerAssetsToUnits(targetBuyerAssets, buyerPrice);
         collateralize(obligation, borrower, units);
@@ -77,15 +77,15 @@ contract TakeAmountsTest is BaseTest {
     function testSellerAssetsToUnitsSellOffer(uint256 targetSellerAssets, uint256 tick, uint256 fee0, uint256 fee1)
         public
     {
-        fee0 = bound(fee0, 0, morphoV2.maxTradingFee(0)) / 1e12 * 1e12;
-        fee1 = bound(fee1, 0, morphoV2.maxTradingFee(1)) / 1e12 * 1e12;
+        fee0 = bound(fee0, 0, midnight.maxTradingFee(0)) / 1e12 * 1e12;
+        fee1 = bound(fee1, 0, midnight.maxTradingFee(1)) / 1e12 * 1e12;
         targetSellerAssets = bound(targetSellerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        morphoV2.touchObligation(obligation);
-        morphoV2.setObligationTradingFee(id, 0, fee0);
-        morphoV2.setObligationTradingFee(id, 1, fee1);
-        vm.assume(TickLib.tickToPrice(tick) + morphoV2.tradingFee(id, obligation.maturity - block.timestamp) <= WAD);
+        midnight.touchObligation(obligation);
+        midnight.setObligationTradingFee(id, 0, fee0);
+        midnight.setObligationTradingFee(id, 1, fee1);
+        vm.assume(TickLib.tickToPrice(tick) + midnight.tradingFee(id, obligation.maturity - block.timestamp) <= WAD);
         deal(address(loanToken), lender, type(uint256).max);
         borrowerOffer.tick = tick;
         // borrowerOffer.buy = false → sellerPrice = price.
@@ -104,15 +104,15 @@ contract TakeAmountsTest is BaseTest {
     function testBuyerAssetsToUnitsBuyOffer(uint256 targetBuyerAssets, uint256 tick, uint256 fee0, uint256 fee1)
         public
     {
-        fee0 = bound(fee0, 0, morphoV2.maxTradingFee(0)) / 1e12 * 1e12;
-        fee1 = bound(fee1, 0, morphoV2.maxTradingFee(1)) / 1e12 * 1e12;
+        fee0 = bound(fee0, 0, midnight.maxTradingFee(0)) / 1e12 * 1e12;
+        fee1 = bound(fee1, 0, midnight.maxTradingFee(1)) / 1e12 * 1e12;
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        morphoV2.touchObligation(obligation);
-        morphoV2.setObligationTradingFee(id, 0, fee0);
-        morphoV2.setObligationTradingFee(id, 1, fee1);
-        uint256 _tradingFee = morphoV2.tradingFee(id, obligation.maturity - block.timestamp);
+        midnight.touchObligation(obligation);
+        midnight.setObligationTradingFee(id, 0, fee0);
+        midnight.setObligationTradingFee(id, 1, fee1);
+        uint256 _tradingFee = midnight.tradingFee(id, obligation.maturity - block.timestamp);
         uint256 buyerPrice = TickLib.tickToPrice(tick);
         vm.assume(buyerPrice >= _tradingFee);
         deal(address(loanToken), lender, type(uint256).max);
@@ -128,15 +128,15 @@ contract TakeAmountsTest is BaseTest {
     function testSellerAssetsToUnitsBuyOffer(uint256 targetSellerAssets, uint256 tick, uint256 fee0, uint256 fee1)
         public
     {
-        fee0 = bound(fee0, 0, morphoV2.maxTradingFee(0)) / 1e12 * 1e12;
-        fee1 = bound(fee1, 0, morphoV2.maxTradingFee(1)) / 1e12 * 1e12;
+        fee0 = bound(fee0, 0, midnight.maxTradingFee(0)) / 1e12 * 1e12;
+        fee1 = bound(fee1, 0, midnight.maxTradingFee(1)) / 1e12 * 1e12;
         targetSellerAssets = bound(targetSellerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        morphoV2.touchObligation(obligation);
-        morphoV2.setObligationTradingFee(id, 0, fee0);
-        morphoV2.setObligationTradingFee(id, 1, fee1);
-        uint256 _tradingFee = morphoV2.tradingFee(id, obligation.maturity - block.timestamp);
+        midnight.touchObligation(obligation);
+        midnight.setObligationTradingFee(id, 0, fee0);
+        midnight.setObligationTradingFee(id, 1, fee1);
+        uint256 _tradingFee = midnight.tradingFee(id, obligation.maturity - block.timestamp);
         vm.assume(TickLib.tickToPrice(tick) > _tradingFee);
         deal(address(loanToken), lender, type(uint256).max);
         lenderOffer.tick = tick;
