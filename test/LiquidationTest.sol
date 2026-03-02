@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {WAD, ORACLE_PRICE_SCALE, TIME_TO_MAX_LIF} from "../src/libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, TIME_TO_MAX_LIF, LIQUIDATION_CURSOR} from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
 import {IOracle} from "../src/interfaces/IOracle.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
@@ -657,8 +657,13 @@ contract LiquidationTest is BaseTest {
             .mulDivDown(obligation.collaterals[0].lltv, WAD);
     }
 
-    function maxLif(uint256 lltv) internal view returns (uint256) {
-        return midnight.maxLif(lltv);
+    function maxLif(uint256 lltv) internal pure returns (uint256) {
+        return WAD.mulDivDown(WAD, WAD - LIQUIDATION_CURSOR.mulDivDown(WAD - lltv, WAD));
+    }
+
+    function testMaxLifMatchesContract(uint256 lltv) public view {
+        lltv = bound(lltv, 0, WAD - 1);
+        assertEq(maxLif(lltv), midnight.maxLif(lltv), "maxLif formula mismatch");
     }
 
     function onLiquidate(Obligation memory, uint256, uint256, uint256 _repaidUnits, address, bytes memory data) public {
