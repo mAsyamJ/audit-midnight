@@ -14,9 +14,10 @@ import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 // So debt <= type(uint128).max * 3/4.
 uint256 constant MAX_DEBT = MAX_TEST_AMOUNT * 3 / 4;
 
-// Price conversion can amplify assets by up to 2x (with price >= 0.5).
-// Combined with the collateral constraint: assets * 2 * 4/3 <= type(uint128).max.
-uint256 constant MAX_ASSETS = MAX_TEST_AMOUNT * 3 / 8;
+// In sell tests, sellerPrice = buyerPrice - tradingFee, so the minimum effective price is
+// 0.5e18 - maxTradingFee(1). Price conversion amplifies assets by up to WAD / minPrice.
+// Combined with the collateral constraint: assets * WAD / minPrice * 4/3 <= type(uint128).max.
+uint256 constant MAX_ASSETS = MAX_TEST_AMOUNT * (0.5e18 - 0.000014e18) / WAD * 3 / 4;
 
 contract TradingFeeTest is BaseTest {
     using UtilsLib for uint256;
