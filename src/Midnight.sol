@@ -52,7 +52,8 @@ contract Midnight is IMidnight {
     mapping(bytes20 id => ObligationState) public obligationState;
 
     /// @dev Groups are useful to have a global offered amount shared accross multiple offers ("OCO").
-    /// @dev To work as expected, all offers in a same group should have the same obligationShares and loan token.
+    /// @dev To work as expected, all offers in a same group should have the same obligationShares, obligationUnits, and
+    /// loan token.
     mapping(address user => mapping(bytes32 group => uint256)) public consumed;
 
     /// @dev Offers should have the current session to be valid.
