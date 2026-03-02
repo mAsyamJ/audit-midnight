@@ -18,7 +18,7 @@ methods {
     function UtilsLib.isLeaf(bytes32, bytes32, bytes32[] memory) internal returns (bool) => NONDET;
     function UtilsLib.msb(uint256) internal returns (uint256) => NONDET;
 
-    function isHealthy(MorphoV2.Obligation memory, bytes20, address) internal returns (bool) => NONDET;
+    function isHealthy(Midnight.Obligation memory, bytes20, address) internal returns (bool) => NONDET;
     
 }
 
@@ -35,8 +35,8 @@ strong invariant sharePriceBelowOrEqOne1(bytes20 id)
         address takerCallback,
         bytes takerCallbackData,
         address receiverIfTakerIsSeller,
-        MorphoV2.Offer offer,
-        MorphoV2.Signature signature,
+        Midnight.Offer offer,
+        Midnight.Signature signature,
         bytes32 root,
         bytes32[] proof) with (env e) {
             require buyerAssets != 0 && sellerAssets == 0 && obligationUnits == 0 && obligationShares == 0, "other cases checked separately";
@@ -56,8 +56,8 @@ strong invariant sharePriceBelowOrEqOne2(bytes20 id)
         address takerCallback,
         bytes takerCallbackData,
         address receiverIfTakerIsSeller,
-        MorphoV2.Offer offer,
-        MorphoV2.Signature signature,
+        Midnight.Offer offer,
+        Midnight.Signature signature,
         bytes32 root,
         bytes32[] proof) with (env e) {
             require buyerAssets == 0 && sellerAssets != 0 && obligationUnits == 0 && obligationShares == 0, "other cases checked separately";
@@ -76,8 +76,8 @@ strong invariant sharePriceBelowOrEqOne3(bytes20 id)
         address takerCallback,
         bytes takerCallbackData,
         address receiverIfTakerIsSeller,
-        MorphoV2.Offer offer,
-        MorphoV2.Signature signature,
+        Midnight.Offer offer,
+        Midnight.Signature signature,
         bytes32 root,
         bytes32[] proof) with (env e) {
             require buyerAssets == 0 && sellerAssets == 0 && obligationUnits != 0 && obligationShares == 0, "other cases checked separately";
@@ -95,8 +95,8 @@ strong invariant sharePriceBelowOrEqOne4(bytes20 id)
         address takerCallback,
         bytes takerCallbackData,
         address receiverIfTakerIsSeller,
-        MorphoV2.Offer offer,
-        MorphoV2.Signature signature,
+        Midnight.Offer offer,
+        Midnight.Signature signature,
         bytes32 root,
         bytes32[] proof) with (env e) {
             require buyerAssets == 0 && sellerAssets == 0 && obligationUnits == 0, "other cases checked separately";
