@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
 import {TakeBundler} from "../src/periphery/TakeBundler.sol";
-import {Offer, Obligation, Signature, Collateral} from "../src/interfaces/IMorphoV2.sol";
+import {Offer, Obligation, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
 import {TICK_RANGE} from "../src/libraries/TickLib.sol";
 
 contract BundlerTest is BaseTest {
@@ -69,14 +69,14 @@ contract BundlerTest is BaseTest {
         collateralize(obligation, borrower, units);
 
         vm.prank(borrower);
-        morphoV2.setIsAuthorized(address(takeBundler), true);
+        midnight.setIsAuthorized(address(takeBundler), true);
 
         vm.prank(borrower);
-        morphoV2.setIsAuthorized(address(this), true);
+        midnight.setIsAuthorized(address(this), true);
 
         vm.prank(borrower);
-        takeBundler.bundleTake(morphoV2, units, borrower, address(0), hex"", address(0), offers, sigs, roots, proofs);
+        takeBundler.bundleTake(midnight, units, borrower, address(0), hex"", address(0), offers, sigs, roots, proofs);
 
-        assertEq(morphoV2.debtOf(id, borrower), units);
+        assertEq(midnight.debtOf(id, borrower), units);
     }
 }
