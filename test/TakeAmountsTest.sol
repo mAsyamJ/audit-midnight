@@ -61,10 +61,7 @@ contract TakeAmountsTest is BaseTest {
     }
 
     /// @dev Creates an initial borrowing position so borrower has debt and lender has obligation shares.
-    function _createPosition(uint256 positionUnits)
-        internal
-        returns (uint256 currentUnits, uint256 currentShares)
-    {
+    function _createPosition(uint256 positionUnits) internal returns (uint256 currentUnits, uint256 currentShares) {
         deal(address(loanToken), lender, type(uint128).max);
         collateralize(obligation, borrower, positionUnits);
         uint256 positionShares = TakeAmountsLib.unitsToShares(positionUnits, initialUnits, initialShares, true);
@@ -116,12 +113,9 @@ contract TakeAmountsTest is BaseTest {
         assertEq(buyerAssets, targetBuyerAssets, "e2e buyerAssets");
     }
 
-    function testSellerAssetsToSharesBuyerIsLender(
-        uint256 targetSellerAssets,
-        uint256 tick,
-        uint256 fee0,
-        uint256 fee1
-    ) public {
+    function testSellerAssetsToSharesBuyerIsLender(uint256 targetSellerAssets, uint256 tick, uint256 fee0, uint256 fee1)
+        public
+    {
         uint256 tradingFee = _setFees(fee0, fee1);
         targetSellerAssets = bound(targetSellerAssets, 1, 1e30);
         tick = bound(tick, 1, _maxTick(tradingFee));
@@ -158,12 +152,9 @@ contract TakeAmountsTest is BaseTest {
         assertEq(obligationUnits, targetUnits, "e2e units");
     }
 
-    function testBuyerAssetsToSharesBuyerIsBorrower(
-        uint256 targetBuyerAssets,
-        uint256 tick,
-        uint256 fee0,
-        uint256 fee1
-    ) public {
+    function testBuyerAssetsToSharesBuyerIsBorrower(uint256 targetBuyerAssets, uint256 tick, uint256 fee0, uint256 fee1)
+        public
+    {
         uint256 tradingFee = _setFees(fee0, fee1);
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
         tick = bound(tick, 1, _maxTick(tradingFee));
