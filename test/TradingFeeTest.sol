@@ -2,12 +2,16 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {WAD} from "../src/libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, TICK_RANGE} from "../src/libraries/TickLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
+
+// Price conversion can amplify assets by up to 2x (with price >= 0.5).
+// To keep the resulting debt within uint128, we cap assets at type(uint128).max / 2.
+uint256 constant MAX_ASSETS = MAX_TEST_AMOUNT / 2;
 
 contract TradingFeeTest is BaseTest {
     using UtilsLib for uint256;
@@ -49,11 +53,14 @@ contract TradingFeeTest is BaseTest {
 
         deal(address(loanToken), address(lender), MAX_TEST_AMOUNT * 10000);
 
+        oracle1.setPrice(ORACLE_PRICE_SCALE * 1e18);
+        oracle2.setPrice(ORACLE_PRICE_SCALE * 1e18);
+
         midnight.setTradingFeeRecipient(feeRecipient);
     }
 
     function testBuyBuyerAssets(uint256 buyerAssets, uint256 sellerTick, uint256 tradingFee) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
@@ -72,7 +79,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testSellBuyerAssets(uint256 tradingFee, uint256 buyerTick, uint256 buyerAssets) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         buyerTick = bound(buyerTick, 0, TICK_RANGE);
         uint256 buyerPrice = TickLib.tickToPrice(buyerTick);
         vm.assume(buyerPrice >= 0.5e18);
@@ -93,7 +100,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testBuySellerAssets(uint256 tradingFee, uint256 sellerTick, uint256 sellerAssets) public {
-        sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
+        sellerAssets = bound(sellerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
@@ -112,7 +119,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testSellSellerAssets(uint256 tradingFee, uint256 buyerTick, uint256 sellerAssets) public {
-        sellerAssets = bound(sellerAssets, 0, MAX_TEST_AMOUNT);
+        sellerAssets = bound(sellerAssets, 0, MAX_ASSETS);
         buyerTick = bound(buyerTick, 0, TICK_RANGE);
         uint256 buyerPrice = TickLib.tickToPrice(buyerTick);
         vm.assume(buyerPrice >= 0.5e18);
@@ -211,7 +218,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testDefaultFee(uint256 buyerAssets, uint256 sellerTick, uint256 tradingFee) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
@@ -230,7 +237,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testSevenDayTtmFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee1Day, uint256 fee7Days) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
@@ -261,7 +268,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testPostMaturityFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee0Day, uint256 maturity) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
@@ -288,7 +295,7 @@ contract TradingFeeTest is BaseTest {
     }
 
     function testEarlyFee(uint256 buyerAssets, uint256 sellerTick, uint256 fee360Days, uint256 maturity) public {
-        buyerAssets = bound(buyerAssets, 0, MAX_TEST_AMOUNT);
+        buyerAssets = bound(buyerAssets, 0, MAX_ASSETS);
         sellerTick = bound(sellerTick, 0, TICK_RANGE);
         uint256 sellerPrice = TickLib.tickToPrice(sellerTick);
         vm.assume(sellerPrice >= 0.5e18);
