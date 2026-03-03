@@ -54,6 +54,22 @@ contract BundlerTest is BaseTest {
         deal(address(loanToken), otherLender, type(uint256).max);
     }
 
+    function testUnauthorized() public {
+        Offer[] memory _offers = new Offer[](1);
+        _offers[0] = offers[0];
+
+        Signature[] memory sigs = new Signature[](1);
+        bytes32[] memory roots = new bytes32[](1);
+        bytes32[][] memory proofs = new bytes32[][](1);
+        uint256[] memory _obligationShares = new uint256[](1);
+
+        vm.prank(address(0xdead));
+        vm.expectRevert("UNAUTHORIZED");
+        takeBundler.bundleTake(
+            midnight, 100, borrower, address(0), hex"", address(0), _obligationShares, _offers, sigs, roots, proofs
+        );
+    }
+
     function testLengthMismatchSigs() public {
         Offer[] memory _offers = new Offer[](2);
         _offers[0] = offers[0];
