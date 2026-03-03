@@ -53,7 +53,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         run: forge build
 
-      - name: Install solc
+      - name: Copy solc
         run: |
           ls -la ~/.local/share/svm
           sudo cp ~/.local/share/svm/solc-0.8.31/solc-0.8.31 /usr/local/bin/
