@@ -30,9 +30,23 @@ contract TakeTest is BaseTest {
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
         obligation.collaterals
-            .push(Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(oracle1)}));
+            .push(
+                Collateral({
+                    token: address(collateralToken1),
+                    lltv: 0.75e18,
+                    maxLif: maxLif(0.75e18, 0.25e18),
+                    oracle: address(oracle1)
+                })
+            );
         obligation.collaterals
-            .push(Collateral({token: address(collateralToken2), lltv: 0.75e18, oracle: address(oracle2)}));
+            .push(
+                Collateral({
+                    token: address(collateralToken2),
+                    lltv: 0.75e18,
+                    maxLif: maxLif(0.75e18, 0.25e18),
+                    oracle: address(oracle2)
+                })
+            );
         obligation.collaterals = sortCollaterals(obligation.collaterals);
         obligation.rcfThreshold = 0;
 
@@ -472,7 +486,7 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, units.mulDivDown(price, WAD));
         collateralize(obligation, borrower, collateralized);
 
-        vm.expectRevert("Seller is unhealthy");
+        vm.expectRevert("seller is unhealthy");
         take(units, lender, borrowerOffer);
     }
 
@@ -486,7 +500,7 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, units.mulDivDown(price, WAD));
         collateralize(obligation, borrower, collateralized);
 
-        vm.expectRevert("Seller is unhealthy");
+        vm.expectRevert("seller is unhealthy");
         take(units, borrower, lenderOffer);
     }
 

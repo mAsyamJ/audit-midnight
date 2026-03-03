@@ -48,6 +48,7 @@ rule takeInputOutputConsistency(env e, uint256 obligationUnitsInput, address tak
 
     // The output obligationUnits is equal to the input.
     assert obligationUnitsOutput == obligationUnitsInput;
+
     // If the input is zero, all the output arguments are zero.
     assert obligationUnitsInput == 0 => buyerAssetsOutput == 0 && sellerAssetsOutput == 0 && obligationUnitsOutput == 0;
 }

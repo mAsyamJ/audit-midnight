@@ -20,7 +20,14 @@ contract AuthorizationTest is BaseTest {
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
         obligation.collaterals
-            .push(Collateral({token: address(collateralToken1), lltv: 0.75e18, oracle: address(oracle1)}));
+            .push(
+                Collateral({
+                    token: address(collateralToken1),
+                    lltv: 0.75e18,
+                    maxLif: maxLif(0.75e18, 0.25e18),
+                    oracle: address(oracle1)
+                })
+            );
 
         id = toId(obligation);
     }
@@ -56,7 +63,7 @@ contract AuthorizationTest is BaseTest {
         // Attacker tries to withdraw lender's units
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
-        vm.expectRevert("UNAUTHORIZED");
+        vm.expectRevert("unauthorized");
         midnight.withdraw(obligation, units, lender, lender);
     }
 
@@ -72,7 +79,7 @@ contract AuthorizationTest is BaseTest {
         // Attacker tries to withdraw user's collateral
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
-        vm.expectRevert("UNAUTHORIZED");
+        vm.expectRevert("unauthorized");
         midnight.withdrawCollateral(obligation, 0, collateralAmount, user, user);
     }
 
@@ -174,7 +181,7 @@ contract AuthorizationTest is BaseTest {
         // Attacker tries to take on behalf of taker
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
-        vm.expectRevert("UNAUTHORIZED");
+        vm.expectRevert("unauthorized");
         midnight.take(units, taker, address(0), hex"", address(0), offer, sig([offer]), root([offer]), proof([offer]));
     }
 
