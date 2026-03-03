@@ -114,7 +114,6 @@ contract TakeAmountsTest is BaseTest {
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
         tick = bound(tick, 1, _maxTick(tradingFee));
 
-        uint256 buyerPrice = TickLib.tickToPrice(tick) + tradingFee;
         offer.tick = tick;
         uint256 shares = TakeAmountsLib.buyerAssetsToShares(midnight, id, lender, offer, targetBuyerAssets);
         deal(address(loanToken), lender, type(uint256).max);
@@ -133,7 +132,6 @@ contract TakeAmountsTest is BaseTest {
         targetSellerAssets = bound(targetSellerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        uint256 sellerPrice = TickLib.tickToPrice(tick);
         offer.tick = tick;
         uint256 shares = TakeAmountsLib.sellerAssetsToShares(midnight, id, lender, offer, targetSellerAssets);
         deal(address(loanToken), lender, type(uint256).max);
@@ -152,7 +150,7 @@ contract TakeAmountsTest is BaseTest {
         targetUnits = bound(targetUnits, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        (uint256 currentUnits, uint256 currentShares) = _createPosition(2 * targetUnits);
+        _createPosition(2 * targetUnits);
 
         uint256 shares = TakeAmountsLib.unitsToShares(midnight, id, borrower, offer, targetUnits);
         deal(address(loanToken), borrower, type(uint256).max);
@@ -171,9 +169,8 @@ contract TakeAmountsTest is BaseTest {
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
         tick = bound(tick, 1, _maxTick(tradingFee));
 
-        (uint256 currentUnits, uint256 currentShares) = _createPosition(1e36);
+        _createPosition(1e36);
 
-        uint256 buyerPrice = TickLib.tickToPrice(tick) + tradingFee;
         offer.maker = lender;
         offer.tick = tick;
         uint256 shares = TakeAmountsLib.buyerAssetsToShares(midnight, id, borrower, offer, targetBuyerAssets);
@@ -194,9 +191,8 @@ contract TakeAmountsTest is BaseTest {
         targetSellerAssets = bound(targetSellerAssets, 1, 1e30);
         tick = bound(tick, 1, TICK_RANGE);
 
-        (uint256 currentUnits, uint256 currentShares) = _createPosition(1e36);
+        _createPosition(1e36);
 
-        uint256 sellerPrice = TickLib.tickToPrice(tick);
         offer.maker = lender;
         offer.tick = tick;
         uint256 shares = TakeAmountsLib.sellerAssetsToShares(midnight, id, borrower, offer, targetSellerAssets);
@@ -233,7 +229,7 @@ contract TakeAmountsTest is BaseTest {
         uint256 tradingFee = _setFees(fee0, fee1);
         targetBuyerAssets = bound(targetBuyerAssets, 1, 1e30);
 
-        (uint256 currentUnits, uint256 currentShares) = _createPosition(1e36);
+        _createPosition(1e36);
 
         uint256 buyerPrice = TickLib.tickToPrice(TICK_RANGE) + tradingFee;
         uint256 targetUnits = targetBuyerAssets.mulDivUp(WAD, buyerPrice);
