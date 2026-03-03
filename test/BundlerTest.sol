@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 
 import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
-import {TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {TickLib, TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {WAD} from "../src/libraries/ConstantsLib.sol";
 import {TakeBundler} from "../src/periphery/TakeBundler.sol";
 import {BaseTest} from "./BaseTest.sol";
 
@@ -21,6 +22,12 @@ contract BundlerTest is BaseTest {
         super.setUp();
 
         takeBundler = new TakeBundler();
+
+        // Set trading fees to max for all breakpoints.
+        midnight.setTradingFeeRecipient(makeAddr("feeRecipient"));
+        for (uint256 i; i <= 6; i++) {
+            midnight.setDefaultTradingFee(address(loanToken), i, midnight.maxTradingFee(i));
+        }
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
@@ -50,125 +57,211 @@ contract BundlerTest is BaseTest {
         offers.push();
         offers[0].buy = true;
         offers[0].maker = lender;
-        offers[0].obligationShares = 500;
         offers[0].obligation = obligation;
         offers[0].expiry = block.timestamp + 200;
         offers[0].tick = TICK_RANGE;
 
         offers.push();
         offers[1].buy = true;
-        offers[1].maker = otherLender;
-        offers[1].receiverIfMakerIsSeller = otherLender;
-        offers[1].obligationShares = type(uint256).max;
+        offers[1].maker = lender;
         offers[1].obligation = obligation;
         offers[1].expiry = block.timestamp + 200;
         offers[1].tick = TICK_RANGE;
+        offers[1].group = bytes32(uint256(1));
 
         deal(address(loanToken), lender, type(uint256).max);
-        deal(address(loanToken), otherLender, type(uint256).max);
     }
 
-    function testUnauthorized() public {
+    function _authorizeBundler() internal {
+        vm.prank(borrower);
+        midnight.setIsAuthorized(address(takeBundler), true);
+
+        vm.prank(borrower);
+        midnight.setIsAuthorized(address(this), true);
+    }
+
+    function _sigsRootsProofs()
+        internal
+        view
+        returns (Signature[] memory sigs, bytes32[] memory roots, bytes32[][] memory proofs)
+    {
+        sigs = new Signature[](2);
+        sigs[0] = sig([offers[0]]);
+        sigs[1] = sig([offers[1]]);
+
+        roots = new bytes32[](2);
+        roots[0] = root([offers[0]]);
+        roots[1] = root([offers[1]]);
+
+        proofs = new bytes32[][](2);
+        proofs[0] = proof([offers[0]]);
+        proofs[1] = proof([offers[1]]);
+    }
+
+    function testUnauthorizedShares() public {
         Offer[] memory _offers = new Offer[](1);
         _offers[0] = offers[0];
 
         Signature[] memory sigs = new Signature[](1);
         bytes32[] memory roots = new bytes32[](1);
         bytes32[][] memory proofs = new bytes32[][](1);
-        uint256[] memory _obligationShares = new uint256[](1);
+        uint256[] memory obligationShares = new uint256[](1);
 
         vm.prank(address(0xdead));
         vm.expectRevert("UNAUTHORIZED");
-        takeBundler.bundleTake(
-            midnight, 100, borrower, address(0), hex"", address(0), _obligationShares, _offers, sigs, roots, proofs
+        takeBundler.bundleTakeShares(
+            midnight, 100, borrower, address(0), obligationShares, _offers, sigs, roots, proofs
         );
     }
 
-    function testLengthMismatchSigs() public {
-        Offer[] memory _offers = new Offer[](2);
-        _offers[0] = offers[0];
-        _offers[1] = offers[0];
+    function testBundleTakeShares(uint256 offerShares0, uint256 offerShares1, uint256 targetShares) public {
+        targetShares = bound(targetShares, 0, uint256(type(uint128).max) * 3 / 4);
+        offers[0].obligationShares = offerShares0;
+        offers[1].obligationShares = offerShares1;
+        (Signature[] memory sigs, bytes32[] memory roots, bytes32[][] memory proofs) = _sigsRootsProofs();
+        uint256 fromOffer0 = UtilsLib.min(targetShares, offerShares0);
 
-        Signature[] memory sigs = new Signature[](1);
-        bytes32[] memory roots = new bytes32[](2);
-        bytes32[][] memory proofs = new bytes32[][](2);
+        collateralize(obligation, borrower, targetShares);
+
         uint256[] memory _obligationShares = new uint256[](2);
+        _obligationShares[0] = offerShares0;
+        _obligationShares[1] = offerShares1;
 
-        vm.prank(lender);
-        vm.expectRevert("length mismatch");
-        takeBundler.bundleTake(
-            midnight, 100, lender, address(0), hex"", address(0), _obligationShares, _offers, sigs, roots, proofs
-        );
+        _authorizeBundler();
+
+        if (offerShares1 >= targetShares - fromOffer0) {
+            vm.prank(borrower);
+            takeBundler.bundleTakeShares(
+                midnight, targetShares, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
+
+            assertEq(midnight.debtOf(id, borrower), targetShares, "debt");
+
+            uint256 consumed0 = midnight.consumed(offers[0].maker, offers[0].group);
+            uint256 consumed1 = midnight.consumed(offers[1].maker, offers[1].group);
+            assertEq(consumed0, fromOffer0, "consumed offer 0");
+            assertEq(consumed0 + consumed1, midnight.debtOf(id, borrower), "total consumed");
+        } else {
+            vm.prank(borrower);
+            vm.expectRevert("insufficient liquidity");
+            takeBundler.bundleTakeShares(
+                midnight, targetShares, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
+        }
     }
 
-    function testLengthMismatchRoots() public {
-        Offer[] memory _offers = new Offer[](2);
-        _offers[0] = offers[0];
-        _offers[1] = offers[0];
+    function testBundleTakeUnits(uint256 offerShares0, uint256 offerShares1, uint256 units) public {
+        units = bound(units, 0, uint256(type(uint128).max) * 3 / 4);
+        offers[0].obligationShares = offerShares0;
+        offers[1].obligationShares = offerShares1;
+        (Signature[] memory sigs, bytes32[] memory roots, bytes32[][] memory proofs) = _sigsRootsProofs();
+        uint256 fromOffer0 = UtilsLib.min(units, offerShares0);
 
-        Signature[] memory sigs = new Signature[](2);
-        bytes32[] memory roots = new bytes32[](1);
-        bytes32[][] memory proofs = new bytes32[][](2);
-        uint256[] memory _obligationShares = new uint256[](2);
-
-        vm.prank(lender);
-        vm.expectRevert("length mismatch");
-        takeBundler.bundleTake(
-            midnight, 100, lender, address(0), hex"", address(0), _obligationShares, _offers, sigs, roots, proofs
-        );
-    }
-
-    function testLengthMismatchProofs() public {
-        Offer[] memory _offers = new Offer[](2);
-        _offers[0] = offers[0];
-        _offers[1] = offers[0];
-
-        Signature[] memory sigs = new Signature[](2);
-        bytes32[] memory roots = new bytes32[](2);
-        bytes32[][] memory proofs = new bytes32[][](1);
-        uint256[] memory _obligationShares = new uint256[](2);
-
-        vm.prank(lender);
-        vm.expectRevert("length mismatch");
-        takeBundler.bundleTake(
-            midnight, 100, lender, address(0), hex"", address(0), _obligationShares, _offers, sigs, roots, proofs
-        );
-    }
-
-    function testBundler() public {
-        Signature[] memory sigs = new Signature[](2);
-        sigs[0] = sig([offers[0]]);
-        sigs[1] = sig([offers[1]]);
-
-        bytes32[] memory roots = new bytes32[](2);
-        roots[0] = root([offers[0]]);
-        roots[1] = root([offers[1]]);
-
-        bytes32[][] memory proofs = new bytes32[][](2);
-        proofs[0] = proof([offers[0]]);
-        proofs[1] = proof([offers[1]]);
-
-        uint256 units = 1000;
-        uint256 shares = units;
         collateralize(obligation, borrower, units);
 
-        uint256[] memory obligationShares = new uint256[](2);
-        obligationShares[0] = offers[0].obligationShares;
-        obligationShares[1] = offers[1].obligationShares;
+        uint256[] memory _obligationShares = new uint256[](2);
+        _obligationShares[0] = offerShares0;
+        _obligationShares[1] = offerShares1;
 
-        vm.prank(borrower);
-        midnight.setIsAuthorized(address(takeBundler), true);
+        _authorizeBundler();
 
-        vm.prank(borrower);
-        midnight.setIsAuthorized(address(this), true);
+        if (offerShares1 >= units - fromOffer0) {
+            vm.prank(borrower);
+            takeBundler.bundleTakeUnits(
+                midnight, units, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
 
-        vm.prank(borrower);
-        takeBundler.bundleTake(
-            midnight, shares, borrower, address(0), hex"", address(0), obligationShares, offers, sigs, roots, proofs
-        );
+            uint256 consumed0 = midnight.consumed(offers[0].maker, offers[0].group);
+            uint256 consumed1 = midnight.consumed(offers[1].maker, offers[1].group);
+            assertEq(consumed0, fromOffer0, "consumed offer 0");
+            assertEq(consumed0 + consumed1, midnight.debtOf(id, borrower), "total consumed");
+            assertEq(midnight.debtOf(id, borrower), units, "debt");
+        } else {
+            vm.prank(borrower);
+            vm.expectRevert("insufficient liquidity");
+            takeBundler.bundleTakeUnits(
+                midnight, units, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
+        }
+    }
 
-        assertEq(midnight.debtOf(id, borrower), units, "debt");
-        assertEq(midnight.consumed(offers[0].maker, offers[0].group), 500, "consumed offer 0");
-        assertEq(midnight.consumed(offers[1].maker, offers[1].group), 500, "consumed offer 1");
+    function testBundleTakeBuyerAssets(uint256 offerShares0, uint256 offerShares1, uint256 targetBuyerAssets) public {
+        targetBuyerAssets = bound(targetBuyerAssets, 1, uint256(type(uint128).max) / 2);
+        offers[0].obligationShares = offerShares0;
+        offers[1].obligationShares = offerShares1;
+        (Signature[] memory sigs, bytes32[] memory roots, bytes32[][] memory proofs) = _sigsRootsProofs();
+
+        uint256 price = TickLib.tickToPrice(TICK_RANGE);
+        uint256 units = targetBuyerAssets.mulDivUp(WAD, price);
+        uint256 fromOffer0 = UtilsLib.min(units, offerShares0);
+
+        collateralize(obligation, borrower, units);
+
+        uint256[] memory _obligationShares = new uint256[](2);
+        _obligationShares[0] = offerShares0;
+        _obligationShares[1] = offerShares1;
+
+        _authorizeBundler();
+
+        if (offerShares1 >= units - fromOffer0) {
+            vm.prank(borrower);
+            takeBundler.bundleTakeBuyerAssets(
+                midnight, targetBuyerAssets, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
+
+            uint256 consumed0 = midnight.consumed(offers[0].maker, offers[0].group);
+            uint256 consumed1 = midnight.consumed(offers[1].maker, offers[1].group);
+            assertEq(consumed0, fromOffer0, "consumed offer 0");
+            assertEq(consumed0 + consumed1, midnight.debtOf(id, borrower), "total consumed");
+            assertEq(loanToken.balanceOf(lender), type(uint256).max - targetBuyerAssets, "lender balance");
+        } else {
+            vm.prank(borrower);
+            vm.expectRevert("insufficient liquidity");
+            takeBundler.bundleTakeBuyerAssets(
+                midnight, targetBuyerAssets, borrower, address(0), _obligationShares, offers, sigs, roots, proofs
+            );
+        }
+    }
+
+    function testBundleTakeSellerAssets(uint256 offerShares0, uint256 offerShares1, uint256 targetSellerAssets) public {
+        targetSellerAssets = bound(targetSellerAssets, 1, uint256(type(uint128).max) / 2);
+        offers[0].obligationShares = offerShares0;
+        offers[1].obligationShares = offerShares1;
+        (Signature[] memory sigs, bytes32[] memory roots, bytes32[][] memory proofs) = _sigsRootsProofs();
+
+        uint256 price = TickLib.tickToPrice(TICK_RANGE);
+        midnight.touchObligation(obligation);
+        uint256 _tradingFee = midnight.tradingFee(id, obligation.maturity - block.timestamp);
+        uint256 units = targetSellerAssets.mulDivUp(WAD, price - _tradingFee);
+        uint256 fromOffer0 = UtilsLib.min(units, offerShares0);
+
+        // Extra collateral headroom for the potential extra unit of debt.
+        collateralize(obligation, borrower, units + 1);
+
+        uint256[] memory _obligationShares = new uint256[](2);
+        _obligationShares[0] = offerShares0;
+        _obligationShares[1] = offerShares1;
+
+        _authorizeBundler();
+
+        // Splitting across offers can cause up to 1 extra share of debt due to rounding.
+        if (fromOffer0 >= units || offerShares1 >= units + 1 - fromOffer0) {
+            vm.prank(borrower);
+            takeBundler.bundleTakeSellerAssets(
+                midnight, targetSellerAssets, borrower, borrower, _obligationShares, offers, sigs, roots, proofs
+            );
+
+            uint256 consumed0 = midnight.consumed(offers[0].maker, offers[0].group);
+            uint256 consumed1 = midnight.consumed(offers[1].maker, offers[1].group);
+            assertEq(consumed0, fromOffer0, "consumed offer 0");
+            assertEq(consumed0 + consumed1, midnight.debtOf(id, borrower), "total consumed");
+            assertEq(loanToken.balanceOf(borrower), targetSellerAssets, "borrower balance");
+        } else {
+            vm.prank(borrower);
+            vm.expectRevert("insufficient liquidity");
+            takeBundler.bundleTakeSellerAssets(
+                midnight, targetSellerAssets, borrower, borrower, _obligationShares, offers, sigs, roots, proofs
+            );
+        }
     }
 }
