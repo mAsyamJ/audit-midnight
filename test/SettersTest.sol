@@ -18,7 +18,7 @@ contract SettersTest is BaseTest {
     function testSetOwnerOnlyOwner(address rdm) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
-        vm.expectRevert("Only owner");
+        vm.expectRevert("only owner");
         midnight.setOwner(makeAddr("newOwner"));
     }
 
@@ -30,7 +30,7 @@ contract SettersTest is BaseTest {
     function testSetFeeSetterOnlyOwner(address rdm) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
-        vm.expectRevert("Only owner");
+        vm.expectRevert("only owner");
         midnight.setFeeSetter(makeAddr("newFeeSetter"));
     }
 
@@ -80,12 +80,12 @@ contract SettersTest is BaseTest {
     }
 
     function testSetTradingFeeInvalidIndex(bytes20 id) public {
-        vm.expectRevert("Invalid index");
+        vm.expectRevert("invalid index");
         midnight.setObligationTradingFee(id, 7, 0);
     }
 
     function testSetDefaultTradingFeeInvalidIndex(address loanToken) public {
-        vm.expectRevert("Invalid index");
+        vm.expectRevert("invalid index");
         midnight.setDefaultTradingFee(loanToken, 7, 0);
     }
 
@@ -113,14 +113,14 @@ contract SettersTest is BaseTest {
     }
 
     function testSetObligationTradingFeeObligationNotCreated(bytes20 id) public {
-        vm.expectRevert("Obligation not created");
+        vm.expectRevert("obligation not created");
         midnight.setObligationTradingFee(id, 0, 0);
     }
 
     function testSetTradingFeeOnlyFeeSetter(address rdm, bytes20 id) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
-        vm.expectRevert("Only feeSetter");
+        vm.expectRevert("only fee setter");
         midnight.setObligationTradingFee(id, 0, 0);
     }
 
@@ -132,7 +132,7 @@ contract SettersTest is BaseTest {
     function testSetTradingFeeRecipientOnlyOwner(address rdm) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
-        vm.expectRevert("Only owner");
+        vm.expectRevert("only owner");
         midnight.setTradingFeeRecipient(makeAddr("newRecipient"));
     }
 
@@ -195,7 +195,7 @@ contract SettersTest is BaseTest {
     function testSetDefaultTradingFeeOnlyFeeSetter(address rdm, address loanToken) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
-        vm.expectRevert("Only feeSetter");
+        vm.expectRevert("only fee setter");
         midnight.setDefaultTradingFee(loanToken, 0, 0);
     }
 

@@ -121,7 +121,7 @@ contract LiquidationTest is BaseTest {
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
 
-        vm.expectRevert("INCONSISTENT_INPUT");
+        vm.expectRevert("inconsistent input");
         midnight.liquidate(obligation, 0, 1, 1, borrower, "");
     }
 

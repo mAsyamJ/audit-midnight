@@ -478,7 +478,7 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, units.mulDivDown(price, WAD));
         collateralize(obligation, borrower, collateralized);
 
-        vm.expectRevert("Seller is unhealthy");
+        vm.expectRevert("seller is unhealthy");
         take(shares, lender, borrowerOffer);
     }
 
@@ -493,7 +493,7 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), lender, units.mulDivDown(price, WAD));
         collateralize(obligation, borrower, collateralized);
 
-        vm.expectRevert("Seller is unhealthy");
+        vm.expectRevert("seller is unhealthy");
         take(shares, borrower, lenderOffer);
     }
 

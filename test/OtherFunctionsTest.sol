@@ -74,7 +74,7 @@ contract OtherFunctionsTest is BaseTest {
         withdraw = bound(withdraw, additionalCollateral + 1, initialCollateral);
 
         vm.prank(borrower);
-        vm.expectRevert("Unhealthy borrower");
+        vm.expectRevert("unhealthy borrower");
         midnight.withdrawCollateral(obligation, 0, withdraw, borrower, borrower);
     }
 
@@ -99,7 +99,7 @@ contract OtherFunctionsTest is BaseTest {
     function testWithdrawInconsistentInput(uint256 units, uint256 shares) public {
         vm.assume(units > 0 && shares > 0);
         vm.prank(lender);
-        vm.expectRevert("INCONSISTENT_INPUT");
+        vm.expectRevert("inconsistent input");
         midnight.withdraw(obligation, units, shares, lender, lender);
     }
 
