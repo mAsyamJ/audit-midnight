@@ -20,29 +20,24 @@ methods {
 
     function isHealthy(Midnight.Obligation memory, bytes20, address) internal returns (bool) => NONDET;
 
-    // Callback summaries for take, liquidate, and flashLoan.
-    function _.onBuy(Midnight.Obligation, address, uint256, uint256, uint256, uint256, bytes) external => NONDET;
-    function _.onSell(Midnight.Obligation, address, uint256, uint256, uint256, uint256, bytes) external => NONDET;
-    function _.onLiquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes) external => NONDET;
-    function _.onFlashLoan(address, uint256, bytes) external => NONDET;
 }
 
 // Check the ratio of units over shares is below or equal to 1.
 strong invariant sharePriceBelowOrEqOne(bytes20 id)
     totalShares(id) >= totalUnits(id);
 
-/// Liquidation without bad debt preserves virtual share price.
-rule sharePriceDoesNotDecreaseByLiquidateNoBadDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes20 id) {
-    mathint unitsBefore = totalUnits(id);
+/// Liquidation does not change the total shares.
+rule liquidateDoesNotChangeShares(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes20 id) {
     mathint sharesBefore = totalShares(id);
-
     liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
+    assert totalShares(id) == sharesBefore;
+}
 
-    mathint unitsAfter = totalUnits(id);
-    mathint sharesAfter = totalShares(id);
-
-    // unitsAfter == unitsBefore <==> badDebt == 0 (no bad debt socialization occurred)
-    assert unitsAfter == unitsBefore => (unitsAfter + 1) * (sharesBefore + 1) >= (unitsBefore + 1) * (sharesAfter + 1);
+/// Liquidation does not increase the total units.
+rule liquidateDoesNotIncreaseUnits(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes20 id) {
+    mathint unitsBefore = totalUnits(id);
+    liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
+    assert totalUnits(id) <= unitsBefore;
 }
 
 /// Virtual share price = (totalUnits+1)/(totalShares+1) monotonicity.
