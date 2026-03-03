@@ -51,7 +51,6 @@ rule sharePriceDoesNotDecreaseByLiquidateNoBadDebt(env e, Midnight.Obligation ob
 rule sharePriceDoesNotDecrease(bytes20 id, method f) filtered { f -> f.selector != sig:multicall(bytes[]).selector && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector && !f.isView } {
 
     // We need it otherwise rounding down to 0 creates shares with no backing units
-    // for withdraw +1 virtual liquidity makes exchange rate differ from actual pool ratio when totalShares > totalUnits
     requireInvariant sharePriceBelowOrEqOne(id);
 
     mathint unitsBefore = totalUnits(id);
