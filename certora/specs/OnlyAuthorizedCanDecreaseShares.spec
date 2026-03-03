@@ -27,10 +27,14 @@ rule onlyAuthorizedCanDecreaseShares(env e, method f, bytes20 id, address user) 
 
     assert sharesOf(id, user) >= sharesBefore
 <<<<<<< HEAD
+<<<<<<< HEAD
         || f.selector == sig:take(uint256,address,address,bytes,address,Midnight.Offer,Midnight.Signature,bytes32,bytes32[]).selector;
 =======
         || f.selector == sig:take(uint256,uint256,uint256,uint256,address,address,bytes,address,Midnight.Offer,Midnight.Signature,bytes32,bytes32[]).selector;
 >>>>>>> a5e4f2a (renaming)
+=======
+        || f.selector == sig:take(uint256,address,address,bytes,address,Midnight.Offer,Midnight.Signature,bytes32,bytes32[]).selector;
+>>>>>>> dfb6060 (midnight.sol latest changes fix)
 }
 
 /// In take, the caller must be authorized by the taker and only the lender shares can decrease
