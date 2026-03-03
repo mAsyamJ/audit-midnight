@@ -8,8 +8,9 @@ import {Offer, Signature} from "../interfaces/IMidnight.sol";
 contract TakeBundler {
     /// @dev Iterates through orders, filling up to `targetShares` obligation shares total.
     /// @dev Assumes all offers share the same obligation id so that obligation shares are comparable.
+    /// @dev The taker must have authorized this bundler and the msg.sender (if different from the taker) on Midnight.
     function bundleTake(
-        Midnight morpho,
+        Midnight midnight,
         uint256 targetShares,
         address taker,
         address takerCallback,
@@ -20,13 +21,15 @@ contract TakeBundler {
         bytes32[] calldata roots,
         bytes32[][] calldata proofs
     ) external {
-        require(taker == msg.sender || morpho.isAuthorized(taker, msg.sender), "UNAUTHORIZED");
+        require(taker == msg.sender || midnight.isAuthorized(taker, msg.sender), "UNAUTHORIZED");
+        require(
+            offers.length == sigs.length && offers.length == roots.length && offers.length == proofs.length,
+            "length mismatch"
+        );
 
         uint256 filled;
-
-        uint256 i;
-        while (i < offers.length && filled < targetShares) {
-            try morpho.take(
+        for (uint256 i; i < offers.length && filled < targetShares; i++) {
+            try midnight.take(
                 targetShares - filled,
                 taker,
                 takerCallback,
