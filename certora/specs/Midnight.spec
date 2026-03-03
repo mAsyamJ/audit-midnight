@@ -9,6 +9,7 @@ methods {
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
     function sharesOf(bytes20 id, address owner) external returns (uint256) envfree;
     function debtOf(bytes20 id, address user) external returns (uint256) envfree;
+    function maxLif(uint256 lltv) external returns (uint256) envfree;
 
     function _.price() external => NONDET;
     function IdLib.toId(Midnight.Obligation memory, uint256, address) internal returns (bytes20) => NONDET;
@@ -17,6 +18,8 @@ methods {
 }
 
 /// HELPERS ///
+
+definition WAD() returns uint256 = 1 ^ 18;
 
 persistent ghost mapping(bytes20 => mathint) sumSharesOf {
     init_state axiom (forall bytes20 id. sumSharesOf[id] == 0);
@@ -122,3 +125,8 @@ strong invariant totalUnitsEqualsSumDebtPlusWithdrawable(bytes20 id)
 
 strong invariant totalSharesEqualsSumSharesOf(bytes20 id)
     totalShares(id) == sumSharesOf[id];
+
+rule lifTimesLltvIsLessThanOrEqualToOne(uint256 lltv) {
+    require lltv <= WAD(), "see rule lltvIsLessThanOrEqualToWad";
+    assert lltv * maxLif(lltv) <= WAD() * WAD();
+}
