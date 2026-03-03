@@ -19,7 +19,7 @@ methods {
 
 /// HELPERS ///
 
-definition WAD() returns uint256 = 1 ^ 18;
+definition WAD() returns uint256 = 10 ^ 18;
 
 persistent ghost mapping(bytes20 => mathint) sumSharesOf {
     init_state axiom (forall bytes20 id. sumSharesOf[id] == 0);
@@ -127,6 +127,6 @@ strong invariant totalSharesEqualsSumSharesOf(bytes20 id)
     totalShares(id) == sumSharesOf[id];
 
 rule lifTimesLltvIsLessThanOrEqualToOne(uint256 lltv) {
-    require lltv <= WAD(), "see rule lltvIsLessThanOrEqualToWad";
+    require lltv <= WAD(), "see rule createdObligationsHaveLltvLessThanOrEqualToOne";
     assert lltv * maxLif(lltv) <= WAD() * WAD();
 }

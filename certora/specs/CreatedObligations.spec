@@ -23,7 +23,7 @@ methods {
     function IdLib.toId(Midnight.Obligation memory obligation, uint256, address) internal returns (bytes20) => summaryToId(obligation);
 }
 
-definition WAD() returns uint256 = 1 ^ 18;
+definition WAD() returns uint256 = 10 ^ 18;
 
 // Since the toId function returns a truncated hash, we need to rehash the obligation to ensure injectivity.
 persistent ghost mapping(bytes32 => bytes20) rehash {
