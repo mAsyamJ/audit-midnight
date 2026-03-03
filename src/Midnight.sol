@@ -10,26 +10,30 @@ import {
     WAD,
     ORACLE_PRICE_SCALE,
     FEE_STEP,
-    MAX_LIF,
     TIME_TO_MAX_LIF,
     MAX_COLLATERALS,
     MAX_COLLATERALS_PER_BORROWER,
+    LIQUIDATION_CURSOR_LOW,
+    LIQUIDATION_CURSOR_HIGH,
     EIP712_DOMAIN_TYPEHASH,
     ROOT_TYPEHASH
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {
-    IMorphoV2,
+    IMidnight,
     Obligation,
     Offer,
     Signature,
     Collateral,
     BorrowerState,
     ObligationState
-} from "./interfaces/IMorphoV2.sol";
+} from "./interfaces/IMidnight.sol";
 import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 
+/// MAX AMOUNTS
+/// @dev The max amount of debt, totalUnits, totalShares, and collateral is type(uint128).max (~1e38).
+///
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
 ///
@@ -40,7 +44,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev Post-maturity, the trading fee is the fee at the 0d breakpoint.
 /// @dev Trading fees are stored divided by FEE_STEP (1e12) to fit in 16 bits.
 /// @dev Max trading fee is defined per index (see maxTradingFee function).
-contract MorphoV2 is IMorphoV2 {
+contract Midnight is IMidnight {
     using UtilsLib for uint256;
     using UtilsLib for uint128;
 
@@ -51,9 +55,9 @@ contract MorphoV2 is IMorphoV2 {
     mapping(bytes20 id => mapping(address user => uint128[128])) public collateralOf;
     mapping(bytes20 id => ObligationState) public obligationState;
 
-    /// @dev Groups are useful to have a global offered amount shared accross multiple offers ("OCO").
-    /// @dev To work as expected, all offers in a same group should have the same assets, obligationUnits,
-    /// obligationShares and loan token.
+    /// @dev Groups are useful to have a global offered amount shared across multiple offers ("OCO").
+    /// @dev To work as expected, all offers in a same group should have the same obligationShares, obligationUnits, and
+    /// loan token.
     mapping(address user => mapping(bytes32 group => uint256)) public consumed;
 
     /// @dev Offers should have the current session to be valid.
@@ -97,24 +101,24 @@ contract MorphoV2 is IMorphoV2 {
     /// ADMIN FUNCTIONS ///
 
     function setOwner(address newOwner) external {
-        require(msg.sender == owner, "Only owner");
+        require(msg.sender == owner, "only owner");
         owner = newOwner;
         emit EventsLib.SetOwner(newOwner);
     }
 
     function setFeeSetter(address newFeeSetter) external {
-        require(msg.sender == owner, "Only owner");
+        require(msg.sender == owner, "only owner");
         feeSetter = newFeeSetter;
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
     /// @dev Overrides the fee of a specific obligation.
     function setObligationTradingFee(bytes20 id, uint256 index, uint256 newTradingFee) external {
-        require(msg.sender == feeSetter, "Only feeSetter");
-        require(index <= 6, "Invalid index");
+        require(msg.sender == feeSetter, "only fee setter");
+        require(index <= 6, "invalid index");
         require(newTradingFee <= maxTradingFee(index), "value too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
-        require(obligationState[id].created, "Obligation not created");
+        require(obligationState[id].created, "obligation not created");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee is less than maxTradingFee
         obligationState[id].fees[index] = uint16(newTradingFee / FEE_STEP);
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
@@ -122,8 +126,8 @@ contract MorphoV2 is IMorphoV2 {
 
     /// @dev Doesn't change the fee of already created obligations.
     function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee) external {
-        require(msg.sender == feeSetter, "Only feeSetter");
-        require(index <= 6, "Invalid index");
+        require(msg.sender == feeSetter, "only fee setter");
+        require(index <= 6, "invalid index");
         require(newTradingFee <= maxTradingFee(index), "value too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee is less than maxTradingFee
@@ -132,7 +136,7 @@ contract MorphoV2 is IMorphoV2 {
     }
 
     function setTradingFeeRecipient(address feeRecipient) external {
-        require(msg.sender == owner, "Only owner");
+        require(msg.sender == owner, "only owner");
         tradingFeeRecipient = feeRecipient;
         emit EventsLib.SetTradingFeeRecipient(feeRecipient);
     }
@@ -145,10 +149,9 @@ contract MorphoV2 is IMorphoV2 {
     /// position at the end.
     /// @dev Neither the taker nor the maker can pass from having shares to having debt in one take.
     /// @dev The taker might not get the price they expected if the trading fee was just changed.
+    /// @dev All sellerAssets are reachable with the obligationShares input, and all buyerAssets are reachable only if
+    /// buyerPrice <= WAD.
     function take(
-        uint256 buyerAssets,
-        uint256 sellerAssets,
-        uint256 obligationUnits,
         uint256 obligationShares,
         address taker,
         address takerCallback,
@@ -159,18 +162,11 @@ contract MorphoV2 is IMorphoV2 {
         bytes32 root,
         bytes32[] memory proof
     ) external returns (uint256, uint256, uint256, uint256) {
-        require(taker == msg.sender || isAuthorized[taker][msg.sender], "UNAUTHORIZED");
-        require(
-            UtilsLib.atMostOneNonZero(buyerAssets, sellerAssets, obligationUnits, obligationShares),
-            "inconsistent input"
-        );
-        require(
-            UtilsLib.atMostOneNonZero(offer.assets, offer.obligationUnits, offer.obligationShares),
-            "inconsistent offer input"
-        );
+        require(taker == msg.sender || isAuthorized[taker][msg.sender], "unauthorized");
         require(block.timestamp >= offer.start, "offer not started");
         require(block.timestamp <= offer.expiry, "offer expired");
         require(offer.maker != taker, "buyer and seller cannot be the same");
+        require(UtilsLib.atMostOneNonZero(offer.obligationUnits, offer.obligationShares), "INCONSISTENT_INPUT");
         require(signer(root, sig) == offer.maker, "invalid signature");
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
@@ -213,40 +209,17 @@ contract MorphoV2 is IMorphoV2 {
 
         bool buyerIsLender = borrowerState[id][buyer].debt == 0;
         bool sellerIsBorrower = sharesOf[id][seller] == 0;
-        // To ensure that the share price does not decrease, shares should be rounded down (units should be rounded up)
-        // when buyerIsLender & sellerIsBorrower, and rounded up (units should be rounded down) when !buyerIsLender &
-        // !sellerIsBorrower. The variable buyerIsLender is used to discriminate between the two cases.
-        if (buyerAssets > 0) {
-            obligationUnits = buyerAssets.mulDivDown(WAD, buyerPrice);
-            sellerAssets = buyerAssets.mulDivDown(sellerPrice, buyerPrice);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else if (sellerAssets > 0) {
-            obligationUnits = sellerAssets.mulDivDown(WAD, sellerPrice);
-            buyerAssets = sellerAssets.mulDivDown(buyerPrice, sellerPrice);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else if (obligationUnits > 0) {
-            buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
-            sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
-            obligationShares = obligationUnits.mulDiv(
-                _obligationState.totalShares + 1, _obligationState.totalUnits + 1, buyerIsLender
-            );
-        } else {
-            obligationUnits = obligationShares.mulDiv(
-                _obligationState.totalUnits + 1, _obligationState.totalShares + 1, !buyerIsLender
-            );
-            buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
-            sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
-        }
+        // To ensure that the share price does not decrease, units should be rounded up when buyerIsLender &
+        // sellerIsBorrower, and rounded down when !buyerIsLender & !sellerIsBorrower. The variable buyerIsLender is
+        // used to discriminate, as the remaining two cases do not change total units and total shares.
+        uint256 obligationUnits = buyerIsLender
+            ? obligationShares.mulDivUp(_obligationState.totalUnits + 1, _obligationState.totalShares + 1)
+            : obligationShares.mulDivDown(_obligationState.totalUnits + 1, _obligationState.totalShares + 1);
+        uint256 buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
+        uint256 sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
 
         uint256 newConsumed;
-        if (offer.assets > 0) {
-            newConsumed = consumed[offer.maker][offer.group] += offer.buy ? buyerAssets : sellerAssets;
-            require(newConsumed <= offer.assets, "consumed");
-        } else if (offer.obligationUnits > 0) {
+        if (offer.obligationUnits > 0) {
             newConsumed = consumed[offer.maker][offer.group] += obligationUnits;
             require(newConsumed <= offer.obligationUnits, "consumed");
         } else {
@@ -324,7 +297,7 @@ contract MorphoV2 is IMorphoV2 {
                 );
         }
 
-        require(isHealthy(offer.obligation, id, seller), "Seller is unhealthy");
+        require(isHealthy(offer.obligation, id, seller), "seller is unhealthy");
 
         return (buyerAssets, sellerAssets, obligationUnits, obligationShares);
     }
@@ -337,8 +310,8 @@ contract MorphoV2 is IMorphoV2 {
         address onBehalf,
         address receiver
     ) external returns (uint256, uint256) {
-        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "UNAUTHORIZED");
-        require(UtilsLib.atMostOneNonZero(obligationUnits, shares), "INCONSISTENT_INPUT");
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
+        require(UtilsLib.atMostOneNonZero(obligationUnits, shares), "inconsistent input");
         bytes20 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
 
@@ -400,7 +373,7 @@ contract MorphoV2 is IMorphoV2 {
         address onBehalf,
         address receiver
     ) external {
-        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "UNAUTHORIZED");
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes20 id = touchObligation(obligation);
         address collateralToken = obligation.collaterals[collateralIndex].token;
 
@@ -412,7 +385,7 @@ contract MorphoV2 is IMorphoV2 {
             borrowerState[id][onBehalf].activatedCollaterals &= ~uint128(1 << collateralIndex);
         }
 
-        require(isHealthy(obligation, id, onBehalf), "Unhealthy borrower");
+        require(isHealthy(obligation, id, onBehalf), "unhealthy borrower");
 
         emit EventsLib.WithdrawCollateral(msg.sender, id, collateralToken, assets, onBehalf, receiver);
 
@@ -425,8 +398,9 @@ contract MorphoV2 is IMorphoV2 {
     /// the liquidation could leave a collateral with a value that would not be enough to repay rcfThreshold units.
     /// @dev Recovery close factor means that debtOf - repaidUnits >= maxDebt - repaidUnits*LIF*LLTV, which is
     /// equivalent to repaidUnits <= (debtOf-maxDebt) / (1 - LIF*LLTV).
-    /// @dev If an account is healthy, the LIF grows linearly from 1 at maturity to MAX_LIF at maturity +
+    /// @dev If an account is healthy, the LIF grows linearly from 1 at maturity to maxLif(lltv) at maturity +
     /// TIME_TO_MAX_LIF.
+    /// @dev Liquidations non zero amounts revert if LLTV = 1.
     /// @dev Returns the seized assets and the repaid units.
     function liquidate(
         Obligation calldata obligation,
@@ -436,52 +410,53 @@ contract MorphoV2 is IMorphoV2 {
         address borrower,
         bytes calldata data
     ) external returns (uint256, uint256) {
-        require(UtilsLib.atMostOneNonZero(repaidUnits, seizedAssets), "INCONSISTENT_INPUT");
+        require(UtilsLib.atMostOneNonZero(repaidUnits, seizedAssets), "inconsistent input");
         bytes20 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
 
-        uint256 repayableDebt;
         uint256 maxDebt;
         uint256 liquidatedCollatPrice;
         BorrowerState storage _state = borrowerState[id][borrower];
+        uint256 originalDebt = _state.debt;
+        uint256 badDebt = originalDebt;
         uint256 bitmap = _state.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
-            uint256 _collateralOf = collateralOf[id][borrower][i];
-            maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
-            repayableDebt += _collateralOf.mulDivUp(WAD, MAX_LIF).mulDivUp(price, ORACLE_PRICE_SCALE);
+            uint256 collateralQuoted = collateralOf[id][borrower][i].mulDivDown(price, ORACLE_PRICE_SCALE);
+            maxDebt += collateralQuoted.mulDivDown(_collateral.lltv, WAD);
+            badDebt = badDebt.zeroFloorSub(collateralQuoted.mulDivDown(WAD, _collateral.maxLif));
             bitmap ^= (1 << i);
         }
 
-        uint256 originalDebt = _state.debt;
         require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
 
-        uint256 badDebt = originalDebt.zeroFloorSub(repayableDebt);
         if (badDebt > 0) {
             _state.debt -= UtilsLib.toUint128(badDebt);
             _obligationState.totalUnits -= UtilsLib.toUint128(badDebt);
         }
 
         if (repaidUnits > 0 || seizedAssets > 0) {
+            uint256 _maxLif = obligation.collaterals[collateralIndex].maxLif;
             uint256 lif = originalDebt > maxDebt
-                ? MAX_LIF
+                ? _maxLif
                 : UtilsLib.min(
-                    MAX_LIF, WAD + (MAX_LIF - WAD) * (block.timestamp - obligation.maturity) / TIME_TO_MAX_LIF
+                    _maxLif, WAD + (_maxLif - WAD) * (block.timestamp - obligation.maturity) / TIME_TO_MAX_LIF
                 );
 
             if (seizedAssets > 0) {
-                repaidUnits = seizedAssets.mulDivUp(WAD, lif).mulDivUp(liquidatedCollatPrice, ORACLE_PRICE_SCALE);
+                repaidUnits = seizedAssets.mulDivUp(liquidatedCollatPrice, ORACLE_PRICE_SCALE).mulDivUp(WAD, lif);
             } else {
-                seizedAssets = repaidUnits.mulDivDown(ORACLE_PRICE_SCALE, liquidatedCollatPrice).mulDivDown(lif, WAD);
+                seizedAssets = repaidUnits.mulDivDown(lif, WAD).mulDivDown(ORACLE_PRICE_SCALE, liquidatedCollatPrice);
             }
 
             if (block.timestamp <= obligation.maturity) {
                 uint256 lltv = obligation.collaterals[collateralIndex].lltv;
                 // Rounded up to avoid consecutive max liquidations.
                 // Acknowledged that the position could be slightly healthy after a liquidation.
+                // Note that debt >= Σ collateralQuoted * 1 / lif >= Σ collateralQuoted * lltv = maxDebt.
                 uint256 maxRepaid = (_state.debt - maxDebt).mulDivUp(WAD, WAD - lif.mulDivUp(lltv, WAD));
                 require(
                     repaidUnits <= maxRepaid
@@ -492,8 +467,9 @@ contract MorphoV2 is IMorphoV2 {
                 );
             }
 
-            collateralOf[id][borrower][collateralIndex] -= UtilsLib.toUint128(seizedAssets);
-            if (collateralOf[id][borrower][collateralIndex] == 0 && seizedAssets > 0) {
+            uint128 newCollateralOf = collateralOf[id][borrower][collateralIndex] - UtilsLib.toUint128(seizedAssets);
+            collateralOf[id][borrower][collateralIndex] = newCollateralOf;
+            if (newCollateralOf == 0 && seizedAssets > 0) {
                 // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
                 _state.activatedCollaterals &= ~uint128(1 << collateralIndex);
             }
@@ -547,12 +523,19 @@ contract MorphoV2 is IMorphoV2 {
     function touchObligation(Obligation memory obligation) public returns (bytes20) {
         bytes20 id = IdLib.toId(obligation, block.chainid, address(this));
         if (!obligationState[id].created) {
+            require(obligation.collaterals.length > 0, "no collaterals");
             require(obligation.collaterals.length <= MAX_COLLATERALS, "too many collaterals");
             address previousCollateralToken;
             for (uint256 i = 0; i < obligation.collaterals.length; i++) {
                 address collateralToken = obligation.collaterals[i].token;
                 require(collateralToken > previousCollateralToken, "collaterals not sorted");
-                require(obligation.collaterals[i].lltv < WAD.mulDivDown(WAD, MAX_LIF), "lltv too high or LIF too high"); // temporary.
+                uint256 lltv = obligation.collaterals[i].lltv;
+                require(lltv <= WAD, "lltv too high");
+                require(
+                    obligation.collaterals[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_LOW)
+                        || obligation.collaterals[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_HIGH),
+                    "invalid maxLif"
+                );
                 previousCollateralToken = collateralToken;
             }
 
@@ -634,6 +617,10 @@ contract MorphoV2 is IMorphoV2 {
         address tentativeSigner = ecrecover(digest, signature.v, signature.r, signature.s);
         require(tentativeSigner != address(0), "invalid signature");
         return tentativeSigner;
+    }
+
+    function maxLif(uint256 lltv, uint256 cursor) internal pure returns (uint256) {
+        return WAD.mulDivDown(WAD, WAD - cursor.mulDivDown(WAD - lltv, WAD));
     }
 
     /// @dev 50 bps for ttm=360 days, scaled linearly. For post maturity, 0.14 bps.

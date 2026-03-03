@@ -15,6 +15,7 @@ struct Obligation {
 struct Collateral {
     address token;
     uint256 lltv;
+    uint256 maxLif;
     address oracle;
 }
 
@@ -22,7 +23,6 @@ struct Offer {
     Obligation obligation;
     bool buy;
     address maker;
-    uint256 assets;
     uint256 obligationUnits;
     uint256 obligationShares;
     uint256 start;
@@ -54,4 +54,4 @@ struct ObligationState {
     uint16[7] fees;
 }
 
-interface IMorphoV2 {}
+interface IMidnight {}
