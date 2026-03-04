@@ -308,6 +308,7 @@ contract LiquidationTest is BaseTest {
 
         midnight.liquidate(obligation, 0, maxSeized, 0, borrower, "");
 
+        assertApproxEqAbs(midnight.debtOf(id, borrower), 0, 1e3, "almost all remaining debt repaid");
         assertApproxEqAbs(
             midnight.collateralOf(id, borrower, 0).mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE),
             0,
