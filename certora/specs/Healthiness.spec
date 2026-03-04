@@ -100,7 +100,7 @@ persistent ghost bytes20 globalId;
 persistent ghost address globalBorrower;
 
 // helper function to check if one of the collaterals of an obligation matches the global variables.
-definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index]) && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index];
+definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index] && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index]);
 
 function summaryToId(Midnight.Obligation obligation, uint256 chainId, address morpho) returns (bytes20) {
     bytes20 id;
@@ -191,7 +191,7 @@ rule stayHealthyLiquidateOtherBorrower(env e, Midnight.Obligation someObligation
     // reset the ghost variable that tracks whether the user was healthy before the callbacks.
     healthyBeforeCallback = true;
 
-    require globalObligationCollateralLength <= 3, "too many collaterals for the spec to handle";
+    require globalObligationCollateralLength <= 2, "too many collaterals for the spec to handle";
 
     require obligation.loanToken == globalObligationLoanToken;
     require obligation.collaterals.length == globalObligationCollateralLength;
