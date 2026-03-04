@@ -32,8 +32,6 @@ methods {
 
 /// SUMMARY ///
 
-definition MAX_LIF() returns uint256 = 115 * 10 ^ 16;
-
 definition WAD() returns uint256 = 10 ^ 18;
 
 definition ORACLE_PRICE_SCALE() returns uint256 = 10 ^ 36;
@@ -95,12 +93,14 @@ persistent ghost mapping(uint256 => address) globalObligationCollateralToken;
 
 persistent ghost mapping(uint256 => uint256) globalObligationCollateralLLTV;
 
+persistent ghost mapping(uint256 => uint256) globalObligationCollateralMaxLif;
+
 persistent ghost bytes20 globalId;
 
 persistent ghost address globalBorrower;
 
 // helper function to check if one of the collaterals of an obligation matches the global variables.
-definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index]);
+definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index]) && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index];
 
 function summaryToId(Midnight.Obligation obligation, uint256 chainId, address morpho) returns (bytes20) {
     bytes20 id;
@@ -152,7 +152,7 @@ rule stayHealthyLiquidateSameBorrower(env e, uint256 someCollateralIndex, uint25
     // reset the ghost variable that tracks whether the user was healthy before the callbacks.
     healthyBeforeCallback = true;
 
-    require globalObligationCollateralLLTV[someCollateralIndex] * MAX_LIF() < WAD() * WAD(), "collateral lltv must be less then 1/MAX_LIF";
+    require globalObligationCollateralLLTV[someCollateralIndex] * globalObligationCollateralMaxLif[someCollateralIndex] < WAD() * WAD(), "collateral lltv must be less then 1/maxLif";
 
     require globalObligationCollateralLength <= 1, "too many collaterals for the spec to handle";
 
@@ -175,9 +175,9 @@ rule stayHealthyLiquidateSameBorrower(env e, uint256 someCollateralIndex, uint25
     mathint price = summaryPrice(obligation.collaterals[someCollateralIndex].oracle);
 
     // require all the axioms that are needed to prove the healthiness after liquidation. These are the same axioms that are proved in the Muldiv.spec
-    require axiomDownUp(repaidUnits, MAX_LIF(), WAD()), "axiom";
-    require axiomDownUp(summaryMulDivDownM(repaidUnits, MAX_LIF(), WAD()), ORACLE_PRICE_SCALE(), price), "axiom";
-    require axiomLifLLTV(summaryMulDivUpM(seizedAssets, price, ORACLE_PRICE_SCALE()), MAX_LIF(), globalObligationCollateralLLTV[someCollateralIndex]);
+    require axiomDownUp(repaidUnits, globalObligationCollateralMaxLif[someCollateralIndex], WAD()), "axiom";
+    require axiomDownUp(summaryMulDivDownM(repaidUnits, globalObligationCollateralMaxLif[someCollateralIndex], WAD()), ORACLE_PRICE_SCALE(), price), "axiom";
+    require axiomLifLLTV(summaryMulDivUpM(seizedAssets, price, ORACLE_PRICE_SCALE()), globalObligationCollateralMaxLif[someCollateralIndex], globalObligationCollateralLLTV[someCollateralIndex]);
     require axiomAdd2(collateralAfter, seizedAssets, price, ORACLE_PRICE_SCALE()), "axiom";
     require axiomAdd2(summaryMulDivDownM(collateralAfter, price, ORACLE_PRICE_SCALE()), summaryMulDivUpM(seizedAssets, price, ORACLE_PRICE_SCALE()), globalObligationCollateralLLTV[someCollateralIndex], WAD()), "axiom";
 
