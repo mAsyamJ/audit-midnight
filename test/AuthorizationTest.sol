@@ -127,6 +127,30 @@ contract AuthorizationTest is BaseTest {
         assertEq(ERC20(collateralToken).balanceOf(operator), collateralAmount);
     }
 
+    function testSupplyCollateralUnauthorized() public {
+        uint256 collateralAmount = 1000;
+        address user = makeAddr("user");
+        address operator = makeAddr("operator");
+        address collateralToken = obligation.collaterals[0].token;
+
+        deal(collateralToken, operator, collateralAmount);
+        vm.prank(operator);
+        ERC20(collateralToken).approve(address(midnight), collateralAmount);
+
+        vm.prank(operator);
+        vm.expectRevert("unauthorized");
+        midnight.supplyCollateral(obligation, 0, collateralAmount, user);
+
+        // User authorizes operator
+        vm.prank(user);
+        midnight.setIsAuthorized(operator, true);
+
+        vm.prank(operator);
+        midnight.supplyCollateral(obligation, 0, collateralAmount, user);
+
+        assertEq(midnight.collateralOf(id, user, 0), collateralAmount);
+    }
+
     function testWithdrawSelf() public {
         uint256 units = 1000;
         collateralize(obligation, borrower, units);

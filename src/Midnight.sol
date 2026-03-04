@@ -347,6 +347,7 @@ contract Midnight is IMidnight {
     function supplyCollateral(Obligation memory obligation, uint256 collateralIndex, uint256 assets, address onBehalf)
         external
     {
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes20 id = touchObligation(obligation);
         address collateralToken = obligation.collaterals[collateralIndex].token;
 
