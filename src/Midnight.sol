@@ -43,7 +43,7 @@ contract Midnight is IMidnight {
     /// STORAGE ///
 
     mapping(bytes20 id => mapping(address user => int256)) public balanceOf;
-    mapping(bytes20 id => mapping(address user => uint256)) public userLossIndexIndex;
+    mapping(bytes20 id => mapping(address user => uint256)) public userLossIndex;
     mapping(bytes20 id => mapping(address user => uint128)) public activatedCollaterals;
     mapping(bytes20 id => mapping(address user => uint128[128])) public collateralOf;
     mapping(bytes20 id => ObligationState) public obligationState;
@@ -502,15 +502,15 @@ contract Midnight is IMidnight {
     }
 
     function slash(bytes20 id, address user) public {
-        uint256 userLossIndex = userLossIndexIndex[id][user];
+        uint256 _userLossIndex = userLossIndex[id][user];
         uint256 lossIndex = obligationState[id].lossIndex;
-        if (userLossIndex != lossIndex) {
+        if (_userLossIndex != lossIndex) {
             int256 balance = balanceOf[id][user];
             if (balance > 0) {
                 // forge-lint: disable-next-line(unsafe-typecast)
-                balanceOf[id][user] = int256(uint256(balance).mulDivDown(WAD - lossIndex, WAD - userLossIndex));
+                balanceOf[id][user] = int256(uint256(balance).mulDivDown(WAD - lossIndex, WAD - _userLossIndex));
             }
-            userLossIndexIndex[id][user] = lossIndex;
+            userLossIndex[id][user] = lossIndex;
         }
     }
 
@@ -529,7 +529,7 @@ contract Midnight is IMidnight {
 
     function balanceOfAfterSlashing(bytes20 id, address user) public view returns (int256) {
         int256 balance = balanceOf[id][user];
-        uint256 userLossIndex = userLossIndexIndex[id][user];
+        uint256 userLossIndex = userLossIndex[id][user];
         uint256 lossIndex = obligationState[id].lossIndex;
         if (balance > 0 && userLossIndex != lossIndex) {
             // forge-lint: disable-next-line(unsafe-typecast)
