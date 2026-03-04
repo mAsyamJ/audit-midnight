@@ -54,7 +54,6 @@ invariant defaultFeePerIndexBound(address loanToken, uint256 index)
     index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= maxFeeUnits(index);
 
 /// Every obligation's fee breakpoints are bounded by the per-index maximum.
-/// Preserved block: obligation creation copies from defaultFees, so we need default bounds.
 invariant obligationFeePerIndexBound(bytes20 id, uint256 index)
     index <= 6 => ghostObligationFeeUnits[id][index] <= maxFeeUnits(index)
     {
