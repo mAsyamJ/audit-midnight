@@ -191,7 +191,7 @@ rule stayHealthyLiquidateOtherBorrower(env e, Midnight.Obligation someObligation
     // reset the ghost variable that tracks whether the user was healthy before the callbacks.
     healthyBeforeCallback = true;
 
-    require globalObligationCollateralLength <= 2, "too many collaterals for the spec to handle";
+    require globalObligationCollateralLength <= 1, "too many collaterals for the spec to handle";
 
     require obligation.loanToken == globalObligationLoanToken;
     require obligation.collaterals.length == globalObligationCollateralLength;
