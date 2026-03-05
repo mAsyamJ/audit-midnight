@@ -5,8 +5,8 @@ methods {
 
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
 
-    // assume price does not revert and does not modify storage.
     function _.price() external => NONDET;
+
     function UtilsLib.mulDivDown(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDiv(x, y, d);
     function UtilsLib.mulDivUp(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDiv(x, y, d);
 }
