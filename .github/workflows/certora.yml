@@ -18,9 +18,9 @@ jobs:
           - ExactMath
           - Liquidate
           - Midnight
+          - OnlyAuthorizedCanDecreaseShares
           - SharePrice
           - Solvency
-          - OnlyAuthorizedCanDecreaseShares
 
     steps:
       - uses: actions/checkout@v4
