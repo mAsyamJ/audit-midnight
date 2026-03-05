@@ -284,7 +284,10 @@ contract LiquidationTest is BaseTest {
         Oracle(obligation.collaterals[0].oracle).setPrice(liquidationOraclePrice);
         uint256 debtAfterBadDebt = units - _badDebt();
         uint256 maxRepaid = _maxRepaid(units, debtAfterBadDebt, liquidationOraclePrice);
-        repaid = bound(repaid, 0, UtilsLib.min(maxRepaid, debtAfterBadDebt));
+        uint256 lif0 = obligation.collaterals[0].maxLif;
+        uint256 maxRepaidFromCollat = midnight.collateralOf(id, borrower, 0)
+            .mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, lif0);
+        repaid = bound(repaid, 0, UtilsLib.min(UtilsLib.min(maxRepaid, debtAfterBadDebt), maxRepaidFromCollat));
 
         midnight.liquidate(obligation, 0, 0, repaid, borrower, "");
 
@@ -639,8 +642,10 @@ contract LiquidationTest is BaseTest {
             uint256 i = UtilsLib.msb(bitmap);
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
-            uint256 collateralQuoted = midnight.collateralOf(id, borrower, i).mulDivDown(price, ORACLE_PRICE_SCALE);
-            badDebt = badDebt.zeroFloorSub(collateralQuoted.mulDivUp(WAD, _collateral.maxLif));
+            badDebt = badDebt.zeroFloorSub(
+                midnight.collateralOf(id, borrower, i).mulDivUp(price, ORACLE_PRICE_SCALE)
+                    .mulDivUp(WAD, _collateral.maxLif)
+            );
             bitmap ^= (1 << i);
         }
         return badDebt;
