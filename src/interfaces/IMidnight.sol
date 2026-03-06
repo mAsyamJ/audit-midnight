@@ -44,6 +44,8 @@ struct Signature {
 struct BorrowerState {
     uint128 debt;
     uint128 activatedCollaterals;
+    uint64 averageContinuousFee;
+    uint48 lastContinuousFeeAccrual;
 }
 
 struct ObligationState {
@@ -52,6 +54,7 @@ struct ObligationState {
     uint256 withdrawable;
     bool created;
     uint16[7] fees;
+    uint64 continuousFee;
 }
 
 interface IMidnight {}

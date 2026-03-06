@@ -855,15 +855,7 @@ contract BorrowCallback is ICallbacks {
         Midnight(msg.sender).supplyCollateral(obligation, collateralIndex, amount, seller);
     }
 
-    function onBuy(
-        Obligation memory obligation,
-        address buyer,
-        uint256 buyerAssets,
-        uint256 sellerAssets,
-        uint256 obligationUnits,
-        uint256 obligationShares,
-        bytes memory data
-    ) external {}
+    function onBuy(Obligation memory, address, uint256, uint256, uint256, uint256, bytes memory) external {}
 
     function onLiquidate(Obligation memory, uint256, uint256, uint256, address, bytes memory) external {}
 }
@@ -884,15 +876,7 @@ contract LendCallback is ICallbacks {
         require(ERC20(obligation.loanToken).transfer(buyer, buyerAssets), "transfer failed");
     }
 
-    function onSell(
-        Obligation memory obligation,
-        address seller,
-        uint256 buyerAssets,
-        uint256 sellerAssets,
-        uint256 obligationUnits,
-        uint256 obligationShares,
-        bytes memory data
-    ) external {}
+    function onSell(Obligation memory, address, uint256, uint256, uint256, uint256, bytes memory) external {}
 
     function onLiquidate(Obligation memory, uint256, uint256, uint256, address, bytes memory) external {}
 }
