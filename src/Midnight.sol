@@ -217,21 +217,8 @@ contract Midnight is IMidnight {
         uint256 unitsUp = obligationShares.mulDivUp(_obligationState.totalUnits + 1, _obligationState.totalShares + 1);
         uint256 obligationUnits = buyerIsLender ? unitsUp : unitsDown;
 
-        uint256 buyerAssets;
-        uint256 sellerAssets;
-        if (offer.buy && buyerIsLender) {
-            buyerAssets = unitsDown.mulDivDown(buyerPrice, WAD);
-            sellerAssets = unitsDown.mulDivDown(sellerPrice, WAD);
-        } else if (offer.buy && !buyerIsLender) {
-            buyerAssets = obligationUnits.mulDivDown(buyerPrice, WAD);
-            sellerAssets = obligationUnits.mulDivDown(sellerPrice, WAD);
-        } else if (!offer.buy && sellerIsBorrower) {
-            sellerAssets = obligationUnits.mulDivUp(sellerPrice, WAD);
-            buyerAssets = obligationUnits.mulDivUp(buyerPrice, WAD);
-        } else {
-            sellerAssets = unitsUp.mulDivUp(sellerPrice, WAD);
-            buyerAssets = unitsUp.mulDivUp(buyerPrice, WAD);
-        }
+        uint256 buyerAssets = offer.buy ? unitsDown.mulDivDown(buyerPrice, WAD) : unitsUp.mulDivUp(buyerPrice, WAD);
+        uint256 sellerAssets = offer.buy ? unitsDown.mulDivDown(sellerPrice, WAD) : unitsUp.mulDivUp(sellerPrice, WAD);
 
         uint256 newConsumed;
         if (offer.obligationUnits > 0) {
