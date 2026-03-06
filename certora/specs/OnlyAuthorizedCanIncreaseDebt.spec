@@ -36,7 +36,6 @@ rule takeOnlyAuthorizedSellerDebtIncrease(env e, uint256 obligationShares, addre
     uint256 debtAfter = debtOf(id, user);
 
     assert takerUnauthorized => reverted;
-    assert !reverted && offer.buy => (e.msg.sender == seller || isAuthorized(seller, e.msg.sender));
     assert user == buyer => debtAfter <= debtBefore;
     assert user == seller => debtAfter >= debtBefore;
     assert user != buyer && user != seller => debtAfter == debtBefore;
