@@ -458,7 +458,7 @@ contract Midnight is IMidnight {
                 uint256 lltv = obligation.collaterals[collateralIndex].lltv;
                 // Rounded up to avoid consecutive max liquidations.
                 // Acknowledged that the position could be slightly healthy after a liquidation.
-                // Note that debt >= maxDebt after the bad debt realization.
+                // Note that debt >= maxDebt in this branch.
                 uint256 maxRepaid = (_state.debt - maxDebt).mulDivUp(WAD, WAD - lif.mulDivUp(lltv, WAD));
                 require(
                     repaidUnits <= maxRepaid
