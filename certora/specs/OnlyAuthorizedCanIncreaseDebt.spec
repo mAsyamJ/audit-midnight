@@ -9,6 +9,9 @@ methods {
     function _.price() external => NONDET;
 }
 
+/// Note: both rules below implicitly assume no reentrancy. 
+
+
 /// No function other than take can increase a user's debt.
 rule debtOnlyIncreasesViaTake(env e, method f, bytes32 id, address user) {
     uint256 debtBefore = debtOf(id, user);

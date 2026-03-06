@@ -18,9 +18,9 @@ jobs:
           - ExactMath
           - Liquidate
           - Midnight
+          - OnlyAuthorizedCanIncreaseDebt
           - SharePrice
           - Solvency
-          - OnlyAuthorizedCanIncreaseDebt
 
     steps:
       - uses: actions/checkout@v4
