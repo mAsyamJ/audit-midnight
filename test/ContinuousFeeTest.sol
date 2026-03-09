@@ -169,8 +169,6 @@ contract ContinuousFeeTest is BaseTest {
         assertApproxEqAbs(debtTwoAccruals, debtOneAccrual, 2, "two accruals ~ one accrual");
     }
 
-    // --- 2. Entry ---
-
     function testSingleBorrow(uint256 debt, uint256 feeRate, uint256 ttm) public {
         debt = bound(debt, 1, MAX_DEBT);
         feeRate = bound(feeRate, 0, MAX_CONTINUOUS_FEE);
@@ -245,8 +243,6 @@ contract ContinuousFeeTest is BaseTest {
         assertEq(midnight.remainingContinuousFee(id, borrower), 0, "remaining is 0 at maturity");
     }
 
-    // --- 3. Exit (repay + take) ---
-
     function testExitViaRepay(uint256 debt, uint256 exitAmount, uint256 feeRate, uint256 ttm, uint256 elapsed) public {
         debt = bound(debt, 1, MAX_DEBT);
         feeRate = bound(feeRate, 0, MAX_CONTINUOUS_FEE);
@@ -277,8 +273,6 @@ contract ContinuousFeeTest is BaseTest {
             assertEq(midnight.remainingContinuousFee(id, borrower), 0, "full repay zeroes remaining");
         }
     }
-
-    // --- 3b. Liquidation Exit ---
 
     function testExitViaLiquidation(uint256 debt, uint256 feeRate, uint256 ttm, uint256 elapsed) public {
         debt = bound(debt, 1e18, MAX_DEBT);
@@ -313,8 +307,6 @@ contract ContinuousFeeTest is BaseTest {
         }
     }
 
-    // --- 5. Fee Shares ---
-
     function testFeeSharesMintedToRecipient(uint256 debt, uint256 feeRate, uint256 ttm, uint256 elapsed) public {
         debt = bound(debt, 1e18, MAX_DEBT);
         feeRate = bound(feeRate, 1, MAX_CONTINUOUS_FEE);
@@ -337,8 +329,6 @@ contract ContinuousFeeTest is BaseTest {
             assertEq(midnight.sharesOf(id, feeRecipient), expectedShares, "fee recipient shares");
         }
     }
-
-    // --- 6. Per-User Rate Lock-In ---
 
     function testPerUserRateLockIn(
         uint256 debt1,
@@ -384,8 +374,6 @@ contract ContinuousFeeTest is BaseTest {
         assertEq(fee2, remaining2.mulDivDown(elapsed, ttm), "borrower2 fee from rate2");
     }
 
-    // --- 8. Integration ---
-
     function testFeesCanMakePositionLiquidatable() public {
         uint256 debt = 100e18;
         uint256 ttm = 360 days;
@@ -412,8 +400,6 @@ contract ContinuousFeeTest is BaseTest {
         deal(address(loanToken), address(this), debt * 2);
         midnight.liquidate(obligation, 0, 0, 0, borrower, "");
     }
-
-    // --- 9. Admin ---
 
     function testSetContinuousFeeOnlyFeeSetter(address rdm) public {
         vm.assume(rdm != address(this));
