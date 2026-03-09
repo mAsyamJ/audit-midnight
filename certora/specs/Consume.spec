@@ -21,7 +21,7 @@ function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
 }
 
 ///  Only `consume` and `take` can modify the consumed mapping.
-rule onlySetConsumedAndTakeChangeConsumed(env e, method f, calldataarg args, address user, bytes32 group) filtered { f -> f.selector != sig:setConsumed(bytes32, uint256).selector && f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector } {
+rule onlySetConsumedAndTakeChangeConsumed(env e, method f, calldataarg args, address user, bytes32 group) filtered { f -> f.selector != sig:setConsumed(bytes32, uint256, address).selector && f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector } {
 
     uint256 consumedBefore = consumed(user, group);
 
@@ -32,10 +32,10 @@ rule onlySetConsumedAndTakeChangeConsumed(env e, method f, calldataarg args, add
 
 /// Calling `setConsumed` only affects msg.sender's consumed value for the given group.
 /// No other (user, group) pair is modified.
-rule setConsumedOnlyAffectsSender(env e, bytes32 group, uint256 amount, address otherUser, bytes32 otherGroup) {
+rule setConsumedOnlyAffectsSender(env e, bytes32 group, uint256 amount, address onBehalf, address otherUser, bytes32 otherGroup) {
     uint256 otherConsumedBefore = consumed(otherUser, otherGroup);
 
-    setConsumed(e, group, amount);
+    setConsumed(e, group, amount, onBehalf);
 
     // Any pair that is not exactly (msg.sender, group) remains unchanged.
     assert (otherUser != e.msg.sender || otherGroup != group) => consumed(otherUser, otherGroup) == otherConsumedBefore;
