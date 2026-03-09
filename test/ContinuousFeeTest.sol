@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {WAD, ORACLE_PRICE_SCALE, MAX_CONTINUOUS_FEE, PASSIVE_FEE_RECIPIENT} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
-import {TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {MAX_TICK} from "../src/libraries/TickLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 
@@ -43,12 +43,12 @@ contract ContinuousFeeTest is BaseTest {
         lenderOffer.maker = otherLender;
         lenderOffer.obligationShares = type(uint256).max;
         lenderOffer.expiry = block.timestamp;
-        lenderOffer.tick = TICK_RANGE;
+        lenderOffer.tick = MAX_TICK;
 
         vm.prank(borrower);
-        midnight.setIsAuthorized(address(this), true);
+        midnight.setIsAuthorized(borrower, address(this), true);
         vm.prank(otherBorrower);
-        midnight.setIsAuthorized(address(this), true);
+        midnight.setIsAuthorized(otherBorrower, address(this), true);
     }
 
     function setupBorrower(uint256 debt, uint256 feeRate, uint256 ttm) internal {
@@ -399,6 +399,23 @@ contract ContinuousFeeTest is BaseTest {
         vm.warp(block.timestamp + 180 days);
         deal(address(loanToken), address(this), debt * 2);
         midnight.liquidate(obligation, 0, 0, 0, borrower, "");
+    }
+
+    function testIsHealthyAccountsForPendingFee() public {
+        uint256 debt = 100e18;
+        uint256 ttm = 360 days;
+
+        obligation.maturity = block.timestamp + ttm;
+        id = toId(obligation);
+        midnight.setDefaultContinuousFee(address(loanToken), MAX_CONTINUOUS_FEE);
+        collateralize(obligation, borrower, debt);
+        setupObligation(obligation, debt);
+
+        assertTrue(midnight.isHealthy(obligation, id, borrower), "healthy at entry");
+
+        vm.warp(block.timestamp + 180 days);
+
+        assertFalse(midnight.isHealthy(obligation, id, borrower), "unhealthy from pending fee");
     }
 
     function testSetContinuousFeeOnlyFeeSetter(address rdm) public {
