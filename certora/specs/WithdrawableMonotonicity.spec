@@ -37,7 +37,6 @@ filtered {
         && f.selector != sig:repay(Midnight.Obligation, uint256, address).selector
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
         && f.selector != sig:withdraw(Midnight.Obligation, uint256, uint256, address, address).selector
-        && f.selector != sig:multicall(bytes[]).selector
 } {
     uint256 withdrawableBefore = withdrawable(id);
     f(e, args);
