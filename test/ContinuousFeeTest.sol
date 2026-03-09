@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {WAD, ORACLE_PRICE_SCALE, MAX_CONTINUOUS_FEE} from "../src/libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, MAX_CONTINUOUS_FEE, PASSIVE_FEE_RECIPIENT} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TICK_RANGE} from "../src/libraries/TickLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
@@ -326,7 +326,7 @@ contract ContinuousFeeTest is BaseTest {
         uint256 feeUnits = remaining.mulDivDown(elapsed, ttm);
         if (feeUnits > 0) {
             uint256 expectedShares = feeUnits.mulDivDown(totalSharesBefore + 1, totalUnitsBefore + 1);
-            assertEq(midnight.sharesOf(id, feeRecipient), expectedShares, "fee recipient shares");
+            assertEq(midnight.sharesOf(id, PASSIVE_FEE_RECIPIENT), expectedShares, "fee recipient shares");
         }
     }
 
