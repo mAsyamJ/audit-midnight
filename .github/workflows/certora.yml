@@ -18,7 +18,7 @@ jobs:
           - ExactMath
           - Liquidate
           - Midnight
-          - OnlyAuthorizedCanIncreaseDebt
+          - OnlyAuthorizedCanDecreaseShares
           - SharePrice
           - Solvency
 
