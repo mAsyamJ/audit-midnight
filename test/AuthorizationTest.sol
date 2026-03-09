@@ -6,7 +6,7 @@ import {Obligation, Collateral, Offer} from "../src/interfaces/IMidnight.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {ERC20} from "./helpers/ERC20.sol";
-import {TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {MAX_TICK} from "../src/libraries/TickLib.sol";
 
 contract AuthorizationTest is BaseTest {
     using UtilsLib for uint256;
@@ -204,7 +204,7 @@ contract AuthorizationTest is BaseTest {
         offer.obligationShares = shares;
         offer.obligation = obligation;
         offer.expiry = block.timestamp + 200;
-        offer.tick = TICK_RANGE;
+        offer.tick = MAX_TICK;
 
         deal(address(loanToken), lender, shares);
         collateralize(obligation, borrower, shares);
@@ -227,7 +227,7 @@ contract AuthorizationTest is BaseTest {
         offer.obligationShares = shares;
         offer.obligation = obligation;
         offer.expiry = block.timestamp + 200;
-        offer.tick = TICK_RANGE;
+        offer.tick = MAX_TICK;
 
         deal(address(loanToken), lender, shares);
         collateralize(obligation, taker, shares);
@@ -252,7 +252,7 @@ contract AuthorizationTest is BaseTest {
         offer.obligationShares = shares;
         offer.obligation = obligation;
         offer.expiry = block.timestamp + 200;
-        offer.tick = TICK_RANGE;
+        offer.tick = MAX_TICK;
 
         deal(address(loanToken), lender, shares);
         collateralize(obligation, borrower, shares);

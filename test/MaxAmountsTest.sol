@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
-import {TICK_RANGE} from "../src/libraries/TickLib.sol";
+import {MAX_TICK} from "../src/libraries/TickLib.sol";
 import {BaseTest} from "./BaseTest.sol";
 
 uint256 constant MAX_AMOUNT = type(uint128).max;
@@ -63,7 +63,7 @@ contract MaxAmountsTest is BaseTest {
         borrowerOffer.receiverIfMakerIsSeller = borrower;
         borrowerOffer.obligationShares = type(uint256).max;
         borrowerOffer.expiry = block.timestamp + 200;
-        borrowerOffer.tick = TICK_RANGE;
+        borrowerOffer.tick = MAX_TICK;
 
         take(amount, lender, borrowerOffer);
 
@@ -83,7 +83,7 @@ contract MaxAmountsTest is BaseTest {
         borrowerOffer.receiverIfMakerIsSeller = borrower;
         borrowerOffer.obligationShares = type(uint256).max;
         borrowerOffer.expiry = block.timestamp + 200;
-        borrowerOffer.tick = TICK_RANGE;
+        borrowerOffer.tick = MAX_TICK;
 
         vm.expectRevert("uint256 overflows uint128");
         take(amount, lender, borrowerOffer);
