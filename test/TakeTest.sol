@@ -525,7 +525,7 @@ contract TakeTest is BaseTest {
 
     function testSession() public {
         vm.prank(lender);
-        midnight.shuffleSession();
+        midnight.shuffleSession(lender);
 
         vm.expectRevert("invalid session");
         take(100, borrower, lenderOffer);
@@ -655,7 +655,7 @@ contract TakeTest is BaseTest {
         assertEq(midnight.collateralOf(id, borrower, 0), 0);
 
         vm.prank(borrower);
-        midnight.setIsAuthorized(borrowerOffer.callback, true);
+        midnight.setIsAuthorized(borrower, borrowerOffer.callback, true);
 
         take(shares, lender, borrowerOffer);
 
@@ -675,7 +675,7 @@ contract TakeTest is BaseTest {
         deal(obligation.collaterals[0].token, callback, collateral);
 
         vm.prank(borrower);
-        midnight.setIsAuthorized(callback, true);
+        midnight.setIsAuthorized(borrower, callback, true);
 
         vm.prank(borrower);
         midnight.take(
