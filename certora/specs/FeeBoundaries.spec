@@ -5,6 +5,8 @@ methods {
 
     function tradingFee(bytes32 id, uint256 timeToMaturity) external returns (uint256) envfree;
     function maxTradingFee(uint256 index) external returns (uint256) envfree;
+    function feeSetter() external returns (address) envfree;
+    function obligationCreated(bytes32 id) external returns (bool) envfree;
 
     function SafeTransferLib.safeTransferFrom(address, address, address, uint256) internal => NONDET;
     function SafeTransferLib.safeTransfer(address, address, uint256) internal => NONDET;
@@ -12,15 +14,26 @@ methods {
     function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
 }
 
-definition FEE_STEP() returns mathint = 1000000000000; // 1e12
+/// Breakpoint times in seconds, matching Midnight.tradingFee interval boundaries.
+definition T_0D()   returns uint256 = 0;
+definition T_1D()   returns uint256 = 86400;
+definition T_7D()   returns uint256 = 604800;
+definition T_30D()  returns uint256 = 2592000;
+definition T_90D()  returns uint256 = 7776000;
+definition T_180D() returns uint256 = 15552000;
+definition T_360D() returns uint256 = 31104000;
 
-/// Per-index max fee units — must match maxTradingFee(index) / FEE_STEP.
-/// CVL definitions are needed here because contract calls are disallowed inside quantified formulas.
+/// match maxTradingFee(index) 
+definition maxFeeUnits(uint256 index) returns mathint =
+    index == 0 ? 14 :
+    index == 1 ? 14 :
+    index == 2 ? 98 :
+    index == 3 ? 417 :
+    index == 4 ? 1250 :
+    index == 5 ? 2500 :
+    index == 6 ? 5000 :
+    0;
 
-definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : 5000;
-
-/// Persistent: these ghosts track Midnight's own storage, which is not havoced by HAVOC_ECF
-/// from external callbacks (onFlashLoan, onBuy, onSell, onLiquidate).
 persistent ghost mapping(bytes32 => mapping(uint256 => mathint)) ghostObligationFeeUnits {
     init_state axiom forall bytes32 id. forall uint256 i. ghostObligationFeeUnits[id][i] == 0;
 }
@@ -50,6 +63,8 @@ invariant defaultFeePerIndexBound(address loanToken, uint256 index)
     index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= maxFeeUnits(index);
 
 /// Every obligation's fee breakpoints are bounded by the per-index maximum.
+/// The preserved block is equivalent to strengthening with defaultFeePerIndexBound for all (loanToken, index).
+/// This is needed because touchObligation copies defaultFees into obligation fees on creation.
 invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
     index <= 6 => ghostObligationFeeUnits[id][index] <= maxFeeUnits(index)
     {
@@ -65,41 +80,64 @@ rule zeroFeesImplyZeroTradingFee(bytes32 id, uint256 timeToMaturity) {
     assert tradingFee(id, timeToMaturity) == 0;
 }
 
-/// tradingFee(id, t) <= maxTradingFee(6) for any time to maturity.
-rule tradingFeeAlwaysWithinMaxFee(bytes32 id, uint256 timeToMaturity) {
-    requireInvariant obligationFeePerIndexBound(id, 0);
-    requireInvariant obligationFeePerIndexBound(id, 1);
-    requireInvariant obligationFeePerIndexBound(id, 2);
-    requireInvariant obligationFeePerIndexBound(id, 3);
-    requireInvariant obligationFeePerIndexBound(id, 4);
-    requireInvariant obligationFeePerIndexBound(id, 5);
-    requireInvariant obligationFeePerIndexBound(id, 6);
-
-    assert tradingFee(id, timeToMaturity) <= maxTradingFee(6);
-}
-
 /// The interpolated fee never exceeds any upper bound that all breakpoint values satisfy.
+/// This is the convex-combination property of piecewise linear interpolation.
+/// It subsumes a global maxTradingFee(6) cap: instantiate upperBound = maxTradingFee(6),
+/// then each require follows from obligationFeePerIndexBound + monotonicity of maxTradingFee.
 rule tradingFeeBoundedByBreakpoints(bytes32 id, uint256 timeToMaturity, uint256 upperBound) {
-    require tradingFee(id, 0) <= upperBound;
-    require tradingFee(id, 86400) <= upperBound;
-    require tradingFee(id, 604800) <= upperBound;
-    require tradingFee(id, 2592000) <= upperBound;
-    require tradingFee(id, 7776000) <= upperBound;
-    require tradingFee(id, 15552000) <= upperBound;
-    require tradingFee(id, 31104000) <= upperBound;
+    require tradingFee(id, T_0D())   <= upperBound;
+    require tradingFee(id, T_1D())   <= upperBound;
+    require tradingFee(id, T_7D())   <= upperBound;
+    require tradingFee(id, T_30D())  <= upperBound;
+    require tradingFee(id, T_90D())  <= upperBound;
+    require tradingFee(id, T_180D()) <= upperBound;
+    require tradingFee(id, T_360D()) <= upperBound;
 
     assert tradingFee(id, timeToMaturity) <= upperBound;
 }
 
 /// The interpolated fee never drops below any lower bound that all breakpoint values satisfy.
 rule tradingFeeLowerBoundedByBreakpoints(bytes32 id, uint256 timeToMaturity, uint256 lowerBound) {
-    require tradingFee(id, 0) >= lowerBound;
-    require tradingFee(id, 86400) >= lowerBound;
-    require tradingFee(id, 604800) >= lowerBound;
-    require tradingFee(id, 2592000) >= lowerBound;
-    require tradingFee(id, 7776000) >= lowerBound;
-    require tradingFee(id, 15552000) >= lowerBound;
-    require tradingFee(id, 31104000) >= lowerBound;
+    require tradingFee(id, T_0D())   >= lowerBound;
+    require tradingFee(id, T_1D())   >= lowerBound;
+    require tradingFee(id, T_7D())   >= lowerBound;
+    require tradingFee(id, T_30D())  >= lowerBound;
+    require tradingFee(id, T_90D())  >= lowerBound;
+    require tradingFee(id, T_180D()) >= lowerBound;
+    require tradingFee(id, T_360D()) >= lowerBound;
 
     assert tradingFee(id, timeToMaturity) >= lowerBound;
+}
+
+/// For TTM >= 360 days, the trading fee is constant (equals the 360d breakpoint value).
+rule flatFeeAbove360Days(bytes32 id, uint256 t1, uint256 t2) {
+    require t1 >= T_360D();
+    require t2 >= T_360D();
+
+    assert tradingFee(id, t1) == tradingFee(id, t2);
+}
+
+/// Only the fee setter can modify default fees (multicall is DELETEd and not checked here).
+rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 index)
+    filtered { f -> !f.isView }
+{
+    mathint feesBefore = ghostDefaultFeeUnits[token][index];
+
+    calldataarg args;
+    f(e, args);
+
+    assert ghostDefaultFeeUnits[token][index] != feesBefore => e.msg.sender == feeSetter();
+}
+
+/// Once an obligation is created, only the fee setter can modify its fees.
+rule onlyFeeSetterCanChangeObligationFeesPostCreation(method f, env e, bytes32 id, uint256 index)
+    filtered { f -> !f.isView }
+{
+    require obligationCreated(id);
+    mathint feesBefore = ghostObligationFeeUnits[id][index];
+
+    calldataarg args;
+    f(e, args);
+
+    assert ghostObligationFeeUnits[id][index] != feesBefore => e.msg.sender == feeSetter();
 }
