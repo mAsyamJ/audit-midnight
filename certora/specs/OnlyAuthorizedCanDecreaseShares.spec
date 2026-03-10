@@ -15,13 +15,20 @@ methods {
 rule onlyAuthorizedCanChangeSharesExceptTake(env e, method f, bytes32 id, address user) {
     uint256 sharesBefore = sharesOf(id, user);
 
-    require user != e.msg.sender;
-    require !isAuthorized(user, e.msg.sender);
+    calldataarg args;
+    f(e, args);
+
+    assert user == e.msg.sender || isAuthorized(user, e.msg.sender) || sharesOf(id, user) == sharesBefore || f.selector == sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector;
+}
+
+/// Assumes no reentrancy: callbacks (onBuy, onSell) and token transfers are not modeled as re-entering Midnight, so re-entrant share decreases are not covered.
+rule onlyAuthorizedCanChangeDebtExceptTake(env e, method f, bytes32 id, address user) {
+    uint256 debtBefore = debtOf(id, user);
 
     calldataarg args;
     f(e, args);
 
-    assert sharesOf(id, user) == sharesBefore || f.selector == sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector;
+    assert user == e.msg.sender || isAuthorized(user, e.msg.sender) || debtOf(id, user) == debtBefore || f.selector == sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector;
 }
 
 /// In take, the caller must be authorized by the taker and only the seller's shares can decrease.
