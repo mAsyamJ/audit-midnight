@@ -56,9 +56,9 @@ rule onlyAuthorizedCanChangeDebtExceptTakeAndLiquidate(env e, method f, calldata
 
 /// In liquidate, users can have their debt decreased.
 rule liquidateCanChangeDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes32 id, address user) {
-    uint256 debtBefore = debtOf(id, borrower);
+    uint256 debtBefore = debtOf(id, user);
     liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
-    uint256 debtAfter = debtOf(id, borrower);
+    uint256 debtAfter = debtOf(id, user);
 
     assert user == borrower => debtAfter <= debtBefore;
     assert user != borrower => debtAfter == debtBefore;
