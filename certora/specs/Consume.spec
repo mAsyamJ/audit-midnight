@@ -67,7 +67,7 @@ rule takeConsumedExactDelta(env e, uint256 obligationShares, address taker, addr
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
     uint256 returnedUnits;
-    (_, _, returnedUnits, _) = take(e, obligationShares, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+    _, _, returnedUnits, _ = take(e, obligationShares, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
 
     uint256 expectedDelta = offer.obligationUnits > 0 ? returnedUnits : obligationShares;
     assert consumed(offer.maker, offer.group) == consumedBefore + expectedDelta;
