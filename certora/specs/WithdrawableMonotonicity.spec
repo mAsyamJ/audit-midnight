@@ -11,7 +11,7 @@ rule repayIncreasesWithdrawable(env e, Midnight.Obligation obligation, uint256 o
     uint256 withdrawableBefore = withdrawable(id);
     repay(e, obligation, obligationUnits, onBehalf);
     uint256 withdrawableAfter = withdrawable(id);
-    assert withdrawableAfter >= withdrawableBefore;
+    assert withdrawableAfter == withdrawableBefore + obligationUnits;
 }
 
 rule liquidateIncreasesWithdrawable(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes32 id) {
