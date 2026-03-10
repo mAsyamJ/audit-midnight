@@ -255,7 +255,7 @@ contract Midnight is IMidnight {
         if (!buyerIsLender) {
             accrueContinuousFee(id, buyer, offer.obligation.maturity);
             BorrowerState storage _buyerState = borrowerState[id][buyer];
-            _buyerState.pendingFee -= uint128(_buyerState.pendingFee.mulDivDown(obligationUnits, _buyerState.debt));
+            _buyerState.pendingFee -= uint128(_buyerState.pendingFee.mulDivUp(obligationUnits, _buyerState.debt));
         }
 
         if (sellerIsBorrower) {
@@ -377,7 +377,7 @@ contract Midnight is IMidnight {
 
         BorrowerState storage _state = borrowerState[id][onBehalf];
         if (_state.debt > 0) {
-            _state.pendingFee -= uint128(_state.pendingFee.mulDivDown(obligationUnits, _state.debt));
+            _state.pendingFee -= uint128(_state.pendingFee.mulDivUp(obligationUnits, _state.debt));
         }
         _state.debt -= UtilsLib.toUint128(obligationUnits);
         obligationState[id].withdrawable += obligationUnits;
@@ -529,7 +529,7 @@ contract Midnight is IMidnight {
         }
 
         if (originalDebt > 0) {
-            _state.pendingFee -= uint128(_state.pendingFee.mulDivDown(badDebt + repaidUnits, originalDebt));
+            _state.pendingFee -= uint128(_state.pendingFee.mulDivUp(badDebt + repaidUnits, originalDebt));
         }
 
         emit EventsLib.Liquidate(msg.sender, id, collateralIndex, seizedAssets, repaidUnits, borrower, badDebt);
@@ -684,11 +684,13 @@ contract Midnight is IMidnight {
 
     function pendingContinuousFee(bytes32 id, address borrower, uint256 maturity) public view returns (uint256) {
         BorrowerState storage _state = borrowerState[id][borrower];
-        uint128 remaining = _state.pendingFee;
-        if (remaining == 0 || _state.lastContinuousFeeAccrual == 0) return 0;
-        if (block.timestamp >= maturity) return remaining;
-        uint256 elapsed = block.timestamp - _state.lastContinuousFeeAccrual;
-        return remaining.mulDivDown(elapsed, maturity - _state.lastContinuousFeeAccrual);
+        uint256 lastAccrual = _state.lastContinuousFeeAccrual;
+        if (lastAccrual == 0 || maturity <= lastAccrual) {
+            return 0;
+        } else {
+            uint256 accrualEnd = UtilsLib.min(block.timestamp, maturity);
+            return _state.pendingFee.mulDivDown(accrualEnd - lastAccrual, maturity - lastAccrual);
+        }
     }
 
     function domainSeparator() internal view returns (bytes32) {
