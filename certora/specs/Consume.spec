@@ -2,12 +2,11 @@
 
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
+    function _.price() external => NONDET;
 
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
     function totalUnits(bytes32 id) external returns (uint256) envfree;
     function totalShares(bytes32 id) external returns (uint256) envfree;
-
-    function _.price() external => NONDET;
 }
 
 ///  Only `setConsumed` and `take` can modify the `consumed` mapping.
@@ -65,25 +64,19 @@ rule takeConsumedAtMaxUnchanged(env e, uint256 obligationShares, address taker, 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
     uint256 maxAmount = offer.obligationUnits > 0 ? offer.obligationUnits : offer.obligationShares;
 
-    require consumedBefore >= maxAmount;
-
     take(e, obligationShares, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
 
-    assert consumed(offer.maker, offer.group) == consumedBefore;
+    assert consumedBefore >= maxAmount => consumed(offer.maker, offer.group) == consumedBefore;
 }
 
 /// A fully-consumed offer always reverts when the take input is non-zero in the offer's consumption dimension.
 rule fullyConsumedOfferRevertsOnNonTrivialTake(env e, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
     uint256 consumedBefore = consumed(offer.maker, offer.group);
-
     bytes32 id = toId(e, offer.obligation);
-    uint256 _totalUnits = totalUnits(id);
-    uint256 _totalShares = totalShares(id);
 
-    require (offer.obligationUnits > 0 && consumedBefore >= offer.obligationUnits && obligationShares > 0) || (offer.obligationShares > 0 && consumedBefore >= offer.obligationShares && obligationShares > 0);
-
-    // When consumption is units-based, prevent rounding down to 0
-    require offer.obligationUnits > 0 => to_mathint(obligationShares) * (to_mathint(_totalUnits) + 1) >= to_mathint(_totalShares) + 1;
+    require obligationShares > 0, "take input is non-zero in the offers consumption dimension";
+    require (offer.obligationUnits > 0 && consumedBefore >= offer.obligationUnits) || (offer.obligationShares > 0 && consumedBefore >= offer.obligationShares), "assume the offer is fully consumed";
+    require offer.obligationUnits > 0 => to_mathint(obligationShares) * (to_mathint(totalUnits(id)) + 1) >= to_mathint(totalShares(id)) + 1, "when consumption is units-based, ensure not rounded down to 0";
 
     take@withrevert(e, obligationShares, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
 
