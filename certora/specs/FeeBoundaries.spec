@@ -14,25 +14,17 @@ methods {
     function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
 }
 
-/// Breakpoint times in seconds, matching Midnight.tradingFee interval boundaries.
-definition T_0D()   returns uint256 = 0;
-definition T_1D()   returns uint256 = 86400;
-definition T_7D()   returns uint256 = 604800;
-definition T_30D()  returns uint256 = 2592000;
-definition T_90D()  returns uint256 = 7776000;
+/// Breakpoint times in seconds
+definition T_0D() returns uint256 = 0;
+definition T_1D() returns uint256 = 86400;
+definition T_7D() returns uint256 = 604800;
+definition T_30D() returns uint256 = 2592000;
+definition T_90D() returns uint256 = 7776000;
 definition T_180D() returns uint256 = 15552000;
 definition T_360D() returns uint256 = 31104000;
 
-/// match maxTradingFee(index) 
-definition maxFeeUnits(uint256 index) returns mathint =
-    index == 0 ? 14 :
-    index == 1 ? 14 :
-    index == 2 ? 98 :
-    index == 3 ? 417 :
-    index == 4 ? 1250 :
-    index == 5 ? 2500 :
-    index == 6 ? 5000 :
-    0;
+/// Stored fee units corresponding to maxTradingFee(index) / FEE_STEP.
+definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : index == 6 ? 5000 : 0;
 
 persistent ghost mapping(bytes32 => mapping(uint256 => mathint)) ghostObligationFeeUnits {
     init_state axiom forall bytes32 id. forall uint256 i. ghostObligationFeeUnits[id][i] == 0;
@@ -63,8 +55,6 @@ invariant defaultFeePerIndexBound(address loanToken, uint256 index)
     index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= maxFeeUnits(index);
 
 /// Every obligation's fee breakpoints are bounded by the per-index maximum.
-/// The preserved block is equivalent to strengthening with defaultFeePerIndexBound for all (loanToken, index).
-/// This is needed because touchObligation copies defaultFees into obligation fees on creation.
 invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
     index <= 6 => ghostObligationFeeUnits[id][index] <= maxFeeUnits(index)
     {
@@ -81,15 +71,12 @@ rule zeroFeesImplyZeroTradingFee(bytes32 id, uint256 timeToMaturity) {
 }
 
 /// The interpolated fee never exceeds any upper bound that all breakpoint values satisfy.
-/// This is the convex-combination property of piecewise linear interpolation.
-/// It subsumes a global maxTradingFee(6) cap: instantiate upperBound = maxTradingFee(6),
-/// then each require follows from obligationFeePerIndexBound + monotonicity of maxTradingFee.
 rule tradingFeeBoundedByBreakpoints(bytes32 id, uint256 timeToMaturity, uint256 upperBound) {
-    require tradingFee(id, T_0D())   <= upperBound;
-    require tradingFee(id, T_1D())   <= upperBound;
-    require tradingFee(id, T_7D())   <= upperBound;
-    require tradingFee(id, T_30D())  <= upperBound;
-    require tradingFee(id, T_90D())  <= upperBound;
+    require tradingFee(id, T_0D()) <= upperBound;
+    require tradingFee(id, T_1D()) <= upperBound;
+    require tradingFee(id, T_7D()) <= upperBound;
+    require tradingFee(id, T_30D()) <= upperBound;
+    require tradingFee(id, T_90D()) <= upperBound;
     require tradingFee(id, T_180D()) <= upperBound;
     require tradingFee(id, T_360D()) <= upperBound;
 
@@ -98,18 +85,18 @@ rule tradingFeeBoundedByBreakpoints(bytes32 id, uint256 timeToMaturity, uint256 
 
 /// The interpolated fee never drops below any lower bound that all breakpoint values satisfy.
 rule tradingFeeLowerBoundedByBreakpoints(bytes32 id, uint256 timeToMaturity, uint256 lowerBound) {
-    require tradingFee(id, T_0D())   >= lowerBound;
-    require tradingFee(id, T_1D())   >= lowerBound;
-    require tradingFee(id, T_7D())   >= lowerBound;
-    require tradingFee(id, T_30D())  >= lowerBound;
-    require tradingFee(id, T_90D())  >= lowerBound;
+    require tradingFee(id, T_0D()) >= lowerBound;
+    require tradingFee(id, T_1D()) >= lowerBound;
+    require tradingFee(id, T_7D()) >= lowerBound;
+    require tradingFee(id, T_30D()) >= lowerBound;
+    require tradingFee(id, T_90D()) >= lowerBound;
     require tradingFee(id, T_180D()) >= lowerBound;
     require tradingFee(id, T_360D()) >= lowerBound;
 
     assert tradingFee(id, timeToMaturity) >= lowerBound;
 }
 
-/// For TTM >= 360 days, the trading fee is constant (equals the 360d breakpoint value).
+/// For TTM >= 360 days, the trading fee is constant.s
 rule flatFeeAbove360Days(bytes32 id, uint256 t1, uint256 t2) {
     require t1 >= T_360D();
     require t2 >= T_360D();
@@ -118,9 +105,7 @@ rule flatFeeAbove360Days(bytes32 id, uint256 t1, uint256 t2) {
 }
 
 /// Only the fee setter can modify default fees (multicall is DELETEd and not checked here).
-rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 index)
-    filtered { f -> !f.isView }
-{
+rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 index) filtered { f -> !f.isView } {
     mathint feesBefore = ghostDefaultFeeUnits[token][index];
 
     calldataarg args;
@@ -130,9 +115,7 @@ rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 i
 }
 
 /// Once an obligation is created, only the fee setter can modify its fees.
-rule onlyFeeSetterCanChangeObligationFeesPostCreation(method f, env e, bytes32 id, uint256 index)
-    filtered { f -> !f.isView }
-{
+rule onlyFeeSetterCanChangeObligationFeesPostCreation(method f, env e, bytes32 id, uint256 index) filtered { f -> !f.isView } {
     require obligationCreated(id);
     mathint feesBefore = ghostObligationFeeUnits[id][index];
 
