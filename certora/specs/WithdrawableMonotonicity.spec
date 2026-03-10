@@ -20,7 +20,7 @@ rule liquidateIncreasesWithdrawable(env e, Midnight.Obligation obligation, uint2
     uint256 withdrawableBefore = withdrawable(id);
     uint256 seizedResult;
     uint256 repaidResult;
-    (seizedResult, repaidResult) = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
+    seizedResult, repaidResult = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
     uint256 withdrawableAfter = withdrawable(id);
     assert withdrawableAfter == withdrawableBefore + repaidResult;
 }
