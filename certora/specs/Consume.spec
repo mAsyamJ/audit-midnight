@@ -61,7 +61,8 @@ rule takeConsumedBoundedByMax(env e, uint256 obligationShares, address taker, ad
     assert consumed(offer.maker, offer.group) <= maxAmount;
 }
 
-/// After a successful `take`, the change in consumed equals the amount taken: returnedUnits for units-based offers, obligationShares for shares-based.
+/// After a successful `take`, the change in consumed equals the amount taken: returnedUnits for units-based
+/// offers, obligationShares for shares-based.
 rule takeConsumedExactDelta(env e, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
