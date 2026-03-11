@@ -222,7 +222,7 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(midnight.obligationCreated(_id), true, "obligation created");
         uint16[7] memory fees = midnight.fees(_id);
         for (uint256 i = 0; i < 7; i++) {
-            assertEq(fees[i], midnight.defaultFees(_obligation.loanToken, i), "fees");
+            assertEq(fees[i], midnight.defaultTradingFees(_obligation.loanToken, i), "fees");
         }
     }
 

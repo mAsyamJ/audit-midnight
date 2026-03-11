@@ -72,7 +72,7 @@ contract Midnight is IMidnight {
 
     /// @dev Default trading fees per loan token. Set when the obligation is created. Can be later overriden by the
     /// feeSetter.
-    mapping(address loanToken => uint16[7]) public defaultFees;
+    mapping(address loanToken => uint16[7]) public defaultTradingFees;
 
     /// @dev Default continuous fee per loan token. Set when the obligation is created. Can be later overriden by the
     /// feeSetter.
@@ -139,7 +139,7 @@ contract Midnight is IMidnight {
         require(newTradingFee <= maxTradingFee(index), "value too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee is less than maxTradingFee
-        defaultFees[loanToken][index] = uint16(newTradingFee / FEE_STEP);
+        defaultTradingFees[loanToken][index] = uint16(newTradingFee / FEE_STEP);
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
 
@@ -232,6 +232,9 @@ contract Midnight is IMidnight {
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
         uint256 buyerPrice = sellerPrice + _tradingFee;
 
+        accrueContinuousFee(id, buyer, offer.obligation.maturity);
+        accrueContinuousFee(id, seller, offer.obligation.maturity);
+
         bool buyerIsLender = borrowerState[id][buyer].debt == 0;
         bool sellerIsBorrower = sharesOf[id][seller] == 0;
         // To ensure that the share price does not decrease, units should be rounded up when buyerIsLender &
@@ -254,14 +257,13 @@ contract Midnight is IMidnight {
         }
 
         if (!buyerIsLender) {
-            accrueContinuousFee(id, buyer, offer.obligation.maturity);
             BorrowerState storage _buyerState = borrowerState[id][buyer];
+            // forge-lint: disable-next-item(unsafe-typecast) as if obligationUnits > debt, an underflow occurs later.
             _buyerState.pendingFee -= uint128(_buyerState.pendingFee.mulDivUp(obligationUnits, _buyerState.debt));
         }
 
         if (sellerIsBorrower) {
-            accrueContinuousFee(id, seller, offer.obligation.maturity);
-            borrowerState[id][seller].pendingFee += uint128(
+            borrowerState[id][seller].pendingFee += UtilsLib.toUint128(
                 _obligationState.continuousFee.mulDivDown(obligationUnits * timeToMaturity, WAD)
             );
         }
@@ -382,6 +384,7 @@ contract Midnight is IMidnight {
 
         BorrowerState storage _state = borrowerState[id][onBehalf];
         if (_state.debt > 0) {
+            // forge-lint: disable-next-item(unsafe-typecast) as if obligationUnits > debt, an underflow occurs later.
             _state.pendingFee -= uint128(_state.pendingFee.mulDivUp(obligationUnits, _state.debt));
         }
         _state.debt -= UtilsLib.toUint128(obligationUnits);
@@ -534,6 +537,8 @@ contract Midnight is IMidnight {
         }
 
         if (originalDebt > 0) {
+            // forge-lint: disable-next-item(unsafe-typecast) as badDebt and repaidUnits have been deducted from
+            // originalDebt earlier without underflow
             _state.pendingFee -= uint128(_state.pendingFee.mulDivUp(badDebt + repaidUnits, originalDebt));
         }
 
@@ -606,7 +611,7 @@ contract Midnight is IMidnight {
             }
 
             obligationState[id].created = true;
-            obligationState[id].fees = defaultFees[obligation.loanToken];
+            obligationState[id].fees = defaultTradingFees[obligation.loanToken];
             obligationState[id].continuousFee = defaultContinuousFee[obligation.loanToken];
             IdLib.storeInCode(obligation);
 
@@ -710,16 +715,17 @@ contract Midnight is IMidnight {
         return tentativeSigner;
     }
 
-    function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) internal {
-        uint128 feeUnits = uint128(pendingContinuousFee(id, borrower, maturity));
+    function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) public {
+        // forge-lint: disable-next-item(unsafe-typecast) as accrued fee is <= pendingFee
+        uint128 accruedFee = uint128(pendingContinuousFee(id, borrower, maturity));
 
-        if (feeUnits > 0) {
+        if (accruedFee > 0) {
             BorrowerState storage _state = borrowerState[id][borrower];
             ObligationState storage _obligationState = obligationState[id];
-            uint256 feeShares = feeUnits.mulDivDown(_obligationState.totalShares + 1, _obligationState.totalUnits + 1);
-            _state.pendingFee -= feeUnits;
-            _state.debt += feeUnits;
-            _obligationState.totalUnits += feeUnits;
+            uint256 feeShares = accruedFee.mulDivDown(_obligationState.totalShares + 1, _obligationState.totalUnits + 1);
+            _state.pendingFee -= accruedFee;
+            _state.debt += accruedFee;
+            _obligationState.totalUnits += accruedFee;
             if (feeShares > 0) {
                 sharesOf[id][PASSIVE_FEE_RECIPIENT] += feeShares;
                 _obligationState.totalShares += UtilsLib.toUint128(feeShares);
