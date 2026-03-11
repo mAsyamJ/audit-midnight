@@ -47,17 +47,19 @@ hook Sload uint16 val defaultFees[KEY address token][INDEX uint256 idx] {
     require ghostDefaultFeeUnits[token][idx] == to_mathint(val);
 }
 
+/// maxTradingFee(index) / FEE_STEP, needed because contract calls are disallowed inside forall.
+definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : index == 6 ? 5000 : 0;
+
 /// Default fees for any loan token at each index are bounded by its specific maxTradingFee cap.
-invariant defaultFeePerIndexBound(address loanToken, uint256 index)
-    index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= to_mathint(maxTradingFee(index)) / FEE_STEP();
+invariant defaultFeePerIndexBound()
+    forall address loanToken. forall uint256 index. index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= maxFeeUnits(index);
 
 /// Every obligation's fee breakpoints are bounded by the per-index maximum.
 invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
     index <= 6 => ghostObligationFeeUnits[id][index] <= to_mathint(maxTradingFee(index)) / FEE_STEP()
     {
         preserved with (env e) {
-            address anyToken;
-            requireInvariant defaultFeePerIndexBound(anyToken, index);
+            requireInvariant defaultFeePerIndexBound();
         }
     }
 
