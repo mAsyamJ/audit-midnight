@@ -23,6 +23,9 @@ definition lowerIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 
 /// Upper enclosing breakpoint index for a given time-to-maturity.
 definition upperIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 6 : ttm >= breakpointTime(5) ? 6 : ttm >= breakpointTime(4) ? 5 : ttm >= breakpointTime(3) ? 4 : ttm >= breakpointTime(2) ? 3 : ttm >= breakpointTime(1) ? 2 : 1;
 
+/// maxTradingFee(index) / FEE_STEP, needed because contract calls are disallowed inside forall.
+definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : index == 6 ? 5000 : 0;
+
 persistent ghost mapping(bytes32 => mapping(uint256 => mathint)) ghostObligationFeeUnits {
     init_state axiom forall bytes32 id. forall uint256 i. ghostObligationFeeUnits[id][i] == 0;
 }
@@ -46,9 +49,6 @@ hook Sstore defaultFees[KEY address token][INDEX uint256 idx] uint16 newVal {
 hook Sload uint16 val defaultFees[KEY address token][INDEX uint256 idx] {
     require ghostDefaultFeeUnits[token][idx] == to_mathint(val);
 }
-
-/// maxTradingFee(index) / FEE_STEP, needed because contract calls are disallowed inside forall.
-definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : index == 6 ? 5000 : 0;
 
 /// Default fees for any loan token at each index are bounded by its specific maxTradingFee cap.
 invariant defaultFeePerIndexBound()
