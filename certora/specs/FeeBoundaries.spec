@@ -21,9 +21,6 @@ definition lowerIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 
 /// Upper enclosing breakpoint index for a given time-to-maturity.
 definition upperIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 6 : ttm >= breakpointTime(5) ? 6 : ttm >= breakpointTime(4) ? 5 : ttm >= breakpointTime(3) ? 4 : ttm >= breakpointTime(2) ? 3 : ttm >= breakpointTime(1) ? 2 : 1;
 
-/// Hardcoded maxTradingFee(index) / FEE_STEP, needed because contract calls are disallowed inside forall.
-definition maxFeeUnits(uint256 index) returns mathint = index == 0 ? 14 : index == 1 ? 14 : index == 2 ? 98 : index == 3 ? 417 : index == 4 ? 1250 : index == 5 ? 2500 : index == 6 ? 5000 : 0;
-
 persistent ghost mapping(bytes32 => mapping(uint256 => mathint)) ghostObligationFeeUnits {
     init_state axiom forall bytes32 id. forall uint256 i. ghostObligationFeeUnits[id][i] == 0;
 }
@@ -49,27 +46,19 @@ hook Sload uint16 val defaultFees[KEY address token][INDEX uint256 idx] {
 }
 
 /// Default fees for any loan token at each index are bounded by its specific maxTradingFee cap.
-invariant defaultFeePerIndexBound()
-    forall address loanToken. forall uint256 index. index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= maxFeeUnits(index);
+invariant defaultFeePerIndexBound(address loanToken, uint256 index)
+    index <= 6 => ghostDefaultFeeUnits[loanToken][index] <= to_mathint(maxTradingFee(index)) / FEE_STEP();
 
 /// Every obligation's fee breakpoints are bounded by the per-index maximum.
 invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
     index <= 6 => ghostObligationFeeUnits[id][index] <= to_mathint(maxTradingFee(index)) / FEE_STEP()
     {
         preserved with (env e) {
-            requireInvariant defaultFeePerIndexBound();
+            address anyToken;
+            uint256 anyIndex;
+            requireInvariant defaultFeePerIndexBound(anyToken, anyIndex);
         }
     }
-
-/// For any time-to-maturity the trading fee is enclosed between the two adjacent breakpoint values (never overshoots or undershoots).
-rule tradingFeeIsConvexCombination(bytes32 id, uint256 timeToMaturity) {
-    uint256 feeLo = tradingFee(id, breakpointTime(lowerIndex(timeToMaturity)));
-    uint256 feeHi = tradingFee(id, breakpointTime(upperIndex(timeToMaturity)));
-    uint256 fee = tradingFee(id, timeToMaturity);
-
-    assert (feeLo <= feeHi) => (fee >= feeLo && fee <= feeHi);
-    assert (feeHi <= feeLo) => (fee >= feeHi && fee <= feeLo);
-}
 
 /// Only the fee setter can modify default fees (multicall is DELETEd and not checked here).
 rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 index) filtered { f -> !f.isView } {
@@ -90,4 +79,14 @@ rule onlyFeeSetterCanChangeObligationFeesPostCreation(method f, env e, bytes32 i
     f(e, args);
 
     assert ghostObligationFeeUnits[id][index] != feesBefore => e.msg.sender == feeSetter();
+}
+
+/// For any time-to-maturity the trading fee is enclosed between the two adjacent breakpoint values (never overshoots or undershoots).
+rule tradingFeeIsConvexCombination(bytes32 id, uint256 timeToMaturity) {
+    uint256 feeLo = tradingFee(id, breakpointTime(lowerIndex(timeToMaturity)));
+    uint256 feeHi = tradingFee(id, breakpointTime(upperIndex(timeToMaturity)));
+    uint256 fee = tradingFee(id, timeToMaturity);
+
+    assert (feeLo <= feeHi) => (fee >= feeLo && fee <= feeHi);
+    assert (feeHi <= feeLo) => (fee >= feeHi && fee <= feeLo);
 }
