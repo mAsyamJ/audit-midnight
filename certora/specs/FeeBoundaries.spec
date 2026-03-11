@@ -70,7 +70,7 @@ rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 i
     calldataarg args;
     f(e, args);
 
-    assert ghostDefaultFeeUnits[token][index] != feesBefore => e.msg.sender == feeSetter();
+    assert ghostDefaultFeeUnits[token][index] != feesBefore => e.msg.sender == feeSetter() && f.selector == sig:setDefaultTradingFee(address, uint256, uint256).selector;
 }
 
 /// Once an obligation is created, only the fee setter can modify its fees.
