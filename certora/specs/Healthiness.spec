@@ -38,15 +38,9 @@ definition ORACLE_PRICE_SCALE() returns uint256 = 10 ^ 36;
 
 persistent ghost summaryPrice(address) returns uint256;
 
-persistent ghost summaryMulDivDownM(mathint, mathint, mathint) returns mathint {
-    /* mulDiv always returns an unsigned integer */
-    axiom forall mathint a. forall mathint b. forall mathint d. a >= 0 && b >= 0 && d > 0 => summaryMulDivDownM(a, b, d) >= 0;
-}
+persistent ghost summaryMulDivDownM(mathint, mathint, mathint) returns mathint;
 
-persistent ghost summaryMulDivUpM(mathint, mathint, mathint) returns mathint {
-    /* mulDiv always returns an unsigned integer */
-    axiom forall mathint a. forall mathint b. forall mathint d. a >= 0 && b >= 0 && d > 0 => summaryMulDivUpM(a, b, d) >= 0;
-}
+persistent ghost summaryMulDivUpM(mathint, mathint, mathint) returns mathint;
 
 /* Axioms that are proved by MulDiv.spec */
 
@@ -62,7 +56,7 @@ definition axiomUpMonotoneA(mathint a1, mathint a2, mathint b, mathint d) return
 definition axiomDownMonotoneB(mathint a, mathint b1, mathint b2, mathint d) returns bool = 0 <= a && 0 <= b1 && b1 <= b2 && 0 < d => summaryMulDivDownM(a, b1, d) <= summaryMulDivDownM(a, b2, d);
 
 /* proved in mulDivMonotoneD */
-definition axiomUpMonotoneD(mathint a, mathint b, mathint d1, mathint d2) returns bool = 0 <= a && 0 <= b && 0 < d1 && d1 <= d2 => summaryMulDivUpM(a, b, d1) >= summaryMulDivDownM(a, b, d2);
+definition axiomUpMonotoneD(mathint a, mathint b, mathint d1, mathint d2) returns bool = 0 <= a && 0 <= b && 0 < d1 && d1 <= d2 => summaryMulDivUpM(a, b, d1) >= summaryMulDivUpM(a, b, d2);
 
 /* proved in mulDivAddDownUp in MulDiv.spec */
 definition axiomAddDownUp(mathint a1, mathint a2, mathint b, mathint d) returns bool = d > 0 => summaryMulDivDownM(a1, b, d) + summaryMulDivUpM(a2, b, d) >= summaryMulDivDownM(a1 + a2, b, d);
@@ -121,18 +115,12 @@ persistent ghost address globalBorrower;
 definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index] && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index]);
 
 function equalsGlobalObligation(Midnight.Obligation obligation) returns (bool) {
-    return obligation.loanToken == globalObligationLoanToken
-        && obligation.collaterals.length == globalObligationCollateralLength
-        && collateralMatches(obligation, 0)
-        && collateralMatches(obligation, 1)
-        && collateralMatches(obligation, 2)
-        && obligation.maturity == globalObligationMaturity
-        && obligation.rcfThreshold == globalObligationRcfThreshold;
+    return obligation.loanToken == globalObligationLoanToken && obligation.collaterals.length == globalObligationCollateralLength && collateralMatches(obligation, 0) && collateralMatches(obligation, 1) && collateralMatches(obligation, 2) && obligation.maturity == globalObligationMaturity && obligation.rcfThreshold == globalObligationRcfThreshold;
 }
 
 function getGlobalObligation() returns (Midnight.Obligation) {
     Midnight.Obligation obligation;
-    require equalsGlobalObligation(obligation), "read global obligation";
+    require equalsGlobalObligation(obligation), "get global obligation";
     return obligation;
 }
 
@@ -218,7 +206,6 @@ rule stayHealthyLiquidateSameBorrower(env e, uint256 someCollateralIndex, uint25
     mathint price = summaryPrice(obligation.collaterals[someCollateralIndex].oracle);
 
     // require all the axioms that are needed to prove the healthiness after liquidation. These are the same axioms that are proved in the MulDiv.spec
-    require forall mathint b. forall mathint d. axiomDownZero(b, d), "axiom";
     require forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. axiomDownMonotoneA(a1, a2, b, d), "axiom";
     require forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. axiomUpMonotoneA(a1, a2, b, d), "axiom";
     require forall mathint a. forall mathint b1. forall mathint b2. forall mathint d. axiomDownMonotoneB(a, b1, b2, d), "axiom";
@@ -244,7 +231,7 @@ rule stayHealthyLiquidateOtherBorrower(env e, Midnight.Obligation someObligation
     require globalObligationCollateralLength <= 1, "too many collaterals for the spec to handle";
 
     Midnight.Obligation obligation = getGlobalObligation();
-    require someBorrower != globalBorrower || !equalsGlobalObligation(someObligation);
+    require someBorrower != globalBorrower || !equalsGlobalObligation(someObligation), "borrower or obligation differs";
 
     require callIsHealthy(obligation, globalId, globalBorrower), "user is healthy before call";
 
@@ -262,7 +249,6 @@ rule stayHealthy(env e, method f, calldataarg args) filtered { f -> f.selector !
     // This variable is set to false whenever isHealthy() is violated before a callback.  Initially we set it to true to indicate no violations detected.
     healthyBeforeCallback = true;
 
-    require forall mathint b. forall mathint d. axiomDownZero(b, d), "axiom";
     require forall mathint a1. forall mathint a2. forall mathint b. forall mathint d. axiomDownMonotoneA(a1, a2, b, d), "axiom";
 
     require globalObligationCollateralLength <= 3, "too many collaterals for the spec to handle";
