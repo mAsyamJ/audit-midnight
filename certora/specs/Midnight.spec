@@ -12,6 +12,7 @@ methods {
     function sharesOf(bytes32 id, address owner) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
     function pendingFee(bytes32 id, address user) external returns (uint128) envfree;
+    function lastContinuousFeeAccrual(bytes32 id, address user) external returns (uint128) envfree;
     function Utils.passiveFeeRecipient() external returns (address) envfree;
 
     function _.price() external => NONDET;
@@ -107,6 +108,16 @@ rule liquidateInputOutputConsistency(env e, Midnight.Obligation obligation, uint
     assert repaidUnits == 0 && seizedAssets == 0 => seizedAssetsOutput == 0 && repaidUnitsOutput == 0;
 }
 
+rule lastAccrualMonotonicity(env e, method f, calldataarg args, bytes32 id, address user) {
+    uint128 before = lastContinuousFeeAccrual(id, user);
+
+    require e.block.timestamp >= require_uint256(before);
+
+    f(e, args);
+
+    assert lastContinuousFeeAccrual(id, user) >= before;
+}
+
 /// INVARIANTS ///
 
 strong invariant notBorrowerAndLender(bytes32 id, address user)
@@ -119,6 +130,22 @@ strong invariant notBorrowerAndLender(bytes32 id, address user)
 
 strong invariant noRemainingContinuousFeeWithoutDebt(bytes32 id, address user)
     debtOf(id, user) == 0 => pendingFee(id, user) == 0;
+
+strong invariant debtImpliesLastAccrual(bytes32 id, address user)
+    debtOf(id, user) > 0 => lastContinuousFeeAccrual(id, user) > 0
+    {
+        preserved with (env e) {
+            require e.block.timestamp > 0;
+        }
+    }
+
+strong invariant pendingFeeImpliesLastAccrual(bytes32 id, address user)
+    pendingFee(id, user) > 0 => lastContinuousFeeAccrual(id, user) > 0
+    {
+        preserved with (env e) {
+            require e.block.timestamp > 0;
+        }
+    }
 
 strong invariant totalUnitsEqualsSumDebtPlusWithdrawable(bytes32 id)
     totalUnits(id) == sumDebtOf[id] + withdrawable(id);

@@ -715,9 +715,8 @@ contract Midnight is IMidnight {
         return tentativeSigner;
     }
 
-    function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) public {
+    function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) internal {
         require(obligationState[id].created, "not created");
-
         // forge-lint: disable-next-item(unsafe-typecast) as accrued fee is <= pendingFee
         uint128 accruedFee = uint128(pendingContinuousFee(id, borrower, maturity));
         if (accruedFee > 0) {
