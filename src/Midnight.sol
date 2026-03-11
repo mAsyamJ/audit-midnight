@@ -731,7 +731,7 @@ contract Midnight is IMidnight {
             }
         }
 
-        borrowerState[id][borrower].lastContinuousFeeAccrual = uint48(block.timestamp);
+        borrowerState[id][borrower].lastContinuousFeeAccrual = uint128(block.timestamp);
     }
 
     function maxLif(uint256 lltv, uint256 cursor) public pure returns (uint256) {

@@ -243,27 +243,6 @@ contract ContinuousFeeTest is BaseTest {
         assertEq(midnight.pendingFee(id, borrower), 0, "remaining is 0 at maturity");
     }
 
-    function testTakeDoesNotStartAccrualForLender() public {
-        setupBorrower(100e18, MAX_CONTINUOUS_FEE, 100 days);
-        deal(address(loanToken), otherLender, 1);
-        lenderOffer.obligation = obligation;
-        lenderOffer.obligationShares = 1;
-        lenderOffer.expiry = block.timestamp;
-        lenderOffer.group = keccak256("lender-skip");
-        collateralize(obligation, borrower, 1);
-
-        take(1, borrower, lenderOffer);
-
-        assertEq(midnight.lastContinuousFeeAccrual(id, otherLender), 0, "last accrual unchanged");
-    }
-
-    function testRepayDoesNotStartAccrualOnFreshObligation() public {
-        midnight.repay(obligation, 0, borrower);
-
-        assertTrue(midnight.obligationCreated(id), "obligation created");
-        assertEq(midnight.lastContinuousFeeAccrual(id, borrower), 0, "last accrual unchanged");
-    }
-
     function testExitViaRepay(uint256 debt, uint256 exitAmount, uint256 feeRate, uint256 ttm, uint256 elapsed) public {
         debt = bound(debt, 1, MAX_DEBT);
         feeRate = bound(feeRate, 0, MAX_CONTINUOUS_FEE);

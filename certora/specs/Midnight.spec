@@ -108,9 +108,21 @@ rule liquidateInputOutputConsistency(env e, Midnight.Obligation obligation, uint
     assert repaidUnits == 0 && seizedAssets == 0 => seizedAssetsOutput == 0 && repaidUnitsOutput == 0;
 }
 
+rule debtChangeUpdatesLastAccrual(env e, method f, calldataarg args, bytes32 id, address user) {
+    uint256 debtBefore = debtOf(id, user);
+
+    require e.block.timestamp < 2 ^ 128;
+
+    f(e, args);
+
+    assert debtOf(id, user) != debtBefore => lastContinuousFeeAccrual(id, user) == assert_uint128(e.block.timestamp);
+}
+
 rule lastAccrualMonotonicity(env e, method f, calldataarg args, bytes32 id, address user) {
     uint128 before = lastContinuousFeeAccrual(id, user);
 
+    // block.timestamp must fit in uint128 (no truncation) and time must not go backwards.
+    require e.block.timestamp < 2 ^ 128;
     require e.block.timestamp >= require_uint256(before);
 
     f(e, args);
