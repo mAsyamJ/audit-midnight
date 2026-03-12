@@ -65,7 +65,8 @@ rule debtNotStoredBeforeAccrual(env e, method f, calldataarg args, bytes32 id, a
 
 /// Check that debt is never loaded before accrueContinuousFee is called.
 /// The SLOADs of accrueContinuousFee are ignored.
-rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:isHealthy(Midnight.Obligation memory, bytes32, address).selector && f.selector != sig:debtOf(bytes32, address).selector && f.selector != sig:borrowerState(bytes32, address).selector } {    require !accrued[id][user];
+rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:isHealthy(Midnight.Obligation memory, bytes32, address).selector && f.selector != sig:debtOf(bytes32, address).selector && f.selector != sig:borrowerState(bytes32, address).selector } {
+    require !accrued[id][user];
     require !debtLoadedBeforeAccrual[id][user];
 
     f(e, args);
