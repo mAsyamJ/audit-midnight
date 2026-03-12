@@ -9,8 +9,10 @@ import {IFlashLoanCallback} from "../src/interfaces/ICallbacks.sol";
 contract FlashLoanTest is BaseTest, IFlashLoanCallback {
     uint256 internal amountStored;
     bytes internal dataStored;
+    bool internal reverts = false;
 
     function testFlashLoan(uint256 amount, bytes memory data) public {
+        amount = bound(amount, 1, type(uint256).max);
         amountStored = amount;
         dataStored = data;
 
@@ -21,10 +23,23 @@ contract FlashLoanTest is BaseTest, IFlashLoanCallback {
         assertEq(loanToken.balanceOf(address(midnight)), amount, "balanceOf");
     }
 
+    function testFlashLoanNotReimbursed(uint256 amount, bytes memory data) public {
+        amount = bound(amount, 1, type(uint256).max);
+
+        amountStored = amount;
+        dataStored = data;
+        reverts = true;
+
+        deal(address(loanToken), address(midnight), amount);
+        vm.expectRevert();
+        midnight.flashLoan(address(loanToken), amount, address(this), data);
+    }
+
     function onFlashLoan(address token, uint256 amount, bytes memory data) external {
         assertEq(token, address(loanToken), "wrong token");
         assertEq(amount, amountStored, "wrong amount");
         assertEq(data, dataStored, "wrong data");
         ERC20(token).approve(address(midnight), amount);
+        if (reverts) ERC20(token).transfer(address(0xdead), amount);
     }
 }
