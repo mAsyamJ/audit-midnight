@@ -101,8 +101,8 @@ rule onlyAuthorizedCanChangeDebtExceptTakeAndLiquidate(env e, method f, calldata
     assert userIsAuthorized || debtAfter == debtBefore;
 }
 
-/// In liquidate, only the borrower's debt can change.
-rule liquidateCanChangeDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, address user) {
+/// In liquidate, only the borrower's debt can change, and it can only decrease.
+rule liquidateOnlyDecreasesBorrowerDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, address user) {
     bytes32 id = toId(obligation);
     require noAccrual(e, id, borrower);
 
@@ -135,7 +135,7 @@ rule takeOnlyAuthorizedCanChangeDebt(env e, uint256 obligationShares, address ta
     assert user != buyer && user != seller => debtAfter == debtBefore;
 }
 
-rule withdrawCollateralDebtIncreasesByAccruedFee(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 id) {
+rule withdrawCollateralDoesNotChangeDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 id) {
     require noAccrual(e, id, onBehalf);
 
     mathint debtBefore = debtOf(id, onBehalf);
@@ -144,7 +144,7 @@ rule withdrawCollateralDebtIncreasesByAccruedFee(env e, Midnight.Obligation obli
     assert debtOf(id, onBehalf) == debtBefore;
 }
 
-rule repayDebtMatchesAccrualAndRepayment(env e, Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf, bytes32 id) {
+rule repayDecreasesDebtByExactUnits(env e, Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf, bytes32 id) {
     require noAccrual(e, id, onBehalf);
 
     mathint debtBefore = debtOf(id, onBehalf);
