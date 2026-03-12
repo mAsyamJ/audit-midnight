@@ -15,6 +15,7 @@ function accruedContinuousFeeBefore(bytes32 id, address user, uint256 blockTimes
     if (lastAccrual == 0 || maturity <= require_uint256(lastAccrual)) return 0;
 
     uint256 accrualEnd = blockTimestamp < maturity ? blockTimestamp : maturity;
+
     // Use the same mulDiv summary as the code to ensure consistency.
     return summaryMulDiv(_pendingFee, assert_uint256(accrualEnd - lastAccrual), assert_uint256(maturity - lastAccrual));
 }
