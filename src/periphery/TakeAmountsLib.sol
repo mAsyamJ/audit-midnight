@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Midnight} from "../Midnight.sol";
-import {Offer} from "../interfaces/IMidnight.sol";
+import {Obligation, Offer} from "../interfaces/IMidnight.sol";
 import {UtilsLib} from "../libraries/UtilsLib.sol";
 import {TickLib} from "../libraries/TickLib.sol";
 import {WAD} from "../libraries/ConstantsLib.sol";
@@ -10,26 +10,20 @@ import {WAD} from "../libraries/ConstantsLib.sol";
 library TakeAmountsLib {
     using UtilsLib for uint256;
 
+    /// @dev Returns the expected total units and total shares.
     function expectedTakeState(Midnight midnight, bytes32 id, address taker, Offer memory offer)
         internal
         view
-        returns (uint256 expectedTotalUnits, uint256 expectedTotalShares, bool buyerIsLender)
+        returns (uint256, uint256)
     {
-        expectedTotalUnits = midnight.totalUnits(id);
-        expectedTotalShares = midnight.totalShares(id);
-
-        address buyer = offer.buy ? offer.maker : taker;
-
-        uint256 buyerAccruedFee = midnight.pendingContinuousFee(id, buyer, offer.obligation.maturity);
-        expectedTotalShares += buyerAccruedFee.mulDivDown(expectedTotalShares + 1, expectedTotalUnits + 1);
-        expectedTotalUnits += buyerAccruedFee;
-
-        buyerIsLender = midnight.debtOf(id, buyer) + buyerAccruedFee == 0;
-
-        uint256 sellerAccruedFee =
-            midnight.pendingContinuousFee(id, offer.buy ? taker : offer.maker, offer.obligation.maturity);
-        expectedTotalShares += sellerAccruedFee.mulDivDown(expectedTotalShares + 1, expectedTotalUnits + 1);
-        expectedTotalUnits += sellerAccruedFee;
+        (uint256 makerAccruedFee, uint256 makerFeeShares) =
+            midnight.accrueContinuousFeeView(offer.obligation, id, offer.maker);
+        (uint256 takerAccruedFee, uint256 takerFeeShares) =
+            midnight.accrueContinuousFeeView(offer.obligation, id, taker);
+        return (
+            midnight.totalUnits(id) + makerAccruedFee + takerAccruedFee,
+            midnight.totalShares(id) + makerFeeShares + takerFeeShares
+        );
     }
 
     // Forward: units = shares.mulDivUp/Down(totalUnits + 1, totalShares + 1) depending on buyerIsLender.
@@ -42,10 +36,10 @@ library TakeAmountsLib {
         Offer memory offer,
         uint256 targetUnits
     ) internal view returns (uint256) {
-        uint256 totalUnits;
-        uint256 totalShares;
-        bool buyerIsLender;
-        (totalUnits, totalShares, buyerIsLender) = expectedTakeState(midnight, id, taker, offer);
+        (uint256 totalUnits, uint256 totalShares) = expectedTakeState(midnight, id, taker, offer);
+        address buyer = offer.buy ? offer.maker : taker;
+        (uint256 buyerAccruedFee,) = midnight.accrueContinuousFeeView(offer.obligation, id, buyer);
+        bool buyerIsLender = midnight.debtOf(id, buyer) == 0; // accrued fee is 0 if debt is 0
         return buyerIsLender
             ? targetUnits.mulDivDown(totalShares + 1, totalUnits + 1)
             : targetUnits.mulDivUp(totalShares + 1, totalUnits + 1);
@@ -60,7 +54,7 @@ library TakeAmountsLib {
         Offer memory offer,
         uint256 targetBuyerAssets
     ) internal view returns (uint256) {
-        (uint256 totalUnits, uint256 totalShares,) = expectedTakeState(midnight, id, taker, offer);
+        (uint256 totalUnits, uint256 totalShares) = expectedTakeState(midnight, id, taker, offer);
         uint256 offerPrice = TickLib.tickToPrice(offer.tick);
         uint256 _tradingFee = midnight.tradingFee(id, UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp));
         uint256 buyerPrice = offer.buy ? offerPrice : offerPrice + _tradingFee;
@@ -80,7 +74,7 @@ library TakeAmountsLib {
         Offer memory offer,
         uint256 targetSellerAssets
     ) internal view returns (uint256) {
-        (uint256 totalUnits, uint256 totalShares,) = expectedTakeState(midnight, id, taker, offer);
+        (uint256 totalUnits, uint256 totalShares) = expectedTakeState(midnight, id, taker, offer);
         uint256 offerPrice = TickLib.tickToPrice(offer.tick);
         uint256 _tradingFee = midnight.tradingFee(id, UtilsLib.zeroFloorSub(offer.obligation.maturity, block.timestamp));
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;

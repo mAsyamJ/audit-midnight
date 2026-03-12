@@ -167,7 +167,6 @@ contract TakeAmountsTest is BaseTest {
         _createPosition(100e18);
 
         vm.warp(block.timestamp + 50);
-        assertGt(midnight.pendingContinuousFee(id, borrower, obligation.maturity), 0, "fee should accrue");
 
         uint256 targetUnits = 10e18;
         offer.maker = lender;

@@ -198,6 +198,9 @@ contract Midnight is IMidnight {
         bytes32 id = touchObligation(offer.obligation);
         ObligationState storage _obligationState = obligationState[id];
 
+        accrueContinuousFee(offer.obligation, id, offer.maker);
+        accrueContinuousFee(offer.obligation, id, taker);
+
         (
             address buyer,
             address buyerCallback,
@@ -231,9 +234,6 @@ contract Midnight is IMidnight {
         uint256 _tradingFee = tradingFee(id, timeToMaturity);
         uint256 sellerPrice = offer.buy ? offerPrice - _tradingFee : offerPrice;
         uint256 buyerPrice = sellerPrice + _tradingFee;
-
-        accrueContinuousFee(id, buyer, offer.obligation.maturity);
-        accrueContinuousFee(id, seller, offer.obligation.maturity);
 
         bool buyerIsLender = borrowerState[id][buyer].debt == 0;
         bool sellerIsBorrower = sharesOf[id][seller] == 0;
@@ -382,7 +382,7 @@ contract Midnight is IMidnight {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
 
-        accrueContinuousFee(id, onBehalf, obligation.maturity);
+        accrueContinuousFee(obligation, id, onBehalf);
 
         BorrowerState storage _state = borrowerState[id][onBehalf];
         if (_state.debt > 0) {
@@ -433,7 +433,7 @@ contract Midnight is IMidnight {
         bytes32 id = touchObligation(obligation);
         address collateralToken = obligation.collaterals[collateralIndex].token;
 
-        accrueContinuousFee(id, onBehalf, obligation.maturity);
+        accrueContinuousFee(obligation, id, onBehalf);
 
         uint256 newCollateralOf = collateralOf[id][onBehalf][collateralIndex] - assets;
         collateralOf[id][onBehalf][collateralIndex] = UtilsLib.toUint128(newCollateralOf);
@@ -472,7 +472,7 @@ contract Midnight is IMidnight {
         bytes32 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
 
-        accrueContinuousFee(id, borrower, obligation.maturity);
+        accrueContinuousFee(obligation, id, borrower);
 
         uint256 maxDebt;
         uint256 liquidatedCollatPrice;
@@ -680,9 +680,9 @@ contract Midnight is IMidnight {
 
     /// @dev This function should be called with the id corresponding to the obligation.
     /// @dev This function does not call any oracle if debt is 0.
-    function isHealthy(Obligation memory obligation, bytes32 id, address borrower) public view returns (bool) {
+    function isHealthy(Obligation memory obligation, bytes32 id, address borrower) internal view returns (bool) {
         BorrowerState storage _borrowerState = borrowerState[id][borrower];
-        uint256 debt = _borrowerState.debt + pendingContinuousFee(id, borrower, obligation.maturity);
+        uint256 debt = _borrowerState.debt;
         uint256 maxDebt;
         uint256 bitmap = _borrowerState.activatedCollaterals;
         while (maxDebt < debt && bitmap != 0) {
@@ -694,17 +694,6 @@ contract Midnight is IMidnight {
             bitmap ^= (1 << i);
         }
         return maxDebt >= debt;
-    }
-
-    function pendingContinuousFee(bytes32 id, address borrower, uint256 maturity) public view returns (uint256) {
-        BorrowerState storage _state = borrowerState[id][borrower];
-        uint256 lastAccrual = _state.lastContinuousFeeAccrual;
-        if (lastAccrual == 0 || maturity <= lastAccrual) {
-            return 0;
-        } else {
-            uint256 accrualEnd = UtilsLib.min(block.timestamp, maturity);
-            return _state.pendingFee.mulDivDown(accrualEnd - lastAccrual, maturity - lastAccrual);
-        }
     }
 
     function domainSeparator() internal view returns (bytes32) {
@@ -719,26 +708,43 @@ contract Midnight is IMidnight {
         return tentativeSigner;
     }
 
-    function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) internal {
+    /// @dev Returns the accrued fee, and fee shares.
+    function accrueContinuousFeeView(Obligation memory obligation, bytes32 id, address borrower)
+        public
+        view
+        returns (uint128, uint128)
+    {
+        BorrowerState storage _state = borrowerState[id][borrower];
+        ObligationState storage _obligationState = obligationState[id];
+        uint256 lastAccrual = _state.lastContinuousFeeAccrual;
+        uint128 accruedFee;
+        uint256 accruedDuration = UtilsLib.min(block.timestamp, obligation.maturity).zeroFloorSub(lastAccrual);
+        uint256 totalDuration = obligation.maturity.zeroFloorSub(lastAccrual);
         // forge-lint: disable-next-item(unsafe-typecast) as accrued fee is <= pendingFee
-        uint128 accruedFee = uint128(pendingContinuousFee(id, borrower, maturity));
-        uint256 feeShares;
+        if (totalDuration > 0) accruedFee = uint128(_state.pendingFee.mulDivDown(accruedDuration, totalDuration));
+        uint128 feeShares =
+            uint128(accruedFee.mulDivDown(_obligationState.totalShares + 1, _obligationState.totalUnits + 1));
+        return (accruedFee, feeShares);
+    }
 
+    /// @dev Expects the obligation to be touched.
+    /// @dev Expects the id to correspond to the obligation's id.
+    function accrueContinuousFee(Obligation memory obligation, bytes32 id, address borrower) internal {
+        BorrowerState storage _state = borrowerState[id][borrower];
+        ObligationState storage _obligationState = obligationState[id];
+        (uint128 accruedFee, uint128 feeShares) = accrueContinuousFeeView(obligation, id, borrower);
         if (accruedFee > 0) {
-            BorrowerState storage _state = borrowerState[id][borrower];
-            ObligationState storage _obligationState = obligationState[id];
-            feeShares = accruedFee.mulDivDown(_obligationState.totalShares + 1, _obligationState.totalUnits + 1);
             _state.pendingFee -= accruedFee;
             _state.debt += accruedFee;
             _obligationState.totalUnits += accruedFee;
             if (feeShares > 0) {
                 sharesOf[id][PASSIVE_FEE_RECIPIENT] += feeShares;
-                _obligationState.totalShares += UtilsLib.toUint128(feeShares);
+                _obligationState.totalShares += feeShares;
             }
         }
+        _state.lastContinuousFeeAccrual = uint48(block.timestamp);
 
-        borrowerState[id][borrower].lastContinuousFeeAccrual = uint48(block.timestamp);
-        emit EventsLib.AccrueContinuousFee(id, borrower, accruedFee, feeShares, borrowerState[id][borrower].pendingFee);
+        emit EventsLib.AccrueContinuousFee(id, borrower, accruedFee, feeShares, _state.pendingFee);
     }
 
     function maxLif(uint256 lltv, uint256 cursor) public pure returns (uint256) {
