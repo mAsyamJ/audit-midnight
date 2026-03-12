@@ -68,27 +68,23 @@ hook Sload uint128 val borrowerState[KEY bytes32 id][KEY address user].debt {
 /// @title Debt is never stored before accrueContinuousFee is called.
 /// Since accrueContinuousFee is summarized (its body does not execute), any SSTORE to debt
 /// comes from the calling function. If the flag is not set at that point, accrue was not called first.
-rule debtNotStoredBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user)
-filtered { f -> !f.isView } {
+rule debtNotStoredBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> !f.isView } {
     require !accrued[id][user];
     require !debtStoredBeforeAccrual[id][user];
 
     f(e, args);
 
-    assert !debtStoredBeforeAccrual[id][user],
-        "debt was stored before accrueContinuousFee was called";
+    assert !debtStoredBeforeAccrual[id][user], "debt was stored before accrueContinuousFee was called";
 }
 
 /// @title Debt is never loaded before accrueContinuousFee is called.
 /// Since accrueContinuousFee is summarized (its body does not execute), any SLOAD of debt
 /// comes from the calling function. If the flag is not set at that point, accrue was not called first.
-rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user)
-filtered { f -> !f.isView } {
+rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> !f.isView } {
     require !accrued[id][user];
     require !debtLoadedBeforeAccrual[id][user];
 
     f(e, args);
 
-    assert !debtLoadedBeforeAccrual[id][user],
-        "debt was loaded before accrueContinuousFee was called";
+    assert !debtLoadedBeforeAccrual[id][user], "debt was loaded before accrueContinuousFee was called";
 }
