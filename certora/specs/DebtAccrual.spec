@@ -17,8 +17,6 @@ methods {
 
     function IdLib.toId(Midnight.Obligation memory, uint256, address) internal returns (bytes32) => NONDET;
 
-    function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
-
     // Summary: replace accrueContinuousFee with a ghost flag update.
     // The original function body is replaced, so its internal debt reads/writes do not fire hooks.
     function accrueContinuousFee(bytes32 id, address borrower, uint256 maturity) internal => summaryAccrueContinuousFee(id, borrower);
@@ -80,7 +78,7 @@ rule debtNotStoredBeforeAccrual(env e, method f, calldataarg args, bytes32 id, a
 /// @title Debt is never loaded before accrueContinuousFee is called.
 /// Since accrueContinuousFee is summarized (its body does not execute), any SLOAD of debt
 /// comes from the calling function. If the flag is not set at that point, accrue was not called first.
-rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> !f.isView } {
+rule debtNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:isHealthy(Midnight.Obligation memory, bytes32, address).selector && f.selector != sig:debtOf(bytes32, address).selector && f.selector != sig:borrowerState(bytes32, address).selector } {
     require !accrued[id][user];
     require !debtLoadedBeforeAccrual[id][user];
 
