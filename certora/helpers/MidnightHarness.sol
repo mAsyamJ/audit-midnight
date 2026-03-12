@@ -5,7 +5,7 @@ import {Midnight} from "../../src/Midnight.sol";
 import {Obligation} from "../../src/interfaces/IMidnight.sol";
 
 contract MidnightHarness is Midnight {
-    constructor(address owner) Midnight(owner) {}
+    constructor() {}
 
     function isHealthyExternal(Obligation memory obligation, bytes32 id, address borrower)
         external
