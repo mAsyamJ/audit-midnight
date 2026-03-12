@@ -16,6 +16,7 @@ jobs:
         conf:
           - Consume
           - CreatedObligations
+          - DebtAccrual
           - ExactMath
           - Liquidate
           - Midnight
