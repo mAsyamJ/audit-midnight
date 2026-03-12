@@ -8,16 +8,22 @@ methods {
     function isHealthy(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
     function isHealthyNoBitmap(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
 
-    function _.price() external => summaryPrice(calledContract) expect(uint256);
+    /* Assumption: price does not change during rules.
+     * We want to show that isHealthy() and isHealthyNoBitmap() behaves the same under the
+     * assumption that each function uses the same oracle price for the corresponding collateral.
+     */
+    function _.price() external => PER_CALLEE_CONSTANT;
     function TickLib.tickToPrice(uint256 tick) internal returns (uint256) => NONDET;
     function IdLib.toId(Midnight.Obligation memory obligation, uint256 chainId, address morpho) internal returns (bytes32) => NONDET;
+
+    /* Simplify mulDiv reasoning for the solver.  We summarize these by ghost functions, i.e.,
+     * arbitrary deterministic functions and axiomatize the axioms we need.
+     */
     function UtilsLib.mulDivDown(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivDown(x, y, d);
     function UtilsLib.mulDivUp(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivUp(x, y, d);
 }
 
 /// SUMMARY ///
-
-persistent ghost summaryPrice(address) returns uint256;
 
 persistent ghost summaryMulDivDown(uint256, uint256, uint256) returns uint256 {
     /* proved in mulDivZero in MulDiv.spec */
@@ -37,7 +43,6 @@ invariant bitsetIffCollateral(bytes32 id, address borrower, uint256 idx)
 // that does not use collateral bitmap returns true.  We also check that the latter function
 // does not revert if isHealthy does not revert.
 rule isHealthyEquivalent(Midnight.Obligation obligation, bytes32 id, address borrower) {
-    // We restrict to at most three collaterals
     require obligation.collaterals.length <= 3, "restrict to three collaterals";
     requireInvariant bitsetIffCollateral(id, borrower, 0);
     requireInvariant bitsetIffCollateral(id, borrower, 1);
