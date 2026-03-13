@@ -25,12 +25,10 @@ rule liquidateIncreasesWithdrawable(env e, Midnight.Obligation obligation, uint2
     assert withdrawableAfter == withdrawableBefore + repaidResult;
 }
 
-rule withdrawDecreasesWithdrawableExactly(env e, Midnight.Obligation obligation, uint256 obligationUnitsInput, uint256 shares, address onBehalf, address receiver) {
+rule withdrawDecreasesWithdrawableExactly(env e, Midnight.Obligation obligation, uint256 obligationUnitsInput, address onBehalf, address receiver) {
     bytes32 id = toId(e, obligation);
     uint256 withdrawableBefore = withdrawable(id);
-    uint256 withdrawnUnits;
-    uint256 withdrawnShares;
-    withdrawnUnits, withdrawnShares = withdraw(e, obligation, obligationUnitsInput, shares, onBehalf, receiver);
+    uint256 withdrawnUnits = withdraw(e, obligation, obligationUnitsInput, onBehalf, receiver);
     uint256 withdrawableAfter = withdrawable(id);
     assert withdrawableAfter == withdrawableBefore - withdrawnUnits;
 }
@@ -40,7 +38,7 @@ filtered {
     f -> !f.isView
         && f.selector != sig:repay(Midnight.Obligation, uint256, address).selector
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
-        && f.selector != sig:withdraw(Midnight.Obligation, uint256, uint256, address, address).selector
+        && f.selector != sig:withdraw(Midnight.Obligation, uint256, address, address).selector
 } {
     uint256 withdrawableBefore = withdrawable(id);
     f(e, args);
