@@ -35,13 +35,12 @@ hook Sstore balanceOf[KEY bytes32 id][KEY address user] int256 newValue (int256 
 
 // View functions that read balanceOf don't call slash (they can't mutate state).
 rule balanceReadAfterSlash(method f, env e, calldataarg args)
-    filtered { f ->
-        f.selector != sig:balanceOf(bytes32, address).selector
+filtered {
+    f -> f.selector != sig:balanceOf(bytes32, address).selector
         && f.selector != sig:debtOf(bytes32, address).selector
         && f.selector != sig:balanceOfAfterSlashing(bytes32, address).selector
         && f.selector != sig:isHealthy(Midnight.Obligation, bytes32, address).selector
-    }
-{
+} {
     f(e, args);
     assert true;
 }
