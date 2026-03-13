@@ -52,7 +52,8 @@ library EventsLib {
         uint256 seizedAssets,
         uint256 repaidUnits,
         address indexed borrower,
-        uint256 badDebt
+        uint256 badDebt,
+        uint256 lossIndex
     );
     event Slash(address caller, bytes32 indexed id_, address indexed user, int256 balance, uint256 userLossIndex);
 

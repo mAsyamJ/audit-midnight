@@ -434,7 +434,9 @@ contract Midnight is IMidnight {
             require(balanceOf[id][borrower] <= 0, "repay too much");
         }
 
-        emit EventsLib.Liquidate(msg.sender, id, collateralIndex, seizedAssets, repaidUnits, borrower, badDebt);
+        emit EventsLib.Liquidate(
+            msg.sender, id, collateralIndex, seizedAssets, repaidUnits, borrower, badDebt, _obligationState.lossIndex
+        );
 
         SafeTransferLib.safeTransfer(obligation.collaterals[collateralIndex].token, msg.sender, seizedAssets);
 

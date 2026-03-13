@@ -10,6 +10,7 @@ import {Oracle} from "./helpers/Oracle.sol";
 import {ERC20} from "./helpers/ERC20.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 import {stdError} from "../lib/forge-std/src/StdError.sol";
+import {EventsLib} from "../src/libraries/EventsLib.sol";
 
 // Collateral = units / lltv (up to ~1.33x for lltv=0.75).
 // To keep collateral within uint128, we cap amounts at type(uint128).max / 2.
@@ -18,8 +19,6 @@ uint256 constant MAX_UNITS = MAX_TEST_AMOUNT / 2;
 contract LiquidationTest is BaseTest {
     using UtilsLib for uint256;
     using UtilsLib for uint128;
-
-    event Slash(address caller, bytes32 indexed id_, address indexed user, int256 balance, uint256 userLossIndex);
 
     Obligation internal obligation;
     bytes32 internal id;
@@ -275,6 +274,23 @@ contract LiquidationTest is BaseTest {
         assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
     }
 
+    function testLiquidateEmitsLossIndex(uint256 units) public {
+        units = bound(units, 10, MAX_UNITS);
+        collateralize(obligation, borrower, units);
+        setupObligation(obligation, units);
+        Oracle(obligation.collaterals[0].oracle).setPrice(badDebtPriceDown(units));
+
+        uint256 expectedBadDebt = _badDebt();
+        (uint128 oldTotalUnits,, uint256 previousLossIndex,) = midnight.obligationState(id);
+        uint256 expectedLossIndex = expectedBadDebt == 0
+            ? previousLossIndex
+            : WAD - (WAD - previousLossIndex).mulDivDown(oldTotalUnits - expectedBadDebt, oldTotalUnits);
+
+        vm.expectEmit(true, true, false, true);
+        emit EventsLib.Liquidate(address(this), id, 0, 0, 0, borrower, expectedBadDebt, expectedLossIndex);
+        midnight.liquidate(obligation, 0, 0, 0, borrower, "");
+    }
+
     function testSlashEvent(uint256 units) public {
         units = bound(units, 10, MAX_UNITS);
         collateralize(obligation, borrower, units);
@@ -287,7 +303,7 @@ contract LiquidationTest is BaseTest {
         (,, uint256 lossIndex,) = midnight.obligationState(id);
 
         vm.expectEmit(true, true, false, true);
-        emit Slash(address(this), id, lender, expectedBalance, lossIndex);
+        emit EventsLib.Slash(address(this), id, lender, expectedBalance, lossIndex);
         midnight.slash(id, lender);
 
         assertEq(midnight.balanceOf(id, lender), expectedBalance, "balance");
