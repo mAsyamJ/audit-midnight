@@ -214,7 +214,7 @@ contract Midnight is IMidnight {
         int256 newSellerBalance = oldSellerBalance - int256(obligationUnits);
         balanceOf[id][buyer] = newBuyerBalance;
         balanceOf[id][seller] = newSellerBalance;
-        if (offer.asLender) require((offer.buy ? newBuyerBalance : newSellerBalance) >= 0, "crossed");
+        if (offer.exitOnly) require(offer.buy ? newBuyerBalance <= 0 : newSellerBalance >= 0, "crossed");
         _obligationState.totalUnits = UtilsLib.toUint128(
             uint256(_obligationState.totalUnits) + UtilsLib.negativePart(newSellerBalance)
                 + UtilsLib.negativePart(newBuyerBalance) - UtilsLib.negativePart(oldSellerBalance)

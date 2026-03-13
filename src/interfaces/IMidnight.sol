@@ -32,7 +32,7 @@ struct Offer {
     address callback;
     bytes callbackData;
     address receiverIfMakerIsSeller;
-    bool asLender;
+    bool exitOnly;
 }
 
 struct Signature {
