@@ -95,9 +95,9 @@ rule takeOnlyAuthorizedCanChangeDebt(env e, uint256 obligationShares, address ta
 
 /// COLLATERAL CHANGE RULES ///
 
-/// An unauthorized caller cannot change a user's collateral except via take and liquidate.
+/// An unauthorized caller cannot change a user's collateral except via liquidate.
 /// Assumes no reentrancy: callbacks and token transfers are not modeled as re-entering Midnight, so re-entrant collateral changes are not covered.
-rule onlyAuthorizedCanChangeCollateralExceptTakeAndLiquidate(env e, method f, calldataarg args, bytes32 id, address user, uint256 collateralIndex) filtered { f -> f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector && f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector } {
+rule onlyAuthorizedCanChangeCollateralExceptLiquidate(env e, method f, calldataarg args, bytes32 id, address user, uint256 collateralIndex) filtered { f -> f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector } {
     bool userIsAuthorized = user == e.msg.sender || isAuthorized(user, e.msg.sender);
 
     uint256 collateralBefore = collateralOf(id, user, collateralIndex);
@@ -115,14 +115,4 @@ rule liquidateCanChangeCollateral(env e, Midnight.Obligation obligation, uint256
 
     assert user == borrower => collateralAfter <= collateralBefore;
     assert user != borrower => collateralAfter == collateralBefore;
-}
-
-/// In take, collateral cannot change.
-/// Assumes no reentrancy: the onBuy/onSell callbacks could re-enter take (or another function) and change collateral.
-rule takeCannotChangeCollateral(env e, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, bytes32 id, address user, uint256 collateralIndex) {
-    uint256 collateralBefore = collateralOf(id, user, collateralIndex);
-    take(e, obligationShares, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, signature, root, proof);
-    uint256 collateralAfter = collateralOf(id, user, collateralIndex);
-
-    assert collateralAfter == collateralBefore;
 }
