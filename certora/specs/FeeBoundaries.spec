@@ -12,7 +12,7 @@ methods {
 }
 
 /// Breakpoint time in seconds for index 0..6, mirroring the tradingFee intervals in Midnight.sol.
-definition breakpointTime(uint256 index) returns uint256 = index == 0 ? 0 : index == 1 ? 86400 : index == 2 ? 604800 : index == 3 ? 2592000 : index == 4 ? 7776000 : index == 5 ? 15552000 : index == 6 ? 31104000 : 0;
+definition breakpointTime(uint256 index) returns uint256 = index == 0 ? 0 : index == 1 ? 86400 : index == 2 ? 7 * 86400 : index == 3 ? 30 * 86400 : index == 4 ? 90 * 86400 : index == 5 ? 180 * 86400 : index == 6 ? 360 * 86400 : 0;
 
 /// Lower enclosing breakpoint index for a given time-to-maturity.
 definition lowerIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 6 : ttm >= breakpointTime(5) ? 5 : ttm >= breakpointTime(4) ? 4 : ttm >= breakpointTime(3) ? 3 : ttm >= breakpointTime(2) ? 2 : ttm >= breakpointTime(1) ? 1 : 0;
@@ -57,7 +57,18 @@ invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
         }
     }
 
-/// Only the fee setter can modify default fees.
+/// Before an obligation is created, its fees can only change through creation (touchObligation copies defaultFees).
+rule obligationFeeChangeRequiresCreation(method f, env e, bytes32 id, uint256 index) filtered { f -> !f.isView } {
+    require !obligationCreated(id);
+
+    mathint feesBefore = ghostObligationFeeUnits[id][index];
+    calldataarg args;
+    f(e, args);
+
+    assert ghostObligationFeeUnits[id][index] != feesBefore => obligationCreated(id);
+}
+
+/// Only the fee setter can modify default fees (multicall is DELETEd and not checked here).
 rule onlyFeeSetterCanChangeDefaultFees(method f, env e, address token, uint256 index) filtered { f -> !f.isView } {
     uint256 defaultFeeBefore = defaultFee(token, index);
     calldataarg args;
