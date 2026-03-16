@@ -102,7 +102,7 @@ abstract contract BaseTest is Test {
         // offer.receiverIfMakerIsSeller is for maker (when offer.buy == false)
         vm.prank(taker);
         return midnight.take(
-            obligationShares, taker, address(0), hex"", taker, offer, root([offer]), proof([offer]), sign([offer])
+            obligationShares, taker, address(0), hex"", taker, offer, sign([offer]), root([offer]), proof([offer])
         );
     }
 
@@ -289,9 +289,9 @@ abstract contract BaseTest is Test {
             hex"",
             borrower,
             borrowerOffer,
+            sign([borrowerOffer]),
             root([borrowerOffer]),
-            proof([borrowerOffer]),
-            sign([borrowerOffer])
+            proof([borrowerOffer])
         );
     }
 

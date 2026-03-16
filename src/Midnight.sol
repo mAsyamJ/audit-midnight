@@ -162,9 +162,9 @@ contract Midnight is IMidnight {
         bytes memory takerCallbackData,
         address receiverIfTakerIsSeller,
         Offer memory offer,
+        Signature memory sig,
         bytes32 root,
-        bytes32[] memory proof,
-        Signature memory sig
+        bytes32[] memory proof
     ) external returns (uint256, uint256, uint256, uint256) {
         require(taker == msg.sender || isAuthorized[taker][msg.sender], "unauthorized");
         require(block.timestamp >= offer.start, "offer not started");

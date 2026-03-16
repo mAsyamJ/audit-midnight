@@ -563,7 +563,7 @@ contract TakeTest is BaseTest {
         vm.expectRevert("invalid proof");
         vm.prank(borrower);
         midnight.take(
-            100, borrower, address(0), hex"", borrower, lenderOffer, invalidRoot, new bytes32[](0), sign([lenderOffer])
+            100, borrower, address(0), hex"", borrower, lenderOffer, sign([lenderOffer]), invalidRoot, new bytes32[](0)
         );
     }
 
@@ -572,7 +572,7 @@ contract TakeTest is BaseTest {
         Signature memory _sig = Signature({v: 1, r: 0, s: 0});
         vm.prank(borrower);
         midnight.take(
-            100, borrower, address(0), hex"", borrower, lenderOffer, root([lenderOffer]), proof([lenderOffer]), _sig
+            100, borrower, address(0), hex"", borrower, lenderOffer, _sig, root([lenderOffer]), proof([lenderOffer])
         );
     }
 
@@ -592,9 +592,9 @@ contract TakeTest is BaseTest {
             hex"",
             sender,
             lenderOffer,
+            sign([lenderOffer], vm.addr(otherPrivateKey)),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer], vm.addr(otherPrivateKey))
+            proof([lenderOffer])
         );
         assertEq(ratifier.recordedSigner(), vm.addr(otherPrivateKey), "recorded signer");
         assertEq(keccak256(abi.encode(ratifier.recordedOffer())), keccak256(abi.encode(lenderOffer)), "recorded offer");
@@ -620,9 +620,9 @@ contract TakeTest is BaseTest {
             hex"",
             sender,
             lenderOffer,
+            sign([lenderOffer], vm.addr(otherPrivateKey)),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer], vm.addr(otherPrivateKey))
+            proof([lenderOffer])
         );
         assertEq(ratifier.recordedSigner(), vm.addr(otherPrivateKey), "recorded signer");
         assertEq(keccak256(abi.encode(ratifier.recordedOffer())), keccak256(abi.encode(lenderOffer)), "recorded offer");
@@ -633,7 +633,7 @@ contract TakeTest is BaseTest {
         vm.expectRevert("invalid proof");
         vm.prank(borrower);
         midnight.take(
-            100, borrower, address(0), hex"", borrower, lenderOffer, root([lenderOffer]), _path, sign([lenderOffer])
+            100, borrower, address(0), hex"", borrower, lenderOffer, sign([lenderOffer]), root([lenderOffer]), _path
         );
     }
 
@@ -649,9 +649,9 @@ contract TakeTest is BaseTest {
             hex"",
             borrower,
             lenderOffer,
+            sign([lenderOffer, otherOffer]),
             root([lenderOffer, otherOffer]),
-            _path,
-            sign([lenderOffer, otherOffer])
+            _path
         );
     }
 
@@ -671,9 +671,9 @@ contract TakeTest is BaseTest {
             hex"",
             borrower,
             lenderOffer,
+            sign([lenderOffer, otherOffer]),
             root([lenderOffer, otherOffer]),
-            proof([lenderOffer, otherOffer]),
-            sign([lenderOffer, otherOffer])
+            proof([lenderOffer, otherOffer])
         );
     }
 
@@ -681,7 +681,7 @@ contract TakeTest is BaseTest {
         vm.expectRevert("offer not ratified");
         vm.prank(borrower);
         midnight.take(
-            100, borrower, address(0), hex"", borrower, lenderOffer, root([lenderOffer]), proof([lenderOffer]), emptySig
+            100, borrower, address(0), hex"", borrower, lenderOffer, emptySig, root([lenderOffer]), proof([lenderOffer])
         );
     }
 
@@ -698,9 +698,9 @@ contract TakeTest is BaseTest {
             hex"",
             sender,
             lenderOffer,
+            sign([lenderOffer]),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer])
+            proof([lenderOffer])
         );
     }
 
@@ -711,7 +711,7 @@ contract TakeTest is BaseTest {
         midnight.setRatified(maker, root(lenderOffer), true);
         vm.prank(sender);
         midnight.take(
-            0, sender, address(0), hex"", sender, lenderOffer, root([lenderOffer]), proof([lenderOffer]), emptySig
+            0, sender, address(0), hex"", sender, lenderOffer, emptySig, root([lenderOffer]), proof([lenderOffer])
         );
     }
 
@@ -733,9 +733,9 @@ contract TakeTest is BaseTest {
             hex"",
             sender,
             lenderOffer,
+            sign([lenderOffer], vm.addr(otherSecretKey)),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer], vm.addr(otherSecretKey))
+            proof([lenderOffer])
         );
     }
 
@@ -759,9 +759,9 @@ contract TakeTest is BaseTest {
             hex"",
             sender,
             lenderOffer,
+            sign([lenderOffer], vm.addr(signerPrivateKey)),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer], vm.addr(signerPrivateKey))
+            proof([lenderOffer])
         );
     }
 
@@ -778,9 +778,9 @@ contract TakeTest is BaseTest {
             hex"",
             taker,
             lenderOffer,
+            sign([lenderOffer]),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer])
+            proof([lenderOffer])
         );
     }
 
@@ -794,9 +794,9 @@ contract TakeTest is BaseTest {
             hex"",
             taker,
             lenderOffer,
+            sign([lenderOffer]),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer])
+            proof([lenderOffer])
         );
     }
 
@@ -813,9 +813,9 @@ contract TakeTest is BaseTest {
             hex"",
             taker,
             lenderOffer,
+            sign([lenderOffer]),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer])
+            proof([lenderOffer])
         );
     }
 
@@ -863,9 +863,9 @@ contract TakeTest is BaseTest {
             abi.encode(0, collateral),
             borrower,
             lenderOffer,
+            sign([lenderOffer]),
             root([lenderOffer]),
-            proof([lenderOffer]),
-            sign([lenderOffer])
+            proof([lenderOffer])
         );
         assertEq(midnight.collateralOf(id, borrower, 0), collateral);
         assertEq(BorrowCallback(callback).recordedData(), abi.encode(0, collateral));
@@ -911,9 +911,9 @@ contract TakeTest is BaseTest {
             abi.encode(address(loanToken), assets),
             address(0),
             borrowerOffer,
+            sign([borrowerOffer]),
             root([borrowerOffer]),
-            proof([borrowerOffer]),
-            sign([borrowerOffer])
+            proof([borrowerOffer])
         );
         assertEq(LendCallback(callback).recordedData(), abi.encode(address(loanToken), assets));
     }

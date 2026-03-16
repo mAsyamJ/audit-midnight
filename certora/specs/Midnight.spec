@@ -41,13 +41,13 @@ function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     return res;
 }
 
-rule takeInputOutputConsistency(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, bytes32 root, bytes32[] proof, Midnight.Signature signature, address takerCallbackAddress, bytes takerCallbackData) {
+rule takeInputOutputConsistency(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address takerCallbackAddress, bytes takerCallbackData) {
     uint256 buyerAssetsOutput;
     uint256 sellerAssetsOutput;
     uint256 obligationUnitsOutput;
     uint256 obligationSharesOutput;
 
-    buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, root, proof, signature);
+    buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
 
     // The output obligationShares is equal to the input.
     assert obligationSharesOutput == obligationSharesInput;
@@ -56,7 +56,7 @@ rule takeInputOutputConsistency(env e, uint256 obligationSharesInput, address ta
     assert obligationSharesInput == 0 => buyerAssetsOutput == 0 && sellerAssetsOutput == 0 && obligationUnitsOutput == 0 && obligationSharesOutput == 0;
 }
 
-rule offerInputsConsumed(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, bytes32 root, bytes32[] proof, Midnight.Signature signature, address takerCallbackAddress, bytes takerCallbackData) {
+rule offerInputsConsumed(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address takerCallbackAddress, bytes takerCallbackData) {
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
     uint256 buyerAssetsOutput;
@@ -64,7 +64,7 @@ rule offerInputsConsumed(env e, uint256 obligationSharesInput, address taker, ad
     uint256 obligationUnitsOutput;
     uint256 obligationSharesOutput;
 
-    buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, root, proof, signature);
+    buyerAssetsOutput, sellerAssetsOutput, obligationUnitsOutput, obligationSharesOutput = take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
 
     if (offer.obligationUnits > 0) {
         assert consumed(offer.maker, offer.group) == consumedBefore + obligationUnitsOutput;
@@ -73,8 +73,8 @@ rule offerInputsConsumed(env e, uint256 obligationSharesInput, address taker, ad
     }
 }
 
-rule offerInputsLimit(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, bytes32 root, bytes32[] proof, Midnight.Signature signature, address takerCallbackAddress, bytes takerCallbackData) {
-    take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, root, proof, signature);
+rule offerInputsLimit(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address takerCallbackAddress, bytes takerCallbackData) {
+    take(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
 
     if (offer.obligationUnits > 0) {
         assert consumed(offer.maker, offer.group) <= offer.obligationUnits;
@@ -120,15 +120,15 @@ rule onlyUserOrAuthorizedCanRatify(env e, address onBehalf, bytes32 root, bool n
     assert !lastReverted => (onBehalf == e.msg.sender || isAuthorized(onBehalf, e.msg.sender));
 }
 
-rule unauthorizedTakeFails(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, bytes32 root, bytes32[] proof, Midnight.Signature signature, address takerCallbackAddress, bytes takerCallbackData) {
-    take@withrevert(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, root, proof, signature);
+rule unauthorizedTakeFails(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address takerCallbackAddress, bytes takerCallbackData) {
+    take@withrevert(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
     assert !lastReverted => e.msg.sender == taker || isAuthorized(taker, e.msg.sender);
 }
 
-rule unauthorizedOnRatifyFails(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, bytes32 root, bytes32[] proof, Midnight.Signature signature, address takerCallbackAddress, bytes takerCallbackData) {
+rule unauthorizedOnRatifyFails(env e, uint256 obligationSharesInput, address taker, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address takerCallbackAddress, bytes takerCallbackData) {
     require signature.v != 0;
     require offer.ratifier != 0;
-    take@withrevert(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, root, proof, signature);
+    take@withrevert(e, obligationSharesInput, taker, takerCallbackAddress, takerCallbackData, receiver, offer, signature, root, proof);
     assert !lastReverted => offer.maker == offer.ratifier || isAuthorized(offer.maker, offer.ratifier);
 }
 

@@ -50,9 +50,9 @@ contract TakeBundler {
                 "",
                 receiverIfTakerIsSeller,
                 takes[i].offer,
+                takes[i].sig,
                 takes[i].root,
-                takes[i].proof,
-                takes[i].sig
+                takes[i].proof
             ) returns (
                 uint256 filledBuyerAssets,
                 uint256 filledSellerAssets,
@@ -109,9 +109,9 @@ contract TakeBundler {
                 "",
                 receiverIfTakerIsSeller,
                 takes[i].offer,
+                takes[i].sig,
                 takes[i].root,
-                takes[i].proof,
-                takes[i].sig
+                takes[i].proof
             ) returns (
                 uint256 filledBuyerAssets,
                 uint256 filledSellerAssets,
@@ -168,9 +168,9 @@ contract TakeBundler {
                 "",
                 receiverIfTakerIsSeller,
                 takes[i].offer,
+                takes[i].sig,
                 takes[i].root,
-                takes[i].proof,
-                takes[i].sig
+                takes[i].proof
             ) returns (
                 uint256 filledBuyerAssets, uint256, uint256 filledObligationUnits, uint256 filledObligationShares
             ) {
@@ -220,9 +220,9 @@ contract TakeBundler {
                 "",
                 receiverIfTakerIsSeller,
                 takes[i].offer,
+                takes[i].sig,
                 takes[i].root,
-                takes[i].proof,
-                takes[i].sig
+                takes[i].proof
             ) returns (
                 uint256, uint256 filledSellerAssets, uint256 filledObligationUnits, uint256 filledObligationShares
             ) {
