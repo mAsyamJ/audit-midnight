@@ -150,13 +150,15 @@ contract TradingFeeTest is BaseTest {
         fee7Days = bound(fee7Days, fee1Day, midnight.maxTradingFee(2)) / 1e12 * 1e12;
 
         obligation.maturity = block.timestamp + 3 days;
+
+        // Set fees at breakpoints for linear interpolation (3 days is between 1 and 7 days)
+        // Must be set before touchObligation, which snapshots defaultFees at creation time.
+        midnight.setDefaultTradingFee(address(loanToken), 1, fee1Day);
+        midnight.setDefaultTradingFee(address(loanToken), 2, fee7Days);
+
         id = midnight.touchObligation(obligation);
         lenderOffer.obligation = obligation;
         borrowerOffer.obligation = obligation;
-
-        // Set fees at breakpoints for linear interpolation (3 days is between 1 and 7 days)
-        midnight.setDefaultTradingFee(address(loanToken), 1, fee1Day);
-        midnight.setDefaultTradingFee(address(loanToken), 2, fee7Days);
         borrowerOffer.tick = sellerTick;
 
         uint256 tradingFee = midnight.tradingFee(id, obligation.maturity - block.timestamp);
