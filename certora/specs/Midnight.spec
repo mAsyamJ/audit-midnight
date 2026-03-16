@@ -105,6 +105,7 @@ rule onlyUserCanAuthorizeWithoutSig(env e, method f, calldataarg data) filtered 
     address someone;
 
     require user != e.msg.sender;
+    require !isAuthorized(user, e.msg.sender);
 
     bool authorizedBefore = isAuthorized(user, someone);
 
