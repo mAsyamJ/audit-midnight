@@ -7,6 +7,7 @@ methods {
     function maxTradingFee(uint256 index) external returns (uint256) envfree;
     function feeSetter() external returns (address) envfree;
     function obligationCreated(bytes32 id) external returns (bool) envfree;
+    function toId(Midnight.Obligation) external returns (bytes32);
 
     function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
 }
@@ -61,11 +62,24 @@ invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
 rule obligationFeeChangeRequiresCreation(method f, env e, bytes32 id, uint256 index) filtered { f -> !f.isView } {
     require !obligationCreated(id);
 
-    mathint feesBefore = ghostObligationFeeUnits[id][index];
+    uint256 feeBefore = obligationFee(id, index);
     calldataarg args;
     f(e, args);
 
-    assert ghostObligationFeeUnits[id][index] != feesBefore => obligationCreated(id);
+    assert obligationFee(id, index) != feeBefore => obligationCreated(id);
+}
+
+/// When an obligation is created, its fees are set to the default fees of its loan token.
+rule newObligationFeesMatchDefault(env e, Midnight.Obligation obligation, uint256 index) {
+    require index <= 6;
+    bytes32 id = toId(e, obligation);
+    require !obligationCreated(id);
+
+    uint256 expectedFee = defaultFee(obligation.loanToken, index);
+
+    touchObligation(e, obligation);
+
+    assert obligationFee(id, index) == expectedFee;
 }
 
 /// Only the fee setter can modify default fees (multicall is DELETEd and not checked here).
