@@ -48,13 +48,6 @@ function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     return ghostMulDiv(x, y, d);
 }
 
-// Mirror of obligationState[id].lossIndex for use in rule preconditions.
-ghost mapping(bytes32 => uint128) ghostObligationLossIndex;
-
-hook Sload uint128 value obligationState[KEY bytes32 id].lossIndex {
-    require value == ghostObligationLossIndex[id];
-}
-
 /// REPAY ///
 
 /// repay increases onBehalf's balance by exactly obligationUnits.
@@ -187,7 +180,7 @@ rule liquidateOnlyChangesTargetBalance(env e, Midnight.Obligation obligation, ui
 /// slash can only decrease balances (or keep them unchanged).
 /// Requires the system invariant that the obligation's lossIndex >= the user's lossIndex.
 rule slashOnlyDecreasesBalance(env e, bytes32 id, address user) {
-    require userLossIndex(id, user) <= ghostObligationLossIndex[id], "TODO prove this";
+    require userLossIndex(id, user) <= currentContract.obligationState[id].lossIndex, "TODO prove this";
     int256 balanceBefore = balanceOf(id, user);
     slash(e, id, user);
     int256 balanceAfter = balanceOf(id, user);

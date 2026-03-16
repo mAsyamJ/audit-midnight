@@ -8,6 +8,7 @@ methods {
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
     function balanceOf(bytes32 id, address user) external returns (int256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
+    function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
 
     function _.price() external => NONDET;
     function IdLib.toId(Midnight.Obligation memory, uint256, address) internal returns (bytes32) => NONDET;
@@ -46,6 +47,7 @@ hook Sstore position[KEY bytes32 id][KEY address owner].balance int256 newBalanc
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     uint256 res;
+    require y > d || res <= x;
     return res;
 }
 
@@ -96,7 +98,25 @@ rule liquidateInputOutputConsistency(env e, Midnight.Obligation obligation, uint
     assert repaidUnits == 0 && seizedAssets == 0 => seizedAssetsOutput == 0 && repaidUnitsOutput == 0;
 }
 
+rule obligationLossIndexMonotonicallyIncreases(bytes32 id, method f, env e, calldataarg args) {
+    uint128 lossIndexBefore = currentContract.obligationState[id].lossIndex;
+    f(e, args);
+    uint128 lossIndexAfter = currentContract.obligationState[id].lossIndex;
+    assert lossIndexAfter >= lossIndexBefore;
+}
+
+rule userLossIndexMonotonicallyIncreases(bytes32 id, address user, method f, env e, calldataarg args) {
+    requireInvariant userLossIndexLeqObligationLossIndex(id, user);
+    uint128 lossIndexBefore = userLossIndex(id, user);
+    f(e, args);
+    uint128 lossIndexAfter = userLossIndex(id, user);
+    assert lossIndexAfter >= lossIndexBefore;
+}
+
 /// INVARIANTS ///
 
 strong invariant totalUnitsEqualsSumNegativeBalancePlusWithdrawable(bytes32 id)
     to_mathint(totalUnits(id)) == sumNegativeBalanceOf[id] + to_mathint(withdrawable(id));
+
+invariant userLossIndexLeqObligationLossIndex(bytes32 id, address user)
+    userLossIndex(id, user) <= currentContract.obligationState[id].lossIndex;
