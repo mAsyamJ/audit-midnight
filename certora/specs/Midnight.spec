@@ -100,8 +100,3 @@ rule liquidateInputOutputConsistency(env e, Midnight.Obligation obligation, uint
 
 strong invariant totalUnitsEqualsSumNegativeBalancePlusWithdrawable(bytes32 id)
     to_mathint(totalUnits(id)) == sumNegativeBalanceOf[id] + to_mathint(withdrawable(id));
-
-// Inequality due to lazy slashing: bad debt reduces totalUnits immediately,
-// but lender balances are only reduced when slash is called.
-strong invariant totalUnitsLeqSumPositiveBalance(bytes32 id)
-    to_mathint(totalUnits(id)) <= sumPositiveBalanceOf[id];

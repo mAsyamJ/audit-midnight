@@ -11,24 +11,41 @@ methods {
 
 /// GHOSTS ///
 
-persistent ghost mapping(bytes32 => mapping(address => bool)) slashed {
-    init_state axiom (forall bytes32 id. forall address user. !slashed[id][user]);
+// Track the obligation's current lossIndex.
+persistent ghost mapping(bytes32 => uint128) currentLossIndex {
+    init_state axiom (forall bytes32 id. currentLossIndex[id] == 0);
+}
+
+// Track the lossIndex at which each user was last slashed.
+persistent ghost mapping(bytes32 => mapping(address => uint128)) slashedAtLossIndex {
+    init_state axiom (forall bytes32 id. forall address user. slashedAtLossIndex[id][user] == 0);
 }
 
 function slashSummary(bytes32 id, address user) {
-    slashed[id][user] = true;
+    slashedAtLossIndex[id][user] = currentLossIndex[id];
 }
 
 /// HOOKS ///
 
-// Positive balances must only be read after slash.
-hook Sload int256 value position[KEY bytes32 id][KEY address user].balance {
-    require slashed[id][user] || value <= 0;
+// Keep the ghost in sync with obligationState.lossIndex.
+hook Sload uint128 value obligationState[KEY bytes32 id].lossIndex {
+    require currentLossIndex[id] == value;
 }
 
-// Positive balances must only be overwritten after slash.
+hook Sstore obligationState[KEY bytes32 id].lossIndex uint128 newValue (uint128 oldValue) {
+    currentLossIndex[id] = newValue;
+}
+
+// Positive balances must only be read after slash at the current lossIndex.
+hook Sload int256 value position[KEY bytes32 id][KEY address user].balance {
+    require slashedAtLossIndex[id][user] == currentLossIndex[id] || value <= 0;
+}
+
+// Positive balances must only be written after slash at the current lossIndex.
+// This also covers zero-to-positive transitions: when newValue > 0, slash is required
+// even if oldValue <= 0, ensuring the user's lossIndex is refreshed first.
 hook Sstore position[KEY bytes32 id][KEY address user].balance int256 newValue (int256 oldValue) {
-    require slashed[id][user] || oldValue <= 0;
+    require slashedAtLossIndex[id][user] == currentLossIndex[id] || (oldValue <= 0 && newValue <= 0);
 }
 
 /// RULES ///

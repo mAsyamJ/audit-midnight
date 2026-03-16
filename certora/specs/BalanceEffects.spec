@@ -5,6 +5,7 @@ methods {
 
     function balanceOf(bytes32 id, address user) external returns (int256) envfree;
     function balanceOfAfterSlashing(bytes32 id, address user) external returns (int256) envfree;
+    function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
     function toId(Midnight.Obligation) external returns (bytes32);
 
     function _.price() external => NONDET;
@@ -37,11 +38,21 @@ methods {
 
 // Deterministic summary: same inputs always produce the same output.
 // This is needed so that balanceOfAfterSlashing (view) agrees with the actual slash.
-ghost ghostMulDiv(uint256, uint256, uint256) returns uint256;
+ghost ghostMulDiv(uint256, uint256, uint256) returns uint256 {
+    // mulDivDown(x, y, d) = x * y / d <= x when y <= d. Same holds for mulDivUp.
+    axiom forall uint256 x. forall uint256 y. forall uint256 d. y <= d => ghostMulDiv(x, y, d) <= x;
+}
 
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     return ghostMulDiv(x, y, d);
+}
+
+// Mirror of obligationState[id].lossIndex for use in rule preconditions.
+ghost mapping(bytes32 => uint128) ghostObligationLossIndex;
+
+hook Sload uint128 value obligationState[KEY bytes32 id].lossIndex {
+    require value == ghostObligationLossIndex[id];
 }
 
 /// REPAY ///
@@ -53,6 +64,14 @@ rule repayIncreasesBalanceExactly(env e, Midnight.Obligation obligation, uint256
     repay(e, obligation, obligationUnits, onBehalf);
     int256 balanceAfter = balanceOf(id, onBehalf);
     assert to_mathint(balanceAfter) == to_mathint(balanceBefore) + to_mathint(obligationUnits);
+}
+
+/// After repay, onBehalf's balance is non-positive.
+rule repayLeavesNonPositiveBalance(env e, Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf) {
+    bytes32 id = toId(e, obligation);
+    repay(e, obligation, obligationUnits, onBehalf);
+    int256 balanceAfter = balanceOf(id, onBehalf);
+    assert balanceAfter <= 0;
 }
 
 /// repay only changes position[id][onBehalf].balance.
@@ -164,6 +183,16 @@ rule liquidateOnlyChangesTargetBalance(env e, Midnight.Obligation obligation, ui
 }
 
 /// SLASH ///
+
+/// slash can only decrease balances (or keep them unchanged).
+/// Requires the system invariant that the obligation's lossIndex >= the user's lossIndex.
+rule slashOnlyDecreasesBalance(env e, bytes32 id, address user) {
+    require userLossIndex(id, user) <= ghostObligationLossIndex[id], "TODO prove this";
+    int256 balanceBefore = balanceOf(id, user);
+    slash(e, id, user);
+    int256 balanceAfter = balanceOf(id, user);
+    assert to_mathint(balanceAfter) <= to_mathint(balanceBefore);
+}
 
 /// slash does not change non-positive balances.
 rule slashPreservesNonPositiveBalance(env e, bytes32 id, address user) {
