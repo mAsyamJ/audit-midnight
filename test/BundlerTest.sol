@@ -221,7 +221,7 @@ contract BundlerTest is BaseTest {
 
         _authorizeBundler();
 
-        // Splitting across offers can cause up to 1 extra share of debt due to rounding.
+        // Splitting across offers can cause up to 1 extra unit of debt due to rounding.
         if (fromOffer0 >= units || offerUnits1 >= units + 1 - fromOffer0) {
             vm.prank(borrower);
             takeBundler.bundleTakeSellerAssets(

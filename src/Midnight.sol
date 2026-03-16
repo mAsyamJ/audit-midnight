@@ -237,7 +237,8 @@ contract Midnight is IMidnight {
             obligationUnits,
             receiver,
             offer.group,
-            newConsumed
+            newConsumed,
+            _obligationState.totalUnits
         );
 
         if (buyerCallback != address(0)) {
