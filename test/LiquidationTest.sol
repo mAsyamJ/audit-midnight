@@ -271,6 +271,12 @@ contract LiquidationTest is BaseTest {
         assertEq(midnight.debtOf(id, borrower), units - expectedBadDebt, "debt");
         assertEq(midnight.totalUnits(id), units - expectedBadDebt, "total units");
         assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
+        assertApproxEqAbs(
+            midnight.balanceOfAfterSlashing(id, lender),
+            int256(units - expectedBadDebt),
+            1,
+            "lender units after slashing"
+        );
     }
 
     function testLiquidateWithBadDebtSeizedInput(uint256 units, uint256 seized, uint256 liquidationOraclePrice) public {
@@ -287,6 +293,9 @@ contract LiquidationTest is BaseTest {
         assertEq(midnight.debtOf(id, borrower), debtAfterBadDebt - repaid, "debt");
         assertEq(midnight.totalUnits(id), debtAfterBadDebt, "total units");
         assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
+        assertApproxEqAbs(
+            midnight.balanceOfAfterSlashing(id, lender), int256(debtAfterBadDebt), 1, "lender units after slashing"
+        );
     }
 
     function testLiquidateWithBadDebtRepaidInput(uint256 units, uint256 repaid, uint256 liquidationOraclePrice) public {
@@ -307,6 +316,9 @@ contract LiquidationTest is BaseTest {
         assertEq(midnight.debtOf(id, borrower), debtAfterBadDebt - repaid, "debt");
         assertEq(midnight.totalUnits(id), debtAfterBadDebt, "total units");
         assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
+        assertApproxEqAbs(
+            midnight.balanceOfAfterSlashing(id, lender), int256(debtAfterBadDebt), 1, "lender units after slashing"
+        );
     }
 
     // Check that if there is bad debt it is possible to seize almost all collateral.

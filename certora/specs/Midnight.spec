@@ -6,7 +6,7 @@ methods {
     function withdrawable(bytes32 id) external returns (uint256) envfree;
     function totalUnits(bytes32 id) external returns (uint256) envfree;
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
-    function balanceOf(bytes32 id, address owner) external returns (int256) envfree;
+    function balanceOf(bytes32 id, address user) external returns (int256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
 
     function _.price() external => NONDET;

@@ -288,8 +288,7 @@ contract Midnight is IMidnight {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
 
-        // forge-lint: disable-next-line(unsafe-typecast) as obligationUnits <= totalUnits <= uint128.max
-        position[id][onBehalf].balance += int256(obligationUnits);
+        position[id][onBehalf].balance += UtilsLib.toInt256(obligationUnits);
         require(position[id][onBehalf].balance <= 0, "repay too much");
         obligationState[id].withdrawable += obligationUnits;
 
@@ -440,8 +439,7 @@ contract Midnight is IMidnight {
                 _position.activatedCollaterals &= ~uint128(1 << collateralIndex);
             }
             _obligationState.withdrawable += repaidUnits;
-            // forge-lint: disable-next-line(unsafe-typecast) as repaidUnits <= debt <= totalUnits <= uint128.max
-            _position.balance += int256(repaidUnits);
+            _position.balance += UtilsLib.toInt256(repaidUnits);
             require(_position.balance <= 0, "repay too much");
         }
 
