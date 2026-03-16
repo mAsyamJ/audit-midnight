@@ -37,7 +37,7 @@ function positivePart(mathint x) returns mathint {
     return x > 0 ? x : 0;
 }
 
-hook Sstore balanceOf[KEY bytes32 id][KEY address owner] int256 newBalance (int256 oldBalance) {
+hook Sstore position[KEY bytes32 id][KEY address owner].balance int256 newBalance (int256 oldBalance) {
     sumBalanceOf[id] = sumBalanceOf[id] - oldBalance + newBalance;
     sumPositiveBalanceOf[id] = sumPositiveBalanceOf[id] - positivePart(to_mathint(oldBalance)) + positivePart(to_mathint(newBalance));
     sumNegativeBalanceOf[id] = sumNegativeBalanceOf[id] - negativePart(to_mathint(oldBalance)) + negativePart(to_mathint(newBalance));
