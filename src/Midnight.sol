@@ -530,7 +530,9 @@ contract Midnight is IMidnight {
             int256 balance = _position.balance;
             if (balance > 0) {
                 // forge-lint: disable-next-line(unsafe-typecast)
-                balance = int256(uint256(balance).mulDivDown(WAD - lossIndex, WAD - _userLossIndex));
+                balance = int256(
+                    uint256(balance).mulDivDown(type(uint128).max - lossIndex, type(uint128).max - _userLossIndex)
+                );
                 _position.balance = balance;
             }
             _position.lossIndex = lossIndex;
