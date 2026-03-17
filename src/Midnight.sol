@@ -222,7 +222,7 @@ contract Midnight is IMidnight {
         uint256 oldBuyerDebt = buyerPos.debt;
         uint256 oldSellerDebt = sellerPos.debt;
         uint256 buyerDebtReduction = UtilsLib.min(oldBuyerDebt, obligationUnits);
-        uint256 sellerCreditReduction = UtilsLib.min(oldSellerDebt, obligationUnits);
+        uint256 sellerCreditReduction = UtilsLib.min(sellerPos.credit, obligationUnits);
         buyerPos.debt -= UtilsLib.toUint128(buyerDebtReduction);
         buyerPos.credit += UtilsLib.toUint128(obligationUnits - buyerDebtReduction);
         sellerPos.credit -= UtilsLib.toUint128(sellerCreditReduction);
@@ -564,9 +564,8 @@ contract Midnight is IMidnight {
 
     function creditAfterSlashing(bytes32 id, address user) public view returns (uint256) {
         Position storage _position = position[id][user];
-        ObligationState storage _obligationState = obligationState[id];
         return _position.credit
-            .mulDivDown(type(uint128).max - _obligationState.lossIndex, type(uint128).max - _position.lossIndex);
+            .mulDivDown(type(uint128).max - obligationState[id].lossIndex, type(uint128).max - _position.lossIndex);
     }
 
     function creditOf(bytes32 id, address user) public view returns (uint256) {
