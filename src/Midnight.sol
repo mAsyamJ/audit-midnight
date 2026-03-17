@@ -223,15 +223,13 @@ contract Midnight is IMidnight {
         uint128 oldSellerCredit = sellerPos.credit;
         uint128 oldSellerDebt = sellerPos.debt;
         uint128 units128 = UtilsLib.toUint128(obligationUnits);
-        buyerPos.debt = uint128(UtilsLib.zeroFloorSub(oldBuyerDebt, units128));
-        buyerPos.credit += uint128(UtilsLib.zeroFloorSub(units128, oldBuyerDebt));
-        sellerPos.credit = uint128(UtilsLib.zeroFloorSub(oldSellerCredit, units128));
-        sellerPos.debt += uint128(UtilsLib.zeroFloorSub(units128, oldSellerCredit));
+        buyerPos.debt = UtilsLib.toUint128(UtilsLib.zeroFloorSub(oldBuyerDebt, units128));
+        buyerPos.credit += UtilsLib.toUint128(UtilsLib.zeroFloorSub(units128, oldBuyerDebt));
+        sellerPos.credit = UtilsLib.toUint128(UtilsLib.zeroFloorSub(oldSellerCredit, units128));
+        sellerPos.debt += UtilsLib.toUint128(UtilsLib.zeroFloorSub(units128, oldSellerCredit));
         if (offer.exitOnly) require(offer.buy ? buyerPos.credit == 0 : sellerPos.debt == 0, "crossed");
-        _obligationState.totalUnits = UtilsLib.toUint128(
-            uint256(_obligationState.totalUnits) + uint256(sellerPos.debt) + uint256(buyerPos.debt)
-                - uint256(oldSellerDebt) - uint256(oldBuyerDebt)
-        );
+        _obligationState.totalUnits =
+            _obligationState.totalUnits - oldSellerDebt - oldBuyerDebt + sellerPos.debt + buyerPos.debt;
 
         emit EventsLib.Take(
             msg.sender,
@@ -526,13 +524,12 @@ contract Midnight is IMidnight {
         uint128 _userLossIndex = _position.lossIndex;
         uint128 lossIndex = obligationState[id].lossIndex;
         if (_userLossIndex != lossIndex) {
-            uint128 _credit = _position.credit;
-            if (_credit > 0) {
-                _credit = uint128(_credit.mulDivDown(type(uint128).max - lossIndex, type(uint128).max - _userLossIndex));
-                _position.credit = _credit;
-            }
+            uint256 newCredit =
+                _position.credit.mulDivDown(type(uint128).max - lossIndex, type(uint128).max - _userLossIndex);
+            // forge-lint: disable-next-item(unsafe-typecast) as newCredit <= credits.
+            _position.credit = uint128(newCredit);
             _position.lossIndex = lossIndex;
-            emit EventsLib.Slash(msg.sender, id, user, _credit, lossIndex);
+            emit EventsLib.Slash(msg.sender, id, user, newCredit, lossIndex);
         }
     }
 
