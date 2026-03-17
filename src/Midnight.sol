@@ -229,7 +229,8 @@ contract Midnight is IMidnight {
         sellerPos.debt += UtilsLib.toUint128(UtilsLib.zeroFloorSub(units128, oldSellerCredit));
         if (offer.exitOnly) require(offer.buy ? buyerPos.credit == 0 : sellerPos.debt == 0, "crossed");
         _obligationState.totalUnits = UtilsLib.toUint128(
-            _obligationState.totalUnits + sellerPos.debt + buyerPos.debt - oldSellerDebt - oldBuyerDebt
+            uint256(_obligationState.totalUnits) + uint256(sellerPos.debt) + uint256(buyerPos.debt)
+                - uint256(oldSellerDebt) - uint256(oldBuyerDebt)
         );
 
         emit EventsLib.Take(

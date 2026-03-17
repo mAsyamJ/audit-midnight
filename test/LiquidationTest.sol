@@ -231,7 +231,7 @@ contract LiquidationTest is BaseTest {
         uint256 maxRepaid = collateral.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, _maxLif);
         repaid = bound(repaid, units + 1, max(maxRepaid, units + 1));
 
-        vm.expectRevert("repay too much");
+        vm.expectRevert(stdError.arithmeticError);
         midnight.liquidate(obligation, 0, 0, repaid, borrower, "");
     }
 

@@ -34,11 +34,6 @@ methods {
 
 /// HELPERS ///
 
-// Net balance as credit - debt.
-function netBalance(bytes32 id, address user) returns mathint {
-    return to_mathint(creditOf(id, user)) - to_mathint(debtOf(id, user));
-}
-
 // Deterministic summary: same inputs always produce the same output.
 // This is needed so that creditAfterSlashing (view) agrees with the actual slash.
 ghost ghostMulDiv(uint256, uint256, uint256) returns uint256 {
@@ -58,15 +53,13 @@ rule repayEffects(env e, Midnight.Obligation obligation, uint256 obligationUnits
     bytes32 id = toId(e, obligation);
 
     uint256 debtBefore = debtOf(id, onBehalf);
-    mathint otherBefore = netBalance(anyId, anyUser);
+    uint256 otherCreditBefore = creditOf(anyId, anyUser);
+    uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
     repay(e, obligation, obligationUnits, onBehalf);
 
-    uint256 debtAfter = debtOf(id, onBehalf);
-    mathint otherAfter = netBalance(anyId, anyUser);
-
-    assert debtAfter == debtBefore - obligationUnits;
-    assert anyUser != onBehalf || anyId != id => otherAfter == otherBefore;
+    assert debtOf(id, onBehalf) == debtBefore - obligationUnits;
+    assert anyUser != onBehalf || anyId != id => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
 /// WITHDRAW ///
@@ -76,15 +69,13 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 obligationUn
     bytes32 id = toId(e, obligation);
 
     uint256 creditPostSlash = creditAfterSlashing(id, onBehalf);
-    mathint otherBefore = netBalance(anyId, anyUser);
+    uint256 otherCreditBefore = creditOf(anyId, anyUser);
+    uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
     withdraw(e, obligation, obligationUnits, onBehalf, receiver);
 
-    uint256 creditAfter = creditOf(id, onBehalf);
-    mathint otherAfter = netBalance(anyId, anyUser);
-
-    assert creditAfter == creditPostSlash - obligationUnits;
-    assert anyUser != onBehalf || anyId != id => otherAfter == otherBefore;
+    assert creditOf(id, onBehalf) == creditPostSlash - obligationUnits;
+    assert anyUser != onBehalf || anyId != id => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
 /// TAKE ///
@@ -96,19 +87,19 @@ rule takeEffects(env e, uint256 obligationUnits, address taker, address takerCal
 
     mathint makerPostSlash = to_mathint(creditAfterSlashing(id, offer.maker)) - to_mathint(debtOf(id, offer.maker));
     mathint takerPostSlash = to_mathint(creditAfterSlashing(id, taker)) - to_mathint(debtOf(id, taker));
-    mathint otherBefore = netBalance(anyId, anyUser);
+    uint256 otherCreditBefore = creditOf(anyId, anyUser);
+    uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
     take(e, obligationUnits, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
 
-    mathint makerAfter = netBalance(id, offer.maker);
-    mathint takerAfter = netBalance(id, taker);
-    mathint otherAfter = netBalance(anyId, anyUser);
+    mathint makerAfter = to_mathint(creditOf(id, offer.maker)) - to_mathint(debtOf(id, offer.maker));
+    mathint takerAfter = to_mathint(creditOf(id, taker)) - to_mathint(debtOf(id, taker));
 
     mathint makerDelta = offer.buy ? obligationUnits : -obligationUnits;
     assert makerAfter == makerPostSlash + makerDelta;
     mathint takerDelta = offer.buy ? -obligationUnits : obligationUnits;
     assert takerAfter == takerPostSlash + takerDelta;
-    assert anyId != id || (anyUser != offer.maker && anyUser != taker) => otherAfter == otherBefore;
+    assert anyId != id || (anyUser != offer.maker && anyUser != taker) => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
 /// LIQUIDATE ///
@@ -119,17 +110,15 @@ rule liquidateEffects(env e, Midnight.Obligation obligation, uint256 collateralI
     bytes32 id = toId(e, obligation);
 
     uint256 debtBefore = debtOf(id, borrower);
-    mathint otherBefore = netBalance(anyId, anyUser);
+    uint256 otherCreditBefore = creditOf(anyId, anyUser);
+    uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
     uint256 seizedResult;
     uint256 repaidResult;
     seizedResult, repaidResult = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
 
-    uint256 debtAfter = debtOf(id, borrower);
-    mathint otherAfter = netBalance(anyId, anyUser);
-
-    assert debtAfter <= debtBefore - repaidResult;
-    assert anyUser != borrower || anyId != id => otherAfter == otherBefore;
+    assert debtOf(id, borrower) <= debtBefore - repaidResult;
+    assert anyUser != borrower || anyId != id => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
 /// SLASH ///
@@ -142,17 +131,14 @@ rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUse
 
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
-    mathint otherBefore = netBalance(anyId, anyUser);
+    uint256 otherCreditBefore = creditOf(anyId, anyUser);
+    uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
     slash(e, id, user);
 
-    uint256 creditAfter = creditOf(id, user);
-    uint256 debtAfter = debtOf(id, user);
-    mathint otherAfter = netBalance(anyId, anyUser);
-
-    assert creditAfter <= creditBefore;
-    assert debtAfter == debtBefore;
-    assert anyUser != user || anyId != id => otherAfter == otherBefore;
+    assert creditOf(id, user) <= creditBefore;
+    assert debtOf(id, user) == debtBefore;
+    assert anyUser != user || anyId != id => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
 /// ALL OTHER FUNCTIONS ///
