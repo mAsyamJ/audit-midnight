@@ -6,7 +6,7 @@ methods {
     function withdrawable(bytes32 id) external returns (uint256) envfree;
     function totalUnits(bytes32 id) external returns (uint256) envfree;
     function consumed(address user, bytes32 group) external returns (uint256) envfree;
-    function balanceOf(bytes32 id, address user) external returns (int256) envfree;
+    function creditOf(bytes32 id, address user) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
     function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
 
@@ -38,10 +38,14 @@ function positivePart(mathint x) returns mathint {
     return x > 0 ? x : 0;
 }
 
-hook Sstore position[KEY bytes32 id][KEY address owner].balance int256 newBalance (int256 oldBalance) {
-    sumBalanceOf[id] = sumBalanceOf[id] - oldBalance + newBalance;
-    sumPositiveBalanceOf[id] = sumPositiveBalanceOf[id] - positivePart(to_mathint(oldBalance)) + positivePart(to_mathint(newBalance));
-    sumNegativeBalanceOf[id] = sumNegativeBalanceOf[id] - negativePart(to_mathint(oldBalance)) + negativePart(to_mathint(newBalance));
+hook Sstore position[KEY bytes32 id][KEY address owner].credit uint128 newCredit (uint128 oldCredit) {
+    sumBalanceOf[id] = sumBalanceOf[id] - to_mathint(oldCredit) + to_mathint(newCredit);
+    sumPositiveBalanceOf[id] = sumPositiveBalanceOf[id] - to_mathint(oldCredit) + to_mathint(newCredit);
+}
+
+hook Sstore position[KEY bytes32 id][KEY address owner].debt uint128 newDebt (uint128 oldDebt) {
+    sumBalanceOf[id] = sumBalanceOf[id] + to_mathint(oldDebt) - to_mathint(newDebt);
+    sumNegativeBalanceOf[id] = sumNegativeBalanceOf[id] - to_mathint(oldDebt) + to_mathint(newDebt);
 }
 
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {

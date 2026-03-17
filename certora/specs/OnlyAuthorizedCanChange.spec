@@ -3,7 +3,7 @@
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
-    function balanceOf(bytes32 id, address user) external returns (int256) envfree;
+    function creditOf(bytes32 id, address user) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
     function isAuthorized(address authorizer, address authorized) external returns (bool) envfree;
 
@@ -53,9 +53,11 @@ rule onlyAuthorizedCanChangeBalanceExceptSlash(env e, method f, calldataarg args
     bool userIsUnHealthy = !isHealthy(e, obligation, id, user);
     bool isPastMaturity = e.block.timestamp > obligation.maturity;
 
-    int256 balanceBefore = balanceOf(id, user);
+    uint256 creditBefore = creditOf(id, user);
+    uint256 debtBefore = debtOf(id, user);
     f(e, args);
-    int256 balanceAfter = balanceOf(id, user);
+    uint256 creditAfter = creditOf(id, user);
+    uint256 debtAfter = debtOf(id, user);
 
-    assert balanceAfter == balanceBefore || userIsAuthorized || signed[user] || userIsUnHealthy || isPastMaturity;
+    assert (creditAfter == creditBefore && debtAfter == debtBefore) || userIsAuthorized || signed[user] || userIsUnHealthy || isPastMaturity;
 }

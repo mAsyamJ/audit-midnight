@@ -125,7 +125,7 @@ contract OtherFunctionsTest is BaseTest {
         vm.prank(lender);
         midnight.withdraw(obligation, withdraw, lender, lender);
 
-        assertEq(midnight.balanceOf(id, lender), int256(units - withdraw), "balanceOf");
+        assertEq(midnight.creditOf(id, lender), units - withdraw, "creditOf");
         assertEq(midnight.withdrawable(id), 0, "withdrawable");
         assertEq(midnight.totalUnits(id), units - withdraw, "totalUnits");
         assertEq(loanToken.balanceOf(address(midnight)), 0, "balance of midnight");

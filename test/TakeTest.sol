@@ -99,7 +99,7 @@ contract TakeTest is BaseTest {
 
         take(obligationUnits, lender, borrowerOffer);
 
-        assertEq(midnight.balanceOf(id, lender), int256(obligationUnits), "lender units");
+        assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
         assertEq(midnight.debtOf(id, borrower), obligationUnits, "borrower debt");
         assertEq(midnight.totalUnits(id), obligationUnits, "total units");
         assertEq(loanToken.balanceOf(borrower), expectedAssets, "borrower balance");
@@ -119,7 +119,7 @@ contract TakeTest is BaseTest {
 
         take(obligationUnits, borrower, lenderOffer);
 
-        assertEq(midnight.balanceOf(id, lender), int256(obligationUnits), "lender units");
+        assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
         assertEq(midnight.debtOf(id, borrower), obligationUnits, "borrower debt");
         assertEq(midnight.totalUnits(id), obligationUnits, "total units");
         assertEq(loanToken.balanceOf(borrower), expectedAssets, "borrower balance");
@@ -137,7 +137,7 @@ contract TakeTest is BaseTest {
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         otherLenderUnits = bound(otherLenderUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, otherLenderUnits);
-        int256 actualOtherLenderUnits = midnight.balanceOf(id, otherLender);
+        uint256 actualOtherLenderCredit = midnight.creditOf(id, otherLender);
         deal(address(loanToken), lender, buyerAssets + 1);
         otherLenderOffer.buy = false;
         otherLenderOffer.obligationUnits = type(uint256).max;
@@ -145,10 +145,8 @@ contract TakeTest is BaseTest {
 
         take(obligationUnits, lender, otherLenderOffer);
 
-        assertEq(midnight.balanceOf(id, lender), int256(obligationUnits), "lender units");
-        assertEq(
-            midnight.balanceOf(id, otherLender), actualOtherLenderUnits - int256(obligationUnits), "other lender units"
-        );
+        assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
+        assertEq(midnight.creditOf(id, otherLender), actualOtherLenderCredit - obligationUnits, "other lender units");
     }
 
     function testSell2(uint256 obligationUnits, uint256 tick, uint256 otherLenderUnits) public {
@@ -159,17 +157,15 @@ contract TakeTest is BaseTest {
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         otherLenderUnits = bound(otherLenderUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, otherLenderUnits);
-        int256 actualOtherLenderUnits = midnight.balanceOf(id, otherLender);
+        uint256 actualOtherLenderCredit = midnight.creditOf(id, otherLender);
         deal(address(loanToken), lender, buyerAssets + 1);
         lenderOffer.obligationUnits = type(uint256).max;
         lenderOffer.tick = tick;
 
         take(obligationUnits, otherLender, lenderOffer);
 
-        assertEq(midnight.balanceOf(id, lender), int256(obligationUnits), "lender units");
-        assertEq(
-            midnight.balanceOf(id, otherLender), actualOtherLenderUnits - int256(obligationUnits), "other lender units"
-        );
+        assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
+        assertEq(midnight.creditOf(id, otherLender), actualOtherLenderCredit - obligationUnits, "other lender units");
     }
 
     // Lender sells more than their balance, crossing to borrower.
@@ -177,7 +173,7 @@ contract TakeTest is BaseTest {
         otherLenderUnits = bound(otherLenderUnits, 1, maxAssets - 1);
         obligationUnits = bound(obligationUnits, otherLenderUnits + 1, maxAssets);
         setupOtherUsers(obligation, otherLenderUnits);
-        int256 otherLenderBalance = midnight.balanceOf(id, otherLender);
+        uint256 otherLenderCredit = midnight.creditOf(id, otherLender);
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), lender, obligationUnits.mulDivUp(price, WAD));
         collateralize(obligation, otherLender, obligationUnits);
@@ -186,10 +182,9 @@ contract TakeTest is BaseTest {
         take(obligationUnits, lender, otherLenderOffer);
 
         // otherLender crossed from lender to borrower.
-        assertEq(
-            midnight.balanceOf(id, otherLender), otherLenderBalance - int256(obligationUnits), "otherLender balance"
-        );
-        assertEq(midnight.balanceOf(id, lender), int256(obligationUnits), "lender balance");
+        assertEq(midnight.creditOf(id, otherLender), 0, "otherLender credit");
+        assertEq(midnight.debtOf(id, otherLender), obligationUnits - otherLenderCredit, "otherLender debt");
+        assertEq(midnight.creditOf(id, lender), obligationUnits, "lender credit");
     }
 
     // path 3: Borrower exits + borrower enters.
@@ -233,7 +228,7 @@ contract TakeTest is BaseTest {
         otherUnits = bound(otherUnits, 1, maxAssets - 1);
         obligationUnits = bound(obligationUnits, otherUnits + 1, maxAssets);
         setupOtherUsers(obligation, otherUnits);
-        int256 otherBorrowerBalance = midnight.balanceOf(id, otherBorrower);
+        uint256 otherBorrowerDebt = midnight.debtOf(id, otherBorrower);
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), otherBorrower, obligationUnits.mulDivUp(price, WAD));
         collateralize(obligation, borrower, obligationUnits);
@@ -242,11 +237,8 @@ contract TakeTest is BaseTest {
         take(obligationUnits, otherBorrower, borrowerOffer);
 
         // otherBorrower crossed from borrower to lender.
-        assertEq(
-            midnight.balanceOf(id, otherBorrower),
-            otherBorrowerBalance + int256(obligationUnits),
-            "otherBorrower balance"
-        );
+        assertEq(midnight.debtOf(id, otherBorrower), 0, "otherBorrower debt");
+        assertEq(midnight.creditOf(id, otherBorrower), obligationUnits - otherBorrowerDebt, "otherBorrower credit");
         assertEq(midnight.debtOf(id, borrower), obligationUnits, "borrower debt");
     }
 
@@ -260,7 +252,7 @@ contract TakeTest is BaseTest {
         uint256 buyerAssets = obligationUnits.mulDivUp(price, WAD);
         existingUnits = bound(existingUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, existingUnits);
-        int256 otherLenderUnitsVal = midnight.balanceOf(id, otherLender);
+        uint256 otherLenderCredit = midnight.creditOf(id, otherLender);
         uint256 otherBorrowerDebt = midnight.debtOf(id, otherBorrower);
 
         otherLenderOffer.obligationUnits = type(uint256).max;
@@ -269,9 +261,7 @@ contract TakeTest is BaseTest {
 
         take(obligationUnits, otherBorrower, otherLenderOffer);
 
-        assertEq(
-            midnight.balanceOf(id, otherLender), otherLenderUnitsVal - int256(obligationUnits), "otherLender units"
-        );
+        assertEq(midnight.creditOf(id, otherLender), otherLenderCredit - obligationUnits, "otherLender units");
         assertEq(midnight.debtOf(id, otherBorrower), otherBorrowerDebt - obligationUnits, "otherBorrower debt");
         assertEq(midnight.totalUnits(id), otherBorrowerDebt - obligationUnits, "total units");
         assertEq(loanToken.balanceOf(otherLender), buyerAssets, "otherLender balance");
@@ -285,7 +275,7 @@ contract TakeTest is BaseTest {
         uint256 buyerAssets = obligationUnits.mulDivDown(price, WAD);
         existingUnits = bound(existingUnits, obligationUnits, max(obligationUnits, maxAssets));
         setupOtherUsers(obligation, existingUnits);
-        int256 otherLenderUnitsVal = midnight.balanceOf(id, otherLender);
+        uint256 otherLenderCredit = midnight.creditOf(id, otherLender);
         uint256 otherBorrowerDebt = midnight.debtOf(id, otherBorrower);
 
         otherBorrowerOffer.obligationUnits = type(uint256).max;
@@ -293,9 +283,7 @@ contract TakeTest is BaseTest {
 
         take(obligationUnits, otherLender, otherBorrowerOffer);
 
-        assertEq(
-            midnight.balanceOf(id, otherLender), otherLenderUnitsVal - int256(obligationUnits), "otherLender units"
-        );
+        assertEq(midnight.creditOf(id, otherLender), otherLenderCredit - obligationUnits, "otherLender units");
         assertEq(midnight.debtOf(id, otherBorrower), otherBorrowerDebt - obligationUnits, "otherBorrower debt");
         assertEq(midnight.totalUnits(id), otherBorrowerDebt - obligationUnits, "total units");
         assertEq(loanToken.balanceOf(otherLender), buyerAssets, "otherLender balance");
@@ -411,7 +399,8 @@ contract TakeTest is BaseTest {
         take(units, address(this), borrowerOffer);
         take(units, address(this), lenderOffer);
 
-        assertEq(midnight.balanceOf(id, address(this)), 0, "units");
+        assertEq(midnight.creditOf(id, address(this)), 0, "credit");
+        assertEq(midnight.debtOf(id, address(this)), 0, "debt");
         assertEq(midnight.debtOf(id, address(this)), 0, "debt");
     }
 
@@ -438,7 +427,8 @@ contract TakeTest is BaseTest {
         take(units, address(this), lenderOffer);
         take(units, address(this), borrowerOffer);
 
-        assertEq(midnight.balanceOf(id, address(this)), 0, "units");
+        assertEq(midnight.creditOf(id, address(this)), 0, "credit");
+        assertEq(midnight.debtOf(id, address(this)), 0, "debt");
         assertEq(midnight.debtOf(id, address(this)), 0, "debt");
     }
 
@@ -722,7 +712,7 @@ contract TakeTest is BaseTest {
         (uint256 buyerAssets, uint256 sellerAssets,) = take(units, lender, borrowerOffer);
         assertEq(buyerAssets, 0, "buyerAssets");
         assertEq(sellerAssets, 0, "sellerAssets");
-        assertEq(midnight.balanceOf(id, lender), int256(units), "balanceOf");
+        assertEq(midnight.creditOf(id, lender), units, "creditOf");
         assertEq(midnight.debtOf(id, borrower), units, "debtOf");
     }
 
@@ -752,7 +742,7 @@ contract TakeTest is BaseTest {
         (uint256 buyerAssets, uint256 sellerAssets,) = take(units, lender, borrowerOffer);
         assertEq(buyerAssets, expectedBuyerAssets, "buyerAssets");
         assertEq(sellerAssets, 0, "sellerAssets");
-        assertEq(midnight.balanceOf(id, lender), int256(units), "balanceOf");
+        assertEq(midnight.creditOf(id, lender), units, "creditOf");
         assertEq(midnight.debtOf(id, borrower), units, "debtOf");
     }
 }

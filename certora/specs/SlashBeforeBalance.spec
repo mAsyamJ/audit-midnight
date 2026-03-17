@@ -30,17 +30,17 @@ function slashSummary(bytes32 id, address user) {
 
 /// HOOKS ///
 
-// Positive balances must only be read after slash at the current lossIndex.
-hook Sload int256 value position[KEY bytes32 id][KEY address user].balance {
+// Credit (positive balance) must only be read after slash at the current lossIndex.
+hook Sload uint128 value position[KEY bytes32 id][KEY address user].credit {
     if (slashedAtLossIndex[id][user] != obligationState[id].lossIndex && value > 0) {
         balanceReadWithoutSlash = true;
     }
 }
 
-// Positive balances must only be written after slash at the current lossIndex.
+// Credit (positive balance) must only be written after slash at the current lossIndex.
 // This also covers zero-to-positive transitions: when newValue > 0, slash is required
-// even if oldValue <= 0, ensuring the user's lossIndex is refreshed first.
-hook Sstore position[KEY bytes32 id][KEY address user].balance int256 newValue (int256 oldValue) {
+// even if oldValue == 0, ensuring the user's lossIndex is refreshed first.
+hook Sstore position[KEY bytes32 id][KEY address user].credit uint128 newValue (uint128 oldValue) {
     if (slashedAtLossIndex[id][user] != obligationState[id].lossIndex && (oldValue > 0 || newValue > 0)) {
         balanceWrittenWithoutSlash = true;
     }
@@ -51,9 +51,9 @@ hook Sstore position[KEY bytes32 id][KEY address user].balance int256 newValue (
 // View functions that read balanceOf don't call slash (they can't mutate state).
 rule balanceReadAfterSlash(method f, env e, calldataarg args)
 filtered {
-    f -> f.selector != sig:balanceOf(bytes32, address).selector
+    f -> f.selector != sig:creditOf(bytes32, address).selector
         && f.selector != sig:debtOf(bytes32, address).selector
-        && f.selector != sig:balanceOfAfterSlashing(bytes32, address).selector
+        && f.selector != sig:creditAfterSlashing(bytes32, address).selector
         && f.selector != sig:isHealthy(Midnight.Obligation, bytes32, address).selector
 } {
     f(e, args);
