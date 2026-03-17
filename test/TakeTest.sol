@@ -319,9 +319,12 @@ contract TakeTest is BaseTest {
         deal(address(loanToken), otherBorrower, exitUnits.mulDivUp(price, WAD));
         collateralize(obligation, borrower, exitUnits);
 
+        uint256 debtBefore = midnight.debtOf(id, otherBorrower);
+
         take(exitUnits, borrower, otherBorrowerOffer);
 
         assertEq(midnight.creditOf(id, otherBorrower), 0, "no credit");
+        assertEq(midnight.debtOf(id, otherBorrower), debtBefore - exitUnits, "debt reduced");
     }
 
     function testExitOnlyBuyRevert(uint256 existingUnits, uint256 exitUnits) public {
@@ -347,9 +350,12 @@ contract TakeTest is BaseTest {
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), lender, exitUnits.mulDivUp(price, WAD));
 
+        uint256 creditBefore = midnight.creditOf(id, otherLender);
+
         take(exitUnits, lender, otherLenderOffer);
 
         assertEq(midnight.debtOf(id, otherLender), 0, "no debt");
+        assertEq(midnight.creditOf(id, otherLender), creditBefore - exitUnits, "credit reduced");
     }
 
     function testExitOnlySellRevert(uint256 existingUnits, uint256 exitUnits) public {

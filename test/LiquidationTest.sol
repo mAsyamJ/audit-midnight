@@ -724,11 +724,14 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.creditOf(id, borrower), 0, "no credit before");
         uint256 debtBefore = midnight.debtOf(id, borrower);
+        (,, uint128 oblLossIndex,) = midnight.obligationState(id);
+        assertGt(oblLossIndex, midnight.userLossIndex(id, borrower), "loss index stale before");
 
         midnight.slash(id, borrower);
 
         assertEq(midnight.creditOf(id, borrower), 0, "no credit after");
         assertEq(midnight.debtOf(id, borrower), debtBefore, "debt unchanged");
+        assertEq(midnight.userLossIndex(id, borrower), oblLossIndex, "loss index synced");
     }
 
     function testSlashAlreadySynced(uint256 units) public {
