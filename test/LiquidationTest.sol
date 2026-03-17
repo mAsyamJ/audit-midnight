@@ -231,7 +231,7 @@ contract LiquidationTest is BaseTest {
         uint256 maxRepaid = collateral.mulDivDown(liquidationOraclePrice, ORACLE_PRICE_SCALE).mulDivDown(WAD, _maxLif);
         repaid = bound(repaid, units + 1, max(maxRepaid, units + 1));
 
-        vm.expectRevert("repay too much");
+        vm.expectRevert(stdError.arithmeticError);
         midnight.liquidate(obligation, 0, 0, repaid, borrower, "");
     }
 
@@ -280,12 +280,9 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.debtOf(id, borrower), units - expectedBadDebt, "debt");
         assertEq(midnight.totalUnits(id), units - expectedBadDebt, "total units");
-        assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
+        assertEq(midnight.creditOf(id, lender), units, "lender units");
         assertApproxEqAbs(
-            midnight.balanceOfAfterSlashing(id, lender),
-            int256(units - expectedBadDebt),
-            1,
-            "lender units after slashing"
+            midnight.creditAfterSlashing(id, lender), units - expectedBadDebt, 1, "lender units after slashing"
         );
     }
 
@@ -315,14 +312,14 @@ contract LiquidationTest is BaseTest {
 
         midnight.liquidate(obligation, 0, 0, 0, borrower, "");
 
-        int256 expectedBalance = midnight.balanceOfAfterSlashing(id, lender);
+        uint256 expectedCredit = midnight.creditAfterSlashing(id, lender);
         (,, uint256 lossIndex,) = midnight.obligationState(id);
 
         vm.expectEmit(true, true, false, true);
-        emit EventsLib.Slash(address(this), id, lender, expectedBalance, lossIndex);
+        emit EventsLib.Slash(address(this), id, lender, expectedCredit, lossIndex);
         midnight.slash(id, lender);
 
-        assertEq(midnight.balanceOf(id, lender), expectedBalance, "balance");
+        assertEq(midnight.creditOf(id, lender), expectedCredit, "credit");
         assertEq(midnight.userLossIndex(id, lender), lossIndex, "user loss index");
     }
 
@@ -339,10 +336,8 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.debtOf(id, borrower), debtAfterBadDebt - repaid, "debt");
         assertEq(midnight.totalUnits(id), debtAfterBadDebt, "total units");
-        assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
-        assertApproxEqAbs(
-            midnight.balanceOfAfterSlashing(id, lender), int256(debtAfterBadDebt), 1, "lender units after slashing"
-        );
+        assertEq(midnight.creditOf(id, lender), units, "lender units");
+        assertApproxEqAbs(midnight.creditAfterSlashing(id, lender), debtAfterBadDebt, 1, "lender units after slashing");
     }
 
     function testLiquidateWithBadDebtRepaidInput(uint256 units, uint256 repaid, uint256 liquidationOraclePrice) public {
@@ -362,10 +357,8 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.debtOf(id, borrower), debtAfterBadDebt - repaid, "debt");
         assertEq(midnight.totalUnits(id), debtAfterBadDebt, "total units");
-        assertEq(midnight.balanceOf(id, lender), int256(units), "lender units");
-        assertApproxEqAbs(
-            midnight.balanceOfAfterSlashing(id, lender), int256(debtAfterBadDebt), 1, "lender units after slashing"
-        );
+        assertEq(midnight.creditOf(id, lender), units, "lender units");
+        assertApproxEqAbs(midnight.creditAfterSlashing(id, lender), debtAfterBadDebt, 1, "lender units after slashing");
     }
 
     // Check that if there is bad debt it is possible to seize almost all collateral.
@@ -579,11 +572,13 @@ contract LiquidationTest is BaseTest {
         units = bound(units, maxDebt, repayableDebt);
         vm.assume(units > maxDebt);
 
-        // Write the debt as a negative balance.
+        // Write debt into Position storage.
+        // Layout: slot 0 = credit | lossIndex, slot 1 = debt | activatedCollaterals.
+        // Debt is in the lower 128 bits of slot 1.
         uint256 mappingSlot = 0;
         bytes32 intermediateSlot = keccak256(abi.encode(id, mappingSlot));
         bytes32 borrowerSlot = keccak256(abi.encode(borrower, intermediateSlot));
-        vm.store(address(midnight), borrowerSlot, bytes32(uint256(-int256(units))));
+        vm.store(address(midnight), bytes32(uint256(borrowerSlot) + 1), bytes32(units));
 
         assertEq(midnight.debtOf(id, borrower), units, "debt");
 
