@@ -133,9 +133,11 @@ rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUse
     uint256 debtBefore = debtOf(id, user);
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
+    uint256 expectedCredit = creditAfterSlashing(id, user);
 
     slash(e, id, user);
 
+    assert creditOf(id, user) == expectedCredit;
     assert creditOf(id, user) <= creditBefore;
     assert debtOf(id, user) == debtBefore;
     assert anyUser != user || anyId != id => creditOf(anyId, anyUser) == otherCreditBefore && debtOf(anyId, anyUser) == otherDebtBefore;
