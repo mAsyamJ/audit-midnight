@@ -18,16 +18,12 @@ methods {
 
 /// HELPERS ///
 
-persistent ghost mapping(bytes32 => mathint) sumBalanceOf {
-    init_state axiom (forall bytes32 id. sumBalanceOf[id] == 0);
-}
-
 persistent ghost mapping(bytes32 => mathint) sumPositiveBalanceOf {
     init_state axiom (forall bytes32 id. sumPositiveBalanceOf[id] == 0);
 }
 
-persistent ghost mapping(bytes32 => mathint) sumNegativeBalanceOf {
-    init_state axiom (forall bytes32 id. sumNegativeBalanceOf[id] == 0);
+persistent ghost mapping(bytes32 => mathint) sumDebt {
+    init_state axiom (forall bytes32 id. sumDebt[id] == 0);
 }
 
 function negativePart(mathint x) returns mathint {
@@ -39,13 +35,11 @@ function positivePart(mathint x) returns mathint {
 }
 
 hook Sstore position[KEY bytes32 id][KEY address owner].credit uint128 newCredit (uint128 oldCredit) {
-    sumBalanceOf[id] = sumBalanceOf[id] - to_mathint(oldCredit) + to_mathint(newCredit);
     sumPositiveBalanceOf[id] = sumPositiveBalanceOf[id] - to_mathint(oldCredit) + to_mathint(newCredit);
 }
 
 hook Sstore position[KEY bytes32 id][KEY address owner].debt uint128 newDebt (uint128 oldDebt) {
-    sumBalanceOf[id] = sumBalanceOf[id] + to_mathint(oldDebt) - to_mathint(newDebt);
-    sumNegativeBalanceOf[id] = sumNegativeBalanceOf[id] - to_mathint(oldDebt) + to_mathint(newDebt);
+    sumDebt[id] = sumDebt[id] - to_mathint(oldDebt) + to_mathint(newDebt);
 }
 
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
@@ -120,7 +114,7 @@ rule userLossIndexMonotonicallyIncreases(bytes32 id, address user, method f, env
 /// INVARIANTS ///
 
 strong invariant totalUnitsEqualsSumNegativeBalancePlusWithdrawable(bytes32 id)
-    to_mathint(totalUnits(id)) == sumNegativeBalanceOf[id] + to_mathint(withdrawable(id));
+    to_mathint(totalUnits(id)) == sumDebt[id] + to_mathint(withdrawable(id));
 
 strong invariant userLossIndexLeqObligationLossIndex(bytes32 id, address user)
     userLossIndex(id, user) <= currentContract.obligationState[id].lossIndex;

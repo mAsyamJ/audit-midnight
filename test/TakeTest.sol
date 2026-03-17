@@ -146,7 +146,9 @@ contract TakeTest is BaseTest {
         take(obligationUnits, lender, otherLenderOffer);
 
         assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
+        assertEq(midnight.debtOf(id, lender), 0, "lender debt");
         assertEq(midnight.creditOf(id, otherLender), actualOtherLenderCredit - obligationUnits, "other lender units");
+        assertEq(midnight.debtOf(id, otherLender), 0, "other lender debt");
     }
 
     function testSell2(uint256 obligationUnits, uint256 tick, uint256 otherLenderUnits) public {
@@ -165,7 +167,9 @@ contract TakeTest is BaseTest {
         take(obligationUnits, otherLender, lenderOffer);
 
         assertEq(midnight.creditOf(id, lender), obligationUnits, "lender units");
+        assertEq(midnight.debtOf(id, lender), 0, "lender debt");
         assertEq(midnight.creditOf(id, otherLender), actualOtherLenderCredit - obligationUnits, "other lender units");
+        assertEq(midnight.debtOf(id, otherLender), 0, "other lender debt");
     }
 
     // Lender sells more than their balance, crossing to borrower.

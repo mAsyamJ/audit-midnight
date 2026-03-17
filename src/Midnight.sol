@@ -392,7 +392,7 @@ contract Midnight is IMidnight {
         require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
 
         if (badDebt > 0) {
-            _position.debt -= UtilsLib.toUint128(badDebt);
+            _position.debt -= uint128(badDebt);
             uint256 oldTotalUnits = _obligationState.totalUnits;
             _obligationState.lossIndex = UtilsLib.toUint128(
                 type(uint128).max
@@ -561,14 +561,9 @@ contract Midnight is IMidnight {
 
     function creditAfterSlashing(bytes32 id, address user) public view returns (uint256) {
         Position storage _position = position[id][user];
-        uint128 _credit = _position.credit;
-        uint128 _userLossIndex = _position.lossIndex;
-        uint128 lossIndex = obligationState[id].lossIndex;
-        if (_credit > 0 && _userLossIndex != lossIndex) {
-            // forge-lint: disable-next-item(unsafe-typecast) as result <= _credit
-            _credit = uint128(_credit.mulDivDown(type(uint128).max - lossIndex, type(uint128).max - _userLossIndex));
-        }
-        return _credit;
+        ObligationState storage _obligationState = obligationState[id];
+        return _position.credit
+            .mulDivDown(type(uint128).max - _obligationState.lossIndex, type(uint128).max - _position.lossIndex);
     }
 
     function creditOf(bytes32 id, address user) public view returns (uint256) {
