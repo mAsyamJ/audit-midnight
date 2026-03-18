@@ -711,7 +711,9 @@ contract Midnight is IMidnight {
         uint256 accruedDuration = UtilsLib.min(block.timestamp, obligation.maturity).zeroFloorSub(lastAccrual);
         uint256 totalDuration = obligation.maturity.zeroFloorSub(lastAccrual);
         // forge-lint: disable-next-item(unsafe-typecast) as accrued fee is <= pendingFee
-        if (totalDuration > 0) return uint128(uint256(_position.pendingFee).mulDivDown(accruedDuration, totalDuration));
+        if (totalDuration > 0) {
+            return uint128(uint256(_position.pendingFee).mulDivDown(accruedDuration, totalDuration));
+        }
         return 0;
     }
 
