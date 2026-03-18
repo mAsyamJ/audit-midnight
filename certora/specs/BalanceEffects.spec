@@ -175,49 +175,49 @@ filtered {
 
 /// supplyCollateral increases onBehalf's collateral by exactly assets,
 /// and only changes position[id][onBehalf].collateral[collateralIndex].
-rule supplyCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, bytes32 anyId, address anyUser, uint256 anyIdx) {
+rule supplyCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, bytes32 anyId, address anyUser, uint256 anyIndex) {
     bytes32 id = toId(e, obligation);
 
     uint256 collateralBefore = collateralOf(id, onBehalf, collateralIndex);
-    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIdx);
+    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIndex);
 
     supplyCollateral(e, obligation, collateralIndex, assets, onBehalf);
 
     assert collateralOf(id, onBehalf, collateralIndex) == collateralBefore + assets;
-    assert anyUser != onBehalf || anyId != id || anyIdx != collateralIndex => collateralOf(anyId, anyUser, anyIdx) == otherCollateralBefore;
+    assert anyUser != onBehalf || anyId != id || anyIndex != collateralIndex => collateralOf(anyId, anyUser, anyIndex) == otherCollateralBefore;
 }
 
 /// WITHDRAW COLLATERAL ///
 
 /// withdrawCollateral decreases onBehalf's collateral by exactly assets,
 /// and only changes position[id][onBehalf].collateral[collateralIndex].
-rule withdrawCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 anyId, address anyUser, uint256 anyIdx) {
+rule withdrawCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 anyId, address anyUser, uint256 anyIndex) {
     bytes32 id = toId(e, obligation);
 
     uint256 collateralBefore = collateralOf(id, onBehalf, collateralIndex);
-    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIdx);
+    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIndex);
 
     withdrawCollateral(e, obligation, collateralIndex, assets, onBehalf, receiver);
 
     assert collateralOf(id, onBehalf, collateralIndex) == collateralBefore - assets;
-    assert anyUser != onBehalf || anyId != id || anyIdx != collateralIndex => collateralOf(anyId, anyUser, anyIdx) == otherCollateralBefore;
+    assert anyUser != onBehalf || anyId != id || anyIndex != collateralIndex => collateralOf(anyId, anyUser, anyIndex) == otherCollateralBefore;
 }
 
 /// LIQUIDATE (COLLATERAL) ///
 
 /// liquidate decreases the borrower's collateral at collateralIndex by exactly seizedResult,
 /// and only changes position[id][borrower].collateral[collateralIndex].
-rule liquidateCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes32 anyId, address anyUser, uint256 anyIdx) {
+rule liquidateCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes32 anyId, address anyUser, uint256 anyIndex) {
     bytes32 id = toId(e, obligation);
 
     uint256 collateralBefore = collateralOf(id, borrower, collateralIndex);
-    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIdx);
+    uint256 otherCollateralBefore = collateralOf(anyId, anyUser, anyIndex);
 
     uint256 seizedResult;
     seizedResult, _ = liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
 
     assert collateralOf(id, borrower, collateralIndex) == collateralBefore - seizedResult;
-    assert anyUser != borrower || anyId != id || anyIdx != collateralIndex => collateralOf(anyId, anyUser, anyIdx) == otherCollateralBefore;
+    assert anyUser != borrower || anyId != id || anyIndex != collateralIndex => collateralOf(anyId, anyUser, anyIndex) == otherCollateralBefore;
 }
 
 /// ALL OTHER FUNCTIONS (COLLATERAL) ///
