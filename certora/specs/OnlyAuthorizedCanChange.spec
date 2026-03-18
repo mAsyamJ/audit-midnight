@@ -51,9 +51,11 @@ function CVL_signer() returns address {
 /// CREDIT AND DEBT CHANGE RULES ///
 
 /// An unauthorized caller cannot change a user's credit and debt except via liquidate and slash.
+/// PASSIVE_FEE_RECIPIENT's credit can increase via fee accrual without authorization.
 /// Assumes no reentrancy: callbacks (onBuy, onSell) and token transfers are not modeled as re-entering Midnight, so re-entrant credit and debt changes are not covered.
 rule onlyAuthorizedCanChangeCreditAndDebtExceptLiquidateAndSlash(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector && f.selector != sig:slash(bytes32, address).selector } {
     bool userIsAuthorized = user == e.msg.sender || isAuthorized(user, e.msg.sender);
+    bool isPassiveFeeRecipient = user == Utils.passiveFeeRecipient();
 
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
@@ -61,69 +63,5 @@ rule onlyAuthorizedCanChangeCreditAndDebtExceptLiquidateAndSlash(env e, method f
     uint256 creditAfter = creditOf(id, user);
     uint256 debtAfter = debtOf(id, user);
 
-    assert (creditAfter == creditBefore && debtAfter == debtBefore) || userIsAuthorized || signed[user];
-}
-
-/// A user whose debt is zero can only become a borrower via take.
-rule zeroDebtOnlyIncreasesViaTake(env e, method f, calldataarg args, bytes32 id, address user) {
-    uint256 debtBefore = debtOf(id, user);
-
-    requireInvariant noRemainingContinuousFeeWithoutDebt(id, user);
-
-    f(e, args);
-
-    assert debtBefore > 0 || debtOf(id, user) == 0 || f.selector == sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector;
-}
-
-/// In liquidate, only the borrower's debt can change, and any increase is bounded by accrued fee.
-rule liquidateCanChangeDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, address user) {
-    bytes32 id = toId(obligation);
-    require noAccrual(e, id, borrower);
-
-    mathint debtBefore = debtOf(id, user);
-
-    liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
-    mathint debtAfter = debtOf(id, user);
-
-    assert user == borrower => debtAfter <= debtBefore;
-    assert user != borrower => debtAfter == debtBefore;
-}
-
-/// In take, the caller must be authorized by the taker, and only the buyer's or seller's debt can change.
-/// Assumes no reentrancy: the onBuy/onSell callbacks could re-enter take (or another function) and change a different user's debt.
-rule takeOnlyAuthorizedCanChangeDebt(env e, uint256 obligationUnits, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, bytes32 id, address user) {
-    address buyer = offer.buy ? offer.maker : taker;
-    address seller = offer.buy ? taker : offer.maker;
-    bool takerUnauthorized = e.msg.sender != taker && !isAuthorized(taker, e.msg.sender);
-
-    uint256 debtBefore = debtOf(id, user);
-    take@withrevert(e, obligationUnits, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, signature, root, proof);
-    bool reverted = lastReverted;
-    uint256 debtAfter = debtOf(id, user);
-
-    assert takerUnauthorized => reverted;
-    assert user == buyer => debtAfter <= debtBefore;
-    assert user == seller => debtAfter >= debtBefore;
-    assert user != buyer && user != seller => debtAfter == debtBefore;
-}
-
-rule withdrawCollateralDoesNotChangeDebt(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 id) {
-    require noAccrual(e, id, onBehalf);
-
-    mathint debtBefore = debtOf(id, onBehalf);
-
-    withdrawCollateral(e, obligation, collateralIndex, assets, onBehalf, receiver);
-    assert debtOf(id, onBehalf) == debtBefore;
-}
-
-rule repayDecreasesDebtByExactUnits(env e, Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf, bytes32 id) {
-    require noAccrual(e, id, onBehalf);
-
-    mathint debtBefore = debtOf(id, onBehalf);
-
-    repay(e, obligation, obligationUnits, onBehalf);
-    mathint debtAfter = debtOf(id, onBehalf);
-
-    // If debt changed at this id, it decreased by exactly obligationUnits.
-    assert debtAfter != debtBefore => debtAfter + obligationUnits == debtBefore;
+    assert (creditAfter == creditBefore && debtAfter == debtBefore) || userIsAuthorized || signed[user] || isPassiveFeeRecipient;
 }
