@@ -342,8 +342,11 @@ contract ContinuousFeeTest is BaseTest {
         maxRepaid = UtilsLib.min(maxRepaid, collateralSafeRepaid);
         assertGt(maxRepaid, 0, "setup should allow nonzero repaidUnits");
         repaidUnits = bound(repaidUnits, 1, maxRepaid);
+        uint256 pendingAfterBadDebt = badDebt > 0
+            ? remainingAfterAccrual - remainingAfterAccrual.mulDivUp(badDebt, debtAfterAccrual)
+            : remainingAfterAccrual;
         uint256 expectedRemaining =
-            remainingAfterAccrual - remainingAfterAccrual.mulDivUp(badDebt + repaidUnits, debtAfterAccrual);
+            pendingAfterBadDebt - pendingAfterBadDebt.mulDivUp(repaidUnits, debtAfterAccrual - badDebt);
 
         deal(address(loanToken), address(this), repaidUnits);
         vm.expectEmit();

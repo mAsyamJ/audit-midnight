@@ -198,7 +198,6 @@ filtered {
         && f.selector != sig:slash(bytes32, address).selector
         && f.selector != sig:withdrawCollateral(Midnight.Obligation, uint256, uint256, address, address).selector
 } {
-    require noAccrual(e, id, user);
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
     f(e, args);

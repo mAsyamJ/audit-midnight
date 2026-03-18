@@ -23,18 +23,6 @@ methods {
 
 /// HELPERS ///
 
-function accruedContinuousFeeBefore(bytes32 id, address user, uint256 blockTimestamp, uint256 maturity) returns mathint {
-    mathint lastAccrual = currentContract.position[id][user].lastContinuousFeeAccrual;
-    mathint _pendingFee = currentContract.position[id][user].pendingFee;
-
-    if (lastAccrual == 0 || maturity <= require_uint256(lastAccrual)) return 0;
-
-    uint256 accrualEnd = blockTimestamp < maturity ? blockTimestamp : maturity;
-
-    // Use the same mulDiv summary as the code to ensure consistency.
-    return summaryMulDiv(assert_uint256(_pendingFee), assert_uint256(accrualEnd - lastAccrual), assert_uint256(maturity - lastAccrual));
-}
-
 definition noAccrual(env e, bytes32 id, address borrower) returns bool = currentContract.position[id][borrower].pendingFee == 0 || e.block.timestamp == currentContract.position[id][borrower].lastContinuousFeeAccrual;
 
 use invariant noRemainingContinuousFeeWithoutDebt;
