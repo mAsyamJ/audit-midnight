@@ -12,6 +12,17 @@ contract MidnightHarness is Midnight {
         view
         returns (bool)
     {
-        return isHealthy(obligation, id, borrower);
+        Position storage _position = position[id][borrower];
+        uint256 debt = _position.debt + accrueContinuousFeeView(obligation, id, borrower);
+        uint256 maxDebt;
+        uint256 bitmap = _position.activatedCollaterals;
+        while (maxDebt < debt && bitmap != 0) {
+            uint256 i = UtilsLib.msb(bitmap);
+            Collateral memory collateral = obligation.collaterals[i];
+            uint256 price = IOracle(collateral.oracle).price();
+            maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateral.lltv, WAD);
+            bitmap ^= (1 << i);
+        }
+        return maxDebt >= debt;
     }
 }
