@@ -636,19 +636,6 @@ contract Midnight is IMidnight {
         return maxDebt >= debt;
     }
 
-    function canLend(Obligation memory obligation, address account) public view returns (bool) {
-        return obligation.takerGate == address(0) || ITakerGate(obligation.takerGate).canLend(account);
-    }
-
-    function canBorrow(Obligation memory obligation, address account) public view returns (bool) {
-        return obligation.takerGate == address(0) || ITakerGate(obligation.takerGate).canBorrow(account);
-    }
-
-    function canLiquidate(Obligation calldata obligation, address account) public view returns (bool) {
-        return
-            obligation.liquidatorGate == address(0) || ILiquidatorGate(obligation.liquidatorGate).canLiquidate(account);
-    }
-
     function domainSeparator() internal view returns (bytes32) {
         return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(this)));
     }
