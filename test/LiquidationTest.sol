@@ -723,7 +723,7 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.creditOf(id, borrower), 0, "no credit before");
         uint256 debtBefore = midnight.debtOf(id, borrower);
-        (,, uint128 oblLossIndex,) = midnight.obligationState(id);
+        (,, uint128 oblLossIndex,,) = midnight.obligationState(id);
         assertGt(oblLossIndex, midnight.userLossIndex(id, borrower), "loss index stale before");
 
         midnight.slash(id, borrower);
@@ -765,7 +765,7 @@ contract LiquidationTest is BaseTest {
 
         assertEq(midnight.debtOf(id, borrower), 0, "debt");
         assertEq(midnight.totalUnits(id), 0, "total units");
-        (,, uint128 _lossIndex,) = midnight.obligationState(id);
+        (,, uint128 _lossIndex,,) = midnight.obligationState(id);
         assertEq(_lossIndex, type(uint128).max, "loss index");
         assertEq(midnight.creditAfterSlashing(id, lender), 0, "credit after slashing");
 
