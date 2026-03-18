@@ -28,7 +28,6 @@ methods {
     function _.onFlashLoan(address, uint256, bytes) external => NONDET;
     function _.transfer(address, uint256) external => NONDET;
     function signer(bytes32, Midnight.Signature memory) internal returns (address) => NONDET;
-    function Utils.passiveFeeRecipient() external returns (address) envfree;
 }
 
 /// HELPERS ///
@@ -169,7 +168,7 @@ rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUse
 
 /// ALL OTHER FUNCTIONS ///
 
-/// Functions other than take, withdraw, repay, liquidate, and slash do not change any user's credit or debt.
+/// Functions other than take, withdraw, repay, liquidate, slash, and withdrawCollateral do not change any user's credit or debt.
 rule creditAndDebtUnchangedByOtherFunctions(method f, env e, calldataarg args, bytes32 id, address user)
 filtered {
     f -> !f.isView
@@ -178,11 +177,12 @@ filtered {
         && f.selector != sig:repay(Midnight.Obligation, uint256, address).selector
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
         && f.selector != sig:slash(bytes32, address).selector
+        && f.selector != sig:withdrawCollateral(Midnight.Obligation, uint256, uint256, address, address).selector
 } {
     require noAccrual(e, id, user);
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
     f(e, args);
-    assert user != Utils.passiveFeeRecipient() => creditOf(id, user) == creditBefore;
+    assert creditOf(id, user) == creditBefore;
     assert debtOf(id, user) == debtBefore;
 }
