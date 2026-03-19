@@ -52,8 +52,7 @@ definition noAccrual(env e, bytes32 id, address borrower) returns bool = current
 
 /// REPAY ///
 
-/// repay decreases onBehalf's debt by exactly obligationUnits and only changes position[id][onBehalf].debt.
-/// When no fee accrual occurs during repay.
+/// When no fee accrual occurs, repay decreases onBehalf's debt by exactly obligationUnits and only changes position[id][onBehalf].debt
 rule repayEffects(env e, Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf, bytes32 anyId, address anyUser) {
     bytes32 id = toId(e, obligation);
 
