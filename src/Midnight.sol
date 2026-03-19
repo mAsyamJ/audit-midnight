@@ -266,7 +266,7 @@ contract Midnight is IMidnight {
 
         if (sellerDebtIncrease > 0) {
             sellerPos.pendingFee += UtilsLib.toUint128(
-                _obligationState.continuousFee.mulDivDown(sellerDebtIncrease * timeToMaturity, WAD)
+                sellerDebtIncrease.mulDivDown(_obligationState.continuousFee * timeToMaturity, WAD)
             );
             emit EventsLib.UpdatePendingFee(id, seller, sellerPos.pendingFee);
         }
