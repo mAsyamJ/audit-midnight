@@ -195,6 +195,7 @@ filtered {
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
         && f.selector != sig:slash(bytes32, address).selector
         && f.selector != sig:withdrawCollateral(Midnight.Obligation, uint256, uint256, address, address).selector
+        && f.selector != sig:accrueContinuousFee(Midnight.Obligation, address).selector
 } {
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
