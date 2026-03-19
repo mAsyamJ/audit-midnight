@@ -167,8 +167,7 @@ rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUse
 
 /// WITHDRAW COLLATERAL ///
 
-/// withdrawCollateral does not change any user's credit or debt.
-/// When no fee accrual occurs during withdrawCollateral.
+/// When no fee accrual occurs, withdrawCollateral does not change any user's credit or debt.
 rule withdrawCollateralEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf, address receiver, bytes32 anyId, address anyUser) {
     bytes32 id = toId(e, obligation);
 
