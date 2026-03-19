@@ -4,9 +4,30 @@ pragma solidity ^0.8.0;
 
 import {Obligation} from "../../src/interfaces/IMidnight.sol";
 import {IdLib} from "../../src/libraries/IdLib.sol";
+import {UtilsLib} from "../../src/libraries/UtilsLib.sol";
 
 contract Utils {
     function hashObligation(Obligation memory obligation) external pure returns (bytes32) {
         return keccak256(abi.encode(obligation));
+    }
+
+    function setBit(uint256 bitmap, uint256 bit) external pure returns (uint256) {
+        return UtilsLib.setBit(bitmap, bit);
+    }
+
+    function clearBit(uint256 bitmap, uint256 bit) external pure returns (uint256) {
+        return UtilsLib.clearBit(bitmap, bit);
+    }
+
+    function toggleBit(uint256 bitmap, uint256 bit) external pure returns (uint256) {
+        return UtilsLib.toggleBit(bitmap, bit);
+    }
+
+    function getBit(uint256 bitmap, uint256 bit) external pure returns (bool) {
+        return UtilsLib.getBit(bitmap, bit);
+    }
+
+    function msb(uint256 bitmap) external pure returns (uint256) {
+        return UtilsLib.msb(bitmap);
     }
 }

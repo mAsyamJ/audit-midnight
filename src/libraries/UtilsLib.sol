@@ -73,4 +73,20 @@ library UtilsLib {
             res := sub(255, clz(bitmap))
         }
     }
+
+    function getBit(uint256 bitmap, uint256 bit) internal pure returns (bool) {
+        return bitmap & (1 << bit) != 0;
+    }
+
+    function setBit(uint256 bitmap, uint256 bit) internal pure returns (uint256) {
+        return bitmap | (1 << bit);
+    }
+
+    function clearBit(uint256 bitmap, uint256 bit) internal pure returns (uint256) {
+        return bitmap & ~(1 << bit);
+    }
+
+    function toggleBit(uint256 bitmap, uint256 bit) internal pure returns (uint256) {
+        return bitmap ^ (1 << bit);
+    }
 }
