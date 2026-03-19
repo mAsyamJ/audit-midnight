@@ -254,11 +254,11 @@ contract GateTest is BaseTest {
         // Make position liquidatable by dropping oracle price.
         Oracle(gatedObligation.collaterals[0].oracle).setPrice(0);
 
-        // Liquidator is NOT whitelisted.
+        // Liquidator is NOT whitelisted — non-zero seizedAssets triggers the gate check.
         deal(address(loanToken), liquidator, obligationUnits);
         vm.prank(liquidator);
         vm.expectRevert("liquidator gated from liquidating");
-        midnight.liquidate(gatedObligation, 0, 0, 0, borrower, "");
+        midnight.liquidate(gatedObligation, 0, 1, 0, borrower, "");
     }
 
     function testLiquidatorGateAllowsWhitelistedLiquidator(uint256 obligationUnits) public {
@@ -275,6 +275,23 @@ contract GateTest is BaseTest {
         Oracle(gatedObligation.collaterals[0].oracle).setPrice(0);
 
         deal(address(loanToken), liquidator, obligationUnits);
+        vm.prank(liquidator);
+        midnight.liquidate(gatedObligation, 0, 0, 0, borrower, "");
+    }
+
+    function testLiquidatorGateAllowsNoOpForNonWhitelistedLiquidator(uint256 obligationUnits) public {
+        obligationUnits = bound(obligationUnits, 1, MAX_TEST_AMOUNT * 3 / 4);
+        gate.setWhitelisted(lender, true);
+        gate.setWhitelisted(borrower, true);
+
+        deal(address(loanToken), lender, obligationUnits);
+        collateralize(gatedObligation, borrower, obligationUnits);
+        take(obligationUnits, lender, borrowerOffer);
+
+        // Make position liquidatable so the "position is not liquidatable" check passes.
+        Oracle(gatedObligation.collaterals[0].oracle).setPrice(0);
+
+        // Non-whitelisted liquidator can do a no-op.
         vm.prank(liquidator);
         midnight.liquidate(gatedObligation, 0, 0, 0, borrower, "");
     }
