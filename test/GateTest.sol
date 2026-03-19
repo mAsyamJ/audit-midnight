@@ -17,11 +17,11 @@ contract WhitelistGate is IEnterGate, ILiquidatorGate {
         whitelisted[account] = status;
     }
 
-    function canLend(address account) external view returns (bool) {
+    function canIncreaseCredit(address account) external view returns (bool) {
         return whitelisted[account];
     }
 
-    function canBorrow(address account) external view returns (bool) {
+    function canIncreaseDebt(address account) external view returns (bool) {
         return whitelisted[account];
     }
 
@@ -104,7 +104,7 @@ contract GateTest is BaseTest {
         // Borrower is whitelisted, lender is not.
         gate.setWhitelisted(borrower, true);
 
-        vm.expectRevert("buyer gated from lending");
+        vm.expectRevert("buyer gated from increasing credit");
         take(obligationUnits, lender, borrowerOffer);
     }
 
@@ -129,7 +129,7 @@ contract GateTest is BaseTest {
         // Lender is whitelisted, borrower is not.
         gate.setWhitelisted(lender, true);
 
-        vm.expectRevert("seller gated from borrowing");
+        vm.expectRevert("seller gated from increasing debt");
         take(obligationUnits, borrower, lenderOffer);
     }
 

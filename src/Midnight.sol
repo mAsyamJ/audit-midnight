@@ -244,13 +244,13 @@ contract Midnight is IMidnight {
 
         require(
             buyerPos.credit == 0 || offer.obligation.enterGate == address(0)
-                || IEnterGate(offer.obligation.enterGate).canLend(buyer),
-            "buyer gated from lending"
+                || IEnterGate(offer.obligation.enterGate).canIncreaseCredit(buyer),
+            "buyer gated from increasing credit"
         );
         require(
             sellerPos.debt == 0 || offer.obligation.enterGate == address(0)
-                || IEnterGate(offer.obligation.enterGate).canBorrow(seller),
-            "seller gated from borrowing"
+                || IEnterGate(offer.obligation.enterGate).canIncreaseDebt(seller),
+            "seller gated from increasing debt"
         );
 
         emit EventsLib.Take(

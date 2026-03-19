@@ -3,8 +3,8 @@
 pragma solidity >=0.5.0;
 
 interface IEnterGate {
-    function canLend(address account) external view returns (bool);
-    function canBorrow(address account) external view returns (bool);
+    function canIncreaseCredit(address account) external view returns (bool);
+    function canIncreaseDebt(address account) external view returns (bool);
 }
 
 interface ILiquidatorGate {
