@@ -250,9 +250,11 @@ contract Midnight is IMidnight {
         uint256 oldSellerDebt = sellerPos.debt;
         uint256 buyerDebtDecrease = UtilsLib.min(oldBuyerDebt, obligationUnits);
         uint256 sellerDebtIncrease = obligationUnits.zeroFloorSub(sellerPos.credit);
-        buyerPos.pendingFee -= UtilsLib.toUint128(
-            uint256(buyerPos.pendingFee).mulDivUp(buyerDebtDecrease, oldBuyerDebt)
-        );
+        if (oldBuyerDebt > 0) {
+            buyerPos.pendingFee -= UtilsLib.toUint128(
+                uint256(buyerPos.pendingFee).mulDivUp(buyerDebtDecrease, oldBuyerDebt)
+            );
+        }
         buyerPos.debt -= UtilsLib.toUint128(buyerDebtDecrease);
         buyerPos.credit += UtilsLib.toUint128(obligationUnits - buyerDebtDecrease);
         sellerPos.pendingFee += UtilsLib.toUint128(
