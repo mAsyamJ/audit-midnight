@@ -393,7 +393,7 @@ contract Midnight is IMidnight {
         bytes32 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
         require(
-            (seizedAssets == 0 && repaidUnits == 0) || obligation.liquidatorGate == address(0)
+            obligation.liquidatorGate == address(0)
                 || ILiquidatorGate(obligation.liquidatorGate).canLiquidate(msg.sender),
             "liquidator gated from liquidating"
         );
