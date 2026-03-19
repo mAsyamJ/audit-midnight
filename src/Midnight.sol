@@ -34,8 +34,7 @@ import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 
 /// MAX AMOUNTS
-/// @dev The max amount of totalUnits and collateral is type(uint128).max (~1e38).
-/// @dev The max amount of credit is type(uint128).max * (1 - TTM * 0.01) due to continuous fees (with TTM in years).
+/// @dev The max amount of totalUnits, collateral, credit, and debt is type(uint128).max (~1e38).
 ///
 /// OBLIGATIONS
 /// @dev Obligations' collaterals must be sorted by token address.
@@ -549,6 +548,7 @@ contract Midnight is IMidnight {
         if (!obligationState[id].created) {
             require(obligation.collaterals.length > 0, "no collaterals");
             require(obligation.collaterals.length <= MAX_COLLATERALS, "too many collaterals");
+            require(obligation.maturity <= block.timestamp + 100 * 365 days, "ttm too high");
             address previousCollateralToken;
             for (uint256 i = 0; i < obligation.collaterals.length; i++) {
                 address collateralToken = obligation.collaterals[i].token;

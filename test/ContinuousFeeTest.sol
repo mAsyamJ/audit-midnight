@@ -62,7 +62,7 @@ contract ContinuousFeeTest is BaseTest {
         setupObligation(obligation, credit);
     }
 
-    function _makeLenderOffer(uint256 units, bytes32 group) internal returns (Offer memory o) {
+    function _makeLenderOffer(uint256 units, bytes32 group) internal view returns (Offer memory o) {
         o.obligation = obligation;
         o.buy = true;
         o.maker = lender;
@@ -72,7 +72,7 @@ contract ContinuousFeeTest is BaseTest {
         o.group = group;
     }
 
-    function _makeBuyOffer(uint256 units, bytes32 group) internal returns (Offer memory o) {
+    function _makeBuyOffer(uint256 units, bytes32 group) internal view returns (Offer memory o) {
         o.obligation = obligation;
         o.buy = true;
         o.maker = otherLender;
@@ -216,7 +216,7 @@ contract ContinuousFeeTest is BaseTest {
         assertEq(midnight.debtOf(id, borrower), credit, "debt unchanged at entry");
     }
 
-    function _makeBorrowOffer(uint256 credit2) internal returns (Offer memory borrowOffer) {
+    function _makeBorrowOffer(uint256 credit2) internal view returns (Offer memory borrowOffer) {
         borrowOffer.obligation = obligation;
         borrowOffer.buy = false;
         borrowOffer.maker = otherBorrower;

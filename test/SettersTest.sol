@@ -126,12 +126,12 @@ contract SettersTest is BaseTest {
         midnight.setObligationTradingFee(id, 0, 0);
     }
 
-    function testSetTradingFeeRecipientSuccess(address feeRecipient) public {
+    function testSetFeeRecipientSuccess(address feeRecipient) public {
         midnight.setFeeRecipient(feeRecipient);
         assertEq(midnight.feeRecipient(), feeRecipient, "fee recipient set");
     }
 
-    function testSetTradingFeeRecipientOnlyOwner(address rdm) public {
+    function testSetFeeRecipientOnlyOwner(address rdm) public {
         vm.assume(rdm != address(this));
         vm.prank(rdm);
         vm.expectRevert("only owner");
