@@ -664,7 +664,7 @@ contract Midnight is IMidnight {
         return position[id][user].pendingFee;
     }
 
-    function lastContinuousFeeAccrual(bytes32 id, address user) external view returns (uint48) {
+    function lastContinuousFeeAccrual(bytes32 id, address user) external view returns (uint128) {
         return position[id][user].lastContinuousFeeAccrual;
     }
 
@@ -738,7 +738,7 @@ contract Midnight is IMidnight {
             slash(id, PASSIVE_FEE_RECIPIENT);
             position[id][PASSIVE_FEE_RECIPIENT].credit += accruedFee;
         }
-        _position.lastContinuousFeeAccrual = uint48(block.timestamp);
+        _position.lastContinuousFeeAccrual = uint128(block.timestamp);
 
         emit EventsLib.AccrueContinuousFee(id, user, accruedFee, _position.pendingFee);
     }

@@ -52,11 +52,11 @@ struct ObligationState {
 
 struct Position {
     uint128 credit;
+    uint128 pendingFee;
     uint128 lossIndex;
+    uint128 lastContinuousFeeAccrual;
     uint128 debt;
     uint128 activatedCollaterals;
-    uint128 pendingFee;
-    uint48 lastContinuousFeeAccrual;
     uint128[128] collateral;
 }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 using Utils as Utils;
+using Midnight as Midnight;
 
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
@@ -13,9 +14,11 @@ methods {
     function pendingFee(bytes32 id, address user) external returns (uint128) envfree;
     function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
     function Utils.passiveFeeRecipient() external returns (address) envfree;
+    function Midnight.obligationCreated(bytes32 id) external returns (bool) envfree;
+    function Utils.hashObligation(Midnight.Obligation) external returns (bytes32) envfree;
 
     function _.price() external => NONDET;
-    function IdLib.toId(Midnight.Obligation memory, uint256, address) internal returns (bytes32) => NONDET;
+    function IdLib.toId(Midnight.Obligation memory obligation, uint256, address) internal returns (bytes32) => summaryToId(obligation);
 
     function tradingFee(bytes32, uint256) internal returns (uint256) => NONDET;
     function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
@@ -27,11 +30,23 @@ methods {
     function UtilsLib.msb(uint256) internal returns (uint256) => NONDET;
     function UtilsLib.countBits(uint128) internal returns (uint256) => NONDET;
 
-    function UtilsLib.mulDivDown(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDiv(x, y, d);
-    function UtilsLib.mulDivUp(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDiv(x, y, d);
+    function UtilsLib.mulDivDown(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivDown(x, y, d);
+    function UtilsLib.mulDivUp(uint256 x, uint256 y, uint256 d) internal returns (uint256) => summaryMulDivUp(x, y, d);
 }
 
 /// HELPERS ///
+
+definition MAX_TTM() returns uint256 = 3153600000;
+
+definition MAX_CONTINUOUS_FEE() returns uint256 = 317097919;
+
+function summaryToId(Midnight.Obligation obligation) returns (bytes32) {
+    return Utils.hashObligation(obligation);
+}
+
+function obligationIsCreated(Midnight.Obligation obligation) returns (bool) {
+    return Midnight.obligationCreated(summaryToId(obligation));
+}
 
 persistent ghost mapping(bytes32 => mathint) sumDebt {
     init_state axiom (forall bytes32 id. sumDebt[id] == 0);
@@ -41,12 +56,41 @@ hook Sstore position[KEY bytes32 id][KEY address owner].debt uint128 newDebt (ui
     sumDebt[id] = sumDebt[id] - to_mathint(oldDebt) + to_mathint(newDebt);
 }
 
-function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
+ghost ghostMulDivDown(uint256, uint256, uint256) returns uint256 {
+    // When the multiplier is at most the denominator, floor(x * y / d) cannot exceed x.
+    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && y <= d => ghostMulDivDown(x, y, d) <= x;
+
+    // x * d / d == x.
+    axiom forall uint256 x. forall uint256 d. d > 0 => ghostMulDivDown(x, d, d) == x;
+}
+
+ghost ghostMulDivUp(uint256, uint256, uint256) returns uint256 {
+    // When the multiplier is at most the denominator, ceil(x * y / d) cannot exceed x.
+    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && y <= d => ghostMulDivUp(x, y, d) <= x;
+
+    // x * d / d == x.
+    axiom forall uint256 x. forall uint256 d. d > 0 => ghostMulDivUp(x, d, d) == x;
+
+    // For x <= d and y <= d, ceil(x * y / d) is large enough that the remainder
+    // after subtracting it from x fits within the denominator remainder d - y.
+    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && x <= d && y <= d => x - ghostMulDivUp(x, y, d) <= d - y;
+}
+
+function summaryMulDivDown(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     if (d > 0 && y == d) return x;
     if (d > 0 && x == d) return y;
+    if (d > 0) return ghostMulDivDown(x, y, d);
     uint256 res;
-    require y > d || res <= x;
+    return res;
+}
+
+function summaryMulDivUp(uint256 x, uint256 y, uint256 d) returns uint256 {
+    if (x == 0 || y == 0) return 0;
+    if (d > 0 && y == d) return x;
+    if (d > 0 && x == d) return y;
+    if (d > 0) return ghostMulDivUp(x, y, d);
+    uint256 res;
     return res;
 }
 
@@ -117,8 +161,31 @@ rule userLossIndexMonotonicallyIncreases(bytes32 id, address user, method f, env
 strong invariant totalUnitsEqualsSumNegativeDebtPlusWithdrawable(bytes32 id)
     to_mathint(totalUnits(id)) == sumDebt[id] + to_mathint(withdrawable(id));
 
+strong invariant createdObligationsHaveBoundedTtm(env e, Midnight.Obligation obligation)
+    obligationIsCreated(obligation) => obligation.maturity <= e.block.timestamp + MAX_TTM()
+    {
+        preserved with (env e_f) {
+            require e.block.timestamp >= e_f.block.timestamp;
+        }
+    }
+
+strong invariant pendingContinuousFeeBoundedByCredit(bytes32 id, address user)
+    pendingFee(id, user) <= creditOf(id, user)
+    {
+        preserved take(uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
+            requireInvariant createdObligationsHaveBoundedTtm(e, offer.obligation);
+            require currentContract.defaultContinuousFee[offer.obligation.loanToken] <= MAX_CONTINUOUS_FEE();
+            require currentContract.obligationState[summaryToId(offer.obligation)].continuousFee <= MAX_CONTINUOUS_FEE();
+        }
+    }
+
 strong invariant noRemainingContinuousFeeWithoutCredit(bytes32 id, address user)
-    creditOf(id, user) == 0 => pendingFee(id, user) == 0;
+    creditOf(id, user) == 0 => pendingFee(id, user) == 0
+    {
+        preserved {
+            requireInvariant pendingContinuousFeeBoundedByCredit(id, user);
+        }
+    }
 
 strong invariant userLossIndexLeqObligationLossIndex(bytes32 id, address user)
     userLossIndex(id, user) <= currentContract.obligationState[id].lossIndex;
@@ -129,6 +196,6 @@ strong invariant noCreditAndDebt(bytes32 id, address user)
     user != Utils.passiveFeeRecipient() => (creditOf(id, user) == 0 || debtOf(id, user) == 0)
     {
         preserved {
-            requireInvariant noRemainingContinuousFeeWithoutCredit(id, user);
+            requireInvariant pendingContinuousFeeBoundedByCredit(id, user);
         }
     }
