@@ -253,7 +253,7 @@ contract Midnight is IMidnight {
             buyerCreditIncrease.mulDivDown(_obligationState.continuousFee * timeToMaturity, WAD)
         );
         buyerPos.credit += UtilsLib.toUint128(buyerCreditIncrease);
-        if (sellerPos.credit > 0 && sellerCreditDecrease > 0) {
+        if (sellerPos.credit > 0) {
             sellerPos.pendingFee -= UtilsLib.toUint128(
                 uint256(sellerPos.pendingFee).mulDivUp(sellerCreditDecrease, sellerPos.credit)
             );
@@ -583,10 +583,8 @@ contract Midnight is IMidnight {
             uint256 newCredit =
                 creditBefore.mulDivDown(type(uint128).max - lossIndex, type(uint128).max - _userLossIndex);
             uint256 creditDecrease = creditBefore - newCredit;
-            if (creditBefore > 0 && creditDecrease > 0) {
-                _position.pendingFee -= UtilsLib.toUint128(
-                    uint256(_position.pendingFee).mulDivUp(creditDecrease, creditBefore)
-                );
+            if (creditBefore > 0) {
+                _position.pendingFee -= UtilsLib.toUint128(_position.pendingFee.mulDivUp(creditDecrease, creditBefore));
             }
             // forge-lint: disable-next-item(unsafe-typecast) as newCredit <= creditBefore
             _position.credit = uint128(newCredit);
