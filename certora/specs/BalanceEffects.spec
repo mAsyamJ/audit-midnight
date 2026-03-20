@@ -5,7 +5,6 @@ methods {
 
     function creditOf(bytes32 id, address user) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
-    function slashAndAccrueView(Midnight.Obligation, address) external returns (uint256) envfree;
     function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
     function collateralOf(bytes32 id, address user, uint256 index) external returns (uint128) envfree;
     function _.price() external => NONDET;
@@ -150,21 +149,23 @@ rule liquidateEffects(env e, Midnight.Obligation obligation, uint256 collateralI
     assert anyUser != borrower || anyId != id => debtOf(anyId, anyUser) == otherDebtBefore;
 }
 
-/// SLASH ///
+/// SLASH AND ACCRUE ///
 
-/// slash can only decrease credit (or keep it unchanged), does not change debt,
-/// and only changes position[id][user].
+/// When no fee accrual occurs, slashAndAccrue can only decrease credit (or keep it unchanged),
+/// does not change debt, and only changes position[id][user].
 /// Requires the system invariant that the obligation's lossIndex >= the user's lossIndex.
-rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUser) {
+rule slashAndAccrueEffects(env e, Midnight.Obligation obligation, address user, bytes32 anyId, address anyUser) {
+    bytes32 id = toId(e, obligation);
     require userLossIndex(id, user) <= currentContract.obligationState[id].lossIndex, "see Midnight.spec";
 
-    uint256 creditBefore = creditOf(id, user);
-    uint256 debtBefore = debtOf(id, user);
+    // Exclude fee accrual effects.
+    require noAccrual(e, id, user);
+
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
     uint256 expectedCredit = creditAfterSlash(id, user);
 
-    slash(e, id, user);
+    slashAndAccrue(e, obligation, user);
 
     assert creditOf(id, user) == expectedCredit;
     assert debtOf(anyId, anyUser) == otherDebtBefore;
