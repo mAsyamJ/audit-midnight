@@ -8,8 +8,8 @@ methods {
 
     function _.price() external => NONDET;
     function _.onRatify(Midnight.Offer, address) external => NONDET;
-    function _.onBuy(Midnight.Obligation, address, uint256, uint256, uint256, uint256, bytes) external => NONDET;
-    function _.onSell(Midnight.Obligation, address, uint256, uint256, uint256, uint256, bytes) external => NONDET;
+    function _.onBuy(Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
+    function _.onSell(Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
     function _.transferFrom(address, address, uint256) external => NONDET;
     function _.transfer(address, uint256) external => NONDET;
 
@@ -34,11 +34,11 @@ function signerSummary(bytes32 root, Midnight.Signature s) returns address {
 }
 
 /// Every successful take requires maker consent: either a ratifier callback, a ratified root, or a valid signature.
-rule takeRequiresMakerConsent(env e, uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+rule takeRequiresMakerConsent(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
     bool makerAuthorizedRatifier = isAuthorized(offer.maker, offer.ratifier);
     bool rootRatified = ratified(offer.maker, root);
 
-    take(e, obligationShares, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, signature, root, proof);
+    take(e, units, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, signature, root, proof);
 
     if (signature.v == 0) {
         assert rootRatified;
