@@ -295,7 +295,9 @@ contract SettersTest is BaseTest {
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
             collaterals: collaterals,
-            rcfThreshold: 0
+            rcfThreshold: 0,
+            enterGate: address(0),
+            liquidatorGate: address(0)
         });
         midnight.touchObligation(obligation);
         bytes32 id = toId(obligation);
@@ -320,7 +322,9 @@ contract SettersTest is BaseTest {
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
             collaterals: collaterals,
-            rcfThreshold: 0
+            rcfThreshold: 0,
+            enterGate: address(0),
+            liquidatorGate: address(0)
         });
         midnight.touchObligation(obligation);
         bytes32 id = toId(obligation);
@@ -346,7 +350,9 @@ contract SettersTest is BaseTest {
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
             collaterals: collaterals,
-            rcfThreshold: 0
+            rcfThreshold: 0,
+            enterGate: address(0),
+            liquidatorGate: address(0)
         });
         midnight.touchObligation(obligation);
         bytes32 id = toId(obligation);
