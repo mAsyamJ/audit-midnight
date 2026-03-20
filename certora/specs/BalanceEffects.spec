@@ -66,9 +66,6 @@ definition noAccrual(env e, bytes32 id, address borrower) returns bool = current
 rule repayEffects(env e, Midnight.Obligation obligation, uint256 units, address onBehalf, bytes32 anyId, address anyUser) {
     bytes32 id = toId(e, obligation);
 
-    // Exclude fee accrual effects.
-    require noAccrual(e, id, onBehalf);
-
     uint256 debtBefore = debtOf(id, onBehalf);
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
@@ -87,7 +84,7 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 units, addre
     bytes32 id = toId(e, obligation);
     require userLossIndex(id, onBehalf) <= currentContract.obligationState[id].lossIndex, "see Midnight.spec";
 
-    // Exclude fee accrual effects: withdraw now calls accrueContinuousFee which decreases credit.
+    // Exclude fee accrual effects.
     require noAccrual(e, id, onBehalf);
 
     uint256 creditPostSlash = creditAfterSlash(id, onBehalf);
@@ -139,9 +136,6 @@ rule takeEffects(env e, uint256 units, address taker, address takerCallback, byt
 /// and only changes position[id][borrower].debt.
 rule liquidateEffects(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data, bytes32 anyId, address anyUser) {
     bytes32 id = toId(e, obligation);
-
-    // Exclude fee accrual effects.
-    require noAccrual(e, id, borrower);
 
     uint256 debtBefore = debtOf(id, borrower);
     uint256 otherCreditBefore = creditOf(anyId, anyUser);

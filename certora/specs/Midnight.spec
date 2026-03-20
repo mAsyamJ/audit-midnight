@@ -131,7 +131,7 @@ strong invariant totalUnitsEqualsSumNegativeDebtPlusWithdrawable(bytes32 id)
     to_mathint(totalUnits(id)) == sumDebt[id] + to_mathint(withdrawable(id));
 
 strong invariant pendingContinuousFeeBoundedByCredit(bytes32 id, address user)
-    pendingFee(id, user) <= creditOf(id, user)
+    pendingFee(id, user) <= creditOf(id, user);
 
 strong invariant noRemainingContinuousFeeWithoutCredit(bytes32 id, address user)
     creditOf(id, user) == 0 => pendingFee(id, user) == 0
@@ -147,4 +147,4 @@ strong invariant userLossIndexLeqObligationLossIndex(bytes32 id, address user)
 /// A user cannot have both credit and debt, excluding PASSIVE_FEE_RECIPIENT who receives
 /// credit from fee accrual and could theoretically be a trade participant.
 strong invariant noCreditAndDebt(bytes32 id, address user)
-    user != Utils.passiveFeeRecipient() => (creditOf(id, user) == 0 || debtOf(id, user) == 0)
+    user != Utils.passiveFeeRecipient() => (creditOf(id, user) == 0 || debtOf(id, user) == 0);
