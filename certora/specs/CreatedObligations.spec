@@ -134,8 +134,8 @@ strong invariant obligationPendingFeeIsEmptyIfNotCreated(bytes32 id, address use
 strong invariant obligationLastContinuousFeeAccrualIsEmptyIfNotCreated(bytes32 id, address user)
     !Midnight.obligationCreated(id) => userHasNoLastContinuousFeeAccrual(id, user);
 
-strong invariant obligationCollateralIsEmptyIfNotCreated(bytes32 id, address user)
-    !Midnight.obligationCreated(id) => userHasNoCollateral(id, user);
+strong invariant obligationCollateralIsEmptyIfNotCreated(bytes32 id, address user, uint256 collateralIndex)
+    !Midnight.obligationCreated(id) => userHasNoCollateral(id, user, collateralIndex);
 
 strong invariant positionLossIndexIsEmptyIfNotCreated(bytes32 id, address user)
     !Midnight.obligationCreated(id) => currentContract.position[id][user].lossIndex == 0;
@@ -151,4 +151,4 @@ definition userHasNoRemainingContinuousFee(bytes32 id, address user) returns boo
 
 definition userHasNoLastContinuousFeeAccrual(bytes32 id, address user) returns bool = Midnight.lastContinuousFeeAccrual(id, user) == 0;
 
-definition userHasNoCollateral(bytes32 id, address user) returns bool = forall uint256 collateralIndex. collateralIndex < 128 => currentContract.position[id][user].collateral[collateralIndex] == 0;
+definition userHasNoCollateral(bytes32 id, address user, uint256 collateralIndex) returns bool = collateralIndex < 128 => currentContract.position[id][user].collateral[collateralIndex] == 0;

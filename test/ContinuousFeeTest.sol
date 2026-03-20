@@ -89,7 +89,7 @@ contract ContinuousFeeTest is BaseTest {
         // Via direct call
         vm.expectEmit();
         emit EventsLib.AccrueContinuousFee(id, lender, expectedFee, remaining - expectedFee);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
         assertEq(midnight.creditOf(id, lender), credit - expectedFee, "credit after direct call");
         assertEq(midnight.pendingFee(id, lender), remaining - expectedFee, "remaining after direct call");
 
@@ -124,7 +124,7 @@ contract ContinuousFeeTest is BaseTest {
         // Via direct call
         vm.expectEmit();
         emit EventsLib.AccrueContinuousFee(id, lender, remaining, 0);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
         assertEq(midnight.creditOf(id, lender), credit - remaining, "all remaining consumed (direct)");
         assertEq(midnight.pendingFee(id, lender), 0, "remaining is zero (direct)");
     }
@@ -149,15 +149,15 @@ contract ContinuousFeeTest is BaseTest {
         // Two separate accruals
         uint256 snap = vm.snapshotState();
         vm.warp(block.timestamp + elapsed1);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
         vm.warp(block.timestamp + elapsed2);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
         uint256 creditTwoAccruals = midnight.creditOf(id, lender);
         vm.revertToState(snap);
 
         // Single accrual for same total elapsed
         vm.warp(block.timestamp + elapsed1 + elapsed2);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
         uint256 creditOneAccrual = midnight.creditOf(id, lender);
 
         assertApproxEqAbs(creditTwoAccruals, creditOneAccrual, 2, "two accruals ~ one accrual");
@@ -222,7 +222,7 @@ contract ContinuousFeeTest is BaseTest {
 
         // Accrue
         vm.warp(block.timestamp + elapsed);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
 
         uint256 expectedFee = blendedRemaining.mulDivDown(elapsed, ttm);
         assertApproxEqAbs(midnight.creditOf(id, lender), credit1 + credit2 - expectedFee, 1, "credit after accrual");
@@ -307,7 +307,7 @@ contract ContinuousFeeTest is BaseTest {
 
         if (withdrawAmount == creditAfterAccrual) {
             assertEq(midnight.pendingFee(id, lender), 0, "full withdraw zeroes remaining");
-            midnight.accrueContinuousFee(obligation, lender);
+            midnight.slashAndAccrue(obligation, lender);
             assertEq(midnight.pendingFee(id, lender), 0, "full withdraw stays at zero");
         }
     }
@@ -329,25 +329,25 @@ contract ContinuousFeeTest is BaseTest {
 
         // Phase 1: accrue fees on original credit before the slash.
         vm.warp(block.timestamp + elapsed1);
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
 
         uint256 creditBeforeSlash = midnight.creditOf(id, lender);
         uint256 pendingBeforeSlash = midnight.pendingFee(id, lender);
 
         // Slash.
         createBadDebt(obligation);
+        midnight.slashAndAccrue(obligation, lender);
 
-        uint256 creditAfterSlash = midnight.creditAfterSlashing(id, lender);
+        uint256 creditAfterSlash = midnight.creditOf(id, lender);
         vm.assume(creditAfterSlash < creditBeforeSlash);
 
-        uint256 pendingAfterSlash =
-            pendingBeforeSlash - pendingBeforeSlash.mulDivUp(creditBeforeSlash - creditAfterSlash, creditBeforeSlash);
+        uint256 pendingAfterSlash = midnight.pendingFee(id, lender);
 
         // Phase 2: accrue fees on slashed credit.
         vm.warp(block.timestamp + elapsed2);
         uint256 accruedFee = pendingAfterSlash.mulDivDown(elapsed2, ttm - elapsed1);
 
-        midnight.accrueContinuousFee(obligation, lender);
+        midnight.slashAndAccrue(obligation, lender);
 
         assertEq(midnight.creditOf(id, lender), creditAfterSlash - accruedFee, "credit after slash and accrual");
         assertApproxEqAbs(

@@ -36,8 +36,6 @@ methods {
 
 /// HELPERS ///
 
-definition MAX_TTM() returns uint256 = 3153600000;
-
 definition MAX_CONTINUOUS_FEE() returns uint256 = 317097919;
 
 function summaryToId(Midnight.Obligation obligation) returns (bytes32) {
@@ -56,31 +54,10 @@ hook Sstore position[KEY bytes32 id][KEY address owner].debt uint128 newDebt (ui
     sumDebt[id] = sumDebt[id] - to_mathint(oldDebt) + to_mathint(newDebt);
 }
 
-ghost ghostMulDivDown(uint256, uint256, uint256) returns uint256 {
-    // When the multiplier is at most the denominator, floor(x * y / d) cannot exceed x.
-    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && y <= d => ghostMulDivDown(x, y, d) <= x;
-
-    // x * d / d == x.
-    axiom forall uint256 x. forall uint256 d. d > 0 => ghostMulDivDown(x, d, d) == x;
-}
-
-ghost ghostMulDivUp(uint256, uint256, uint256) returns uint256 {
-    // When the multiplier is at most the denominator, ceil(x * y / d) cannot exceed x.
-    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && y <= d => ghostMulDivUp(x, y, d) <= x;
-
-    // x * d / d == x.
-    axiom forall uint256 x. forall uint256 d. d > 0 => ghostMulDivUp(x, d, d) == x;
-
-    // For x <= d and y <= d, ceil(x * y / d) is large enough that the remainder
-    // after subtracting it from x fits within the denominator remainder d - y.
-    axiom forall uint256 x. forall uint256 y. forall uint256 d. d > 0 && x <= d && y <= d => x - ghostMulDivUp(x, y, d) <= d - y;
-}
-
 function summaryMulDivDown(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     if (d > 0 && y == d) return x;
     if (d > 0 && x == d) return y;
-    if (d > 0) return ghostMulDivDown(x, y, d);
     uint256 res;
     return res;
 }
@@ -89,7 +66,6 @@ function summaryMulDivUp(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     if (d > 0 && y == d) return x;
     if (d > 0 && x == d) return y;
-    if (d > 0) return ghostMulDivUp(x, y, d);
     uint256 res;
     return res;
 }
@@ -161,23 +137,15 @@ rule userLossIndexMonotonicallyIncreases(bytes32 id, address user, method f, env
 strong invariant totalUnitsEqualsSumNegativeDebtPlusWithdrawable(bytes32 id)
     to_mathint(totalUnits(id)) == sumDebt[id] + to_mathint(withdrawable(id));
 
-strong invariant createdObligationsHaveBoundedTtm(env e, Midnight.Obligation obligation)
-    obligationIsCreated(obligation) => obligation.maturity <= e.block.timestamp + MAX_TTM()
-    {
-        preserved with (env e_f) {
-            require e.block.timestamp >= e_f.block.timestamp;
-        }
-    }
-
 strong invariant pendingContinuousFeeBoundedByCredit(bytes32 id, address user)
     pendingFee(id, user) <= creditOf(id, user)
     {
         preserved take(uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
-            requireInvariant createdObligationsHaveBoundedTtm(e, offer.obligation);
             requireInvariant pendingContinuousFeeBoundedByCredit(summaryToId(offer.obligation), offer.maker);
             requireInvariant pendingContinuousFeeBoundedByCredit(summaryToId(offer.obligation), taker);
-            require currentContract.defaultContinuousFee[offer.obligation.loanToken] * MAX_TTM() <= 10 ^ 18;
-            require currentContract.obligationState[summaryToId(offer.obligation)].continuousFee * MAX_TTM() <= 10 ^ 18;
+            requireInvariant pendingContinuousFeeBoundedByCredit(summaryToId(offer.obligation), Utils.passiveFeeRecipient());
+            require currentContract.defaultContinuousFee[offer.obligation.loanToken] <= MAX_CONTINUOUS_FEE();
+            require currentContract.obligationState[summaryToId(offer.obligation)].continuousFee <= MAX_CONTINUOUS_FEE();
         }
     }
 

@@ -74,7 +74,7 @@ rule creditNotStoredBeforeAccrual(env e, method f, calldataarg args, bytes32 id,
 
 /// Check that credit is never loaded before accrueContinuousFee is called.
 /// The SLOADs of accrueContinuousFee and slash are ignored (see summaries above).
-rule creditNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:creditOf(bytes32, address).selector && f.selector != sig:creditAfterSlashing(bytes32, address).selector } {
+rule creditNotLoadedBeforeAccrual(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:creditOf(bytes32, address).selector && f.selector != sig:slashAndAccrueView(Midnight.Obligation, address).selector } {
     require !accrued[id][user], "initialize the ghost variable";
     require !creditLoadedBeforeAccrual[id][user], "initialize the ghost variable";
 

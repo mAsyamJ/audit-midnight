@@ -5,7 +5,7 @@ methods {
 
     function creditOf(bytes32 id, address user) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
-    function creditAfterSlashing(bytes32 id, address user) external returns (uint256) envfree;
+    function slashAndAccrueView(Midnight.Obligation, address) external returns (uint256) envfree;
     function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
     function collateralOf(bytes32 id, address user, uint256 index) external returns (uint128) envfree;
     function _.price() external => NONDET;
@@ -34,7 +34,7 @@ methods {
 /// HELPERS ///
 
 // Deterministic summary: same inputs always produce the same output.
-// This is needed so that creditAfterSlashing (view) agrees with the actual slash.
+// This is needed so that the slash prediction agrees with the actual slash.
 ghost ghostMulDiv(uint256, uint256, uint256) returns uint256 {
     // mulDivDown(x, y, d) = x * y / d <= x when y <= d. Same holds for mulDivUp.
     axiom forall uint256 x. forall uint256 y. forall uint256 d. y <= d => ghostMulDiv(x, y, d) <= x;
@@ -46,6 +46,15 @@ ghost ghostMulDiv(uint256, uint256, uint256) returns uint256 {
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     return ghostMulDiv(x, y, d);
+}
+
+function creditAfterSlash(bytes32 id, address user) returns uint256 {
+    uint128 userIdx = currentContract.position[id][user].lossIndex;
+    uint128 globalIdx = currentContract.obligationState[id].lossIndex;
+    if (userIdx == globalIdx) {
+        return currentContract.position[id][user].credit;
+    }
+    return require_uint256(summaryMulDiv(currentContract.position[id][user].credit, require_uint256(max_uint128 - globalIdx), require_uint256(max_uint128 - userIdx)));
 }
 
 // All rules in this file assume no accrual.
@@ -81,7 +90,7 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 units, addre
     // Exclude fee accrual effects: withdraw now calls accrueContinuousFee which decreases credit.
     require noAccrual(e, id, onBehalf);
 
-    uint256 creditPostSlash = creditAfterSlashing(id, onBehalf);
+    uint256 creditPostSlash = creditAfterSlash(id, onBehalf);
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
@@ -107,8 +116,8 @@ rule takeEffects(env e, uint256 units, address taker, address takerCallback, byt
     require noAccrual(e, id, offer.maker);
     require noAccrual(e, id, taker);
 
-    mathint makerPostSlash = to_mathint(creditAfterSlashing(id, offer.maker)) - to_mathint(debtOf(id, offer.maker));
-    mathint takerPostSlash = to_mathint(creditAfterSlashing(id, taker)) - to_mathint(debtOf(id, taker));
+    mathint makerPostSlash = to_mathint(creditAfterSlash(id, offer.maker)) - to_mathint(debtOf(id, offer.maker));
+    mathint takerPostSlash = to_mathint(creditAfterSlash(id, taker)) - to_mathint(debtOf(id, taker));
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
 
@@ -159,7 +168,7 @@ rule slashEffects(env e, bytes32 id, address user, bytes32 anyId, address anyUse
     uint256 debtBefore = debtOf(id, user);
     uint256 otherCreditBefore = creditOf(anyId, anyUser);
     uint256 otherDebtBefore = debtOf(anyId, anyUser);
-    uint256 expectedCredit = creditAfterSlashing(id, user);
+    uint256 expectedCredit = creditAfterSlash(id, user);
 
     slash(e, id, user);
 
@@ -188,7 +197,7 @@ rule withdrawCollateralEffects(env e, Midnight.Obligation obligation, uint256 co
 
 /// ALL OTHER FUNCTIONS ///
 
-/// Functions other than take, withdraw, repay, liquidate, slash, withdrawCollateral, and accrueContinuousFee do not change any user's credit or debt.
+/// Functions other than take, withdraw, repay, liquidate, slashAndAccrue, and withdrawCollateral do not change any user's credit or debt.
 rule creditAndDebtUnchangedByOtherFunctions(method f, env e, calldataarg args, bytes32 id, address user)
 filtered {
     f -> !f.isView
@@ -196,9 +205,8 @@ filtered {
         && f.selector != sig:withdraw(Midnight.Obligation, uint256, address, address).selector
         && f.selector != sig:repay(Midnight.Obligation, uint256, address).selector
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
-        && f.selector != sig:slash(bytes32, address).selector
+        && f.selector != sig:slashAndAccrue(Midnight.Obligation, address).selector
         && f.selector != sig:withdrawCollateral(Midnight.Obligation, uint256, uint256, address, address).selector
-        && f.selector != sig:accrueContinuousFee(Midnight.Obligation, address).selector
 } {
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);

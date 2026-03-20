@@ -367,21 +367,6 @@ contract OtherFunctionsTest is BaseTest {
         midnight.touchObligation(_obligation);
     }
 
-    function testTtmTooHigh() public {
-        Obligation memory _obligation = obligation;
-        _obligation.maturity = block.timestamp + 100 * 365 days + 1;
-
-        vm.expectRevert("ttm too high");
-        midnight.touchObligation(_obligation);
-    }
-
-    function testTtmAt100Years() public {
-        Obligation memory _obligation = obligation;
-        _obligation.maturity = block.timestamp + 100 * 365 days;
-
-        midnight.touchObligation(_obligation);
-    }
-
     function testBelowExactMaxCollaterals(uint256 numCollaterals) public {
         numCollaterals = bound(numCollaterals, 1, MAX_COLLATERALS - 1);
         Obligation memory _obligation = _createMultiCollateralObligation(numCollaterals);
