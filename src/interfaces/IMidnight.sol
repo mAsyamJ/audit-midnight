@@ -57,7 +57,7 @@ struct Position {
     uint128 credit;
     uint128 pendingFee;
     uint128 lossIndex;
-    uint128 lastContinuousFeeAccrual;
+    uint128 lastAccrual;
     uint128 debt;
     uint128 activatedCollaterals;
     uint128[128] collateral;

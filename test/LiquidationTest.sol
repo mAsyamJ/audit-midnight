@@ -578,7 +578,7 @@ contract LiquidationTest is BaseTest {
         vm.assume(units > maxDebt);
 
         // Write debt into Position storage.
-        // Layout: slot 0 = credit | pendingFee, slot 1 = lossIndex | lastContinuousFeeAccrual,
+        // Layout: slot 0 = credit | pendingFee, slot 1 = lossIndex | lastAccrual,
         // slot 2 = debt | activatedCollaterals.
         // Debt is in the lower 128 bits of slot 2.
         uint256 mappingSlot = 0;

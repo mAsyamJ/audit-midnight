@@ -266,6 +266,10 @@ contract ContinuousFeeTest is BaseTest {
         if (exitAmount == creditAfterAccrual) {
             assertEq(midnight.pendingFee(id, lender), 0, "full exit zeroes remaining");
         }
+
+        uint256 buyerExpectedPending = exitAmount.mulDivDown(feeRate * (ttm - elapsed), WAD);
+        assertEq(midnight.pendingFee(id, otherLender), buyerExpectedPending, "buyer pendingFee after exit");
+        assertEq(midnight.creditOf(id, otherLender), exitAmount, "buyer credit after exit");
     }
 
     function testWithdrawReducesPendingFee(

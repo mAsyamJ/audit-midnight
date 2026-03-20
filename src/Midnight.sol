@@ -596,25 +596,25 @@ contract Midnight is IMidnight {
     /// SLASHING AND CONTINUOUS FEE ACCRUAL ///
 
     /// @dev Expects the id to correspond to the obligation's id.
-    /// @dev Returns the new credit, new pending fee, and accrued fee after simulating updatePosition.
+    /// @dev Returns the new credit, new pending fee, and accrued fee after having updated the position.
     function updatePositionView(Obligation memory obligation, bytes32 id, address user)
         public
         view
         returns (uint128, uint128, uint128)
     {
-        Position memory _position = position[id][user];
-        uint256 postSlashCredit = _position.lossIndex < type(uint128).max
-            ? _position.credit
-                .mulDivDown(type(uint128).max - obligationState[id].lossIndex, type(uint128).max - _position.lossIndex)
+        Position storage _position = position[id][user];
+        uint128 credit = _position.credit;
+        uint128 lossIndex = _position.lossIndex;
+        uint256 postSlashCredit = lossIndex < type(uint128).max
+            ? credit.mulDivDown(type(uint128).max - obligationState[id].lossIndex, type(uint128).max - lossIndex)
             : 0;
-        uint256 postSlashPending = _position.credit > 0
-            ? _position.pendingFee - _position.pendingFee.mulDivUp(_position.credit - postSlashCredit, _position.credit)
-            : 0;
+        uint128 _pendingFee = _position.pendingFee;
+        uint256 postSlashPending = credit > 0 ? _pendingFee - _pendingFee.mulDivUp(credit - postSlashCredit, credit) : 0;
         uint256 accrualEnd = UtilsLib.min(block.timestamp, obligation.maturity);
-        uint256 lastAccrual = _position.lastContinuousFeeAccrual;
+        uint128 _lastAccrual = _position.lastAccrual;
         // forge-lint: disable-next-item(unsafe-typecast) as fee <= pending <= credit which are uint128 position fields
-        uint128 fee = lastAccrual < obligation.maturity
-            ? uint128(postSlashPending.mulDivDown(accrualEnd - lastAccrual, obligation.maturity - lastAccrual))
+        uint128 fee = _lastAccrual < obligation.maturity
+            ? uint128(postSlashPending.mulDivDown(accrualEnd - _lastAccrual, obligation.maturity - _lastAccrual))
             : 0;
         // forge-lint: disable-next-item(unsafe-typecast) as credit and pending are <= uint128 position fields
         return (uint128(postSlashCredit) - fee, uint128(postSlashPending) - fee, fee);
@@ -631,13 +631,12 @@ contract Midnight is IMidnight {
     /// @dev Expects the id to correspond to the obligation's id.
     function _updatePosition(Obligation memory obligation, bytes32 id, address user) internal {
         Position storage _position = position[id][user];
-        uint128 lossIndex = obligationState[id].lossIndex;
         (uint128 newCredit, uint128 newPending, uint128 accruedFee) = updatePositionView(obligation, id, user);
 
         _position.credit = newCredit;
-        _position.lossIndex = lossIndex;
+        _position.lossIndex = obligationState[id].lossIndex;
         _position.pendingFee = newPending;
-        _position.lastContinuousFeeAccrual = uint128(block.timestamp);
+        _position.lastAccrual = uint128(block.timestamp);
         // The passive fee recipient's credit is increased without slashing them first, meaning that they will get
         // slashed a bit too much later.
         position[id][PASSIVE_FEE_RECIPIENT].credit += accruedFee;
@@ -703,8 +702,8 @@ contract Midnight is IMidnight {
         return position[id][user].pendingFee;
     }
 
-    function lastContinuousFeeAccrual(bytes32 id, address user) external view returns (uint128) {
-        return position[id][user].lastContinuousFeeAccrual;
+    function lastAccrual(bytes32 id, address user) external view returns (uint128) {
+        return position[id][user].lastAccrual;
     }
 
     /// @dev This function should be called with the id corresponding to the obligation.
