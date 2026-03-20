@@ -5,7 +5,6 @@ methods {
 
     function creditOf(bytes32 id, address user) external returns (uint256) envfree;
     function debtOf(bytes32 id, address user) external returns (uint256) envfree;
-    function consumed(address user, bytes32 group) external returns (uint256) envfree;
     function creditAfterSlashing(bytes32 id, address user) external returns (uint256) envfree;
     function userLossIndex(bytes32 id, address user) external returns (uint128) envfree;
     function collateralOf(bytes32 id, address user, uint256 index) external returns (uint128) envfree;
@@ -234,37 +233,4 @@ filtered {
     uint256 collateralBefore = collateralOf(id, user, colIdx);
     f(e, args);
     assert collateralOf(id, user, colIdx) == collateralBefore;
-}
-
-/// SET CONSUMED ///
-
-/// setConsumed sets consumed exactly to amount, and only changes consumed(onBehalf, group).
-rule setConsumedEffects(env e, bytes32 group, uint256 amount, address onBehalf, address anyUser, bytes32 anyGroup) {
-    uint256 otherConsumedBefore = consumed(anyUser, anyGroup);
-
-    setConsumed(e, group, amount, onBehalf);
-
-    assert consumed(onBehalf, group) == amount;
-    assert anyUser != onBehalf || anyGroup != group => consumed(anyUser, anyGroup) == otherConsumedBefore;
-}
-
-/// TAKE (CONSUMED) ///
-
-/// In take, only the maker's consumed can change, and it can only increase.
-rule takeConsumedEffects(env e, uint256 obligationUnits, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, address user, bytes32 group) {
-    uint256 consumedBefore = consumed(user, group);
-    take(e, obligationUnits, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
-    uint256 consumedAfter = consumed(user, group);
-
-    assert user != offer.maker || group != offer.group => consumedAfter == consumedBefore;
-    assert consumedAfter >= consumedBefore;
-}
-
-/// ALL OTHER FUNCTIONS (CONSUMED) ///
-
-/// Functions other than take and setConsumed do not change any user's consumed.
-rule consumedUnchangedByOtherFunctions(method f, env e, calldataarg args, address user, bytes32 group) filtered { f -> !f.isView && f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector && f.selector != sig:setConsumed(bytes32, uint256, address).selector } {
-    uint256 consumedBefore = consumed(user, group);
-    f(e, args);
-    assert consumed(user, group) == consumedBefore;
 }
