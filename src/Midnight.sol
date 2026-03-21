@@ -270,7 +270,7 @@ contract Midnight is IMidnight {
         buyerPos.credit += UtilsLib.toUint128(buyerCreditIncrease);
         if (sellerPos.credit > 0) {
             sellerPos.pendingFee -= UtilsLib.toUint128(
-                uint256(sellerPos.pendingFee).mulDivUp(sellerCreditDecrease, sellerPos.credit)
+                sellerPos.pendingFee.mulDivUp(sellerCreditDecrease, sellerPos.credit)
             );
         }
         sellerPos.credit -= UtilsLib.toUint128(sellerCreditDecrease);
@@ -671,11 +671,11 @@ contract Midnight is IMidnight {
     }
 
     function creditOf(bytes32 id, address user) external view returns (uint256) {
-        return uint256(position[id][user].credit);
+        return position[id][user].credit;
     }
 
     function debtOf(bytes32 id, address user) external view returns (uint256) {
-        return uint256(position[id][user].debt);
+        return position[id][user].debt;
     }
 
     function totalUnits(bytes32 id) external view returns (uint256) {

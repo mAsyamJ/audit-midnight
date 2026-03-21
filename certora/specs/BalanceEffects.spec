@@ -32,7 +32,7 @@ methods {
 
 /// HELPERS ///
 
-// mulDiv(x, y, y) == x is needed so _updatePosition is a no-op under noSlash.
+// Under noSlash, all mulDiv calls in _updatePosition hit y == d (identity) or y == 0.
 function summaryMulDiv(uint256 x, uint256 y, uint256 d) returns uint256 {
     if (x == 0 || y == 0) return 0;
     if (d > 0 && y == d) return x;
@@ -160,7 +160,6 @@ filtered {
         && f.selector != sig:repay(Midnight.Obligation, uint256, address).selector
         && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector
         && f.selector != sig:updatePosition(Midnight.Obligation, address).selector
-        && f.selector != sig:withdrawCollateral(Midnight.Obligation, uint256, uint256, address, address).selector
 } {
     uint256 creditBefore = creditOf(id, user);
     uint256 debtBefore = debtOf(id, user);
