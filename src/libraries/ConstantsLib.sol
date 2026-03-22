@@ -10,6 +10,7 @@ bytes32 constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(uint256 chainI
 bytes32 constant ROOT_TYPEHASH = keccak256("Root(bytes32 root)");
 bytes32 constant AUTHORIZATION_TYPEHASH =
     keccak256("Authorization(address authorizer,address authorizee,bool isAuthorized,uint256 nonce,uint256 deadline)");
+bytes32 constant CALLBACK_SUCCESS = keccak256("CALLBACK_SUCCESS");
 uint256 constant MAX_COLLATERALS = 128;
 uint256 constant MAX_COLLATERALS_PER_BORROWER = 10;
 uint256 constant LIQUIDATION_CURSOR_LOW = 0.25e18;

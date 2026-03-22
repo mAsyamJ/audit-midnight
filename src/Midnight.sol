@@ -10,6 +10,7 @@ import {
     WAD,
     ORACLE_PRICE_SCALE,
     FEE_STEP,
+    CALLBACK_SUCCESS,
     TIME_TO_MAX_LIF,
     MAX_COLLATERALS,
     MAX_COLLATERALS_PER_BORROWER,
@@ -174,21 +175,16 @@ contract Midnight is IMidnight {
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(offer.session == session[offer.maker], "invalid session");
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
-
-        if (sig.v != 0) {
-            address _signer = signer(root, sig);
-            if (offer.ratifier != address(0)) {
-                require(
-                    (offer.maker == offer.ratifier || isAuthorized[offer.maker][offer.ratifier])
-                        && ICallbacks(offer.ratifier).onRatify(offer, _signer),
-                    "offer ratification failed"
-                );
-            } else {
-                require(_signer == offer.maker, "invalid signer");
-            }
+        if (offer.ratifier == address(0)) {
+            require(signer(root, sig) == offer.maker || ratified[offer.maker][root], "invalid signer");
         } else {
-            require(ratified[offer.maker][root], "offer not ratified");
+            require(
+                isAuthorized[offer.maker][offer.ratifier]
+                    && ICallbacks(offer.ratifier).onRatify(offer, signer(root, sig)) == CALLBACK_SUCCESS,
+                "unauthorized"
+            );
         }
+
         bytes32 id = touchObligation(offer.obligation);
         slash(id, offer.maker);
         slash(id, taker);
@@ -652,11 +648,11 @@ contract Midnight is IMidnight {
         return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(this)));
     }
 
+    /// @dev Does not revert if the signature is invalid.
     function signer(bytes32 root, Signature memory signature) internal view returns (address) {
         bytes32 structHash = keccak256(abi.encode(ROOT_TYPEHASH, root));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator(), structHash));
         address tentativeSigner = ecrecover(digest, signature.v, signature.r, signature.s);
-        require(tentativeSigner != address(0), "invalid signature");
         return tentativeSigner;
     }
 

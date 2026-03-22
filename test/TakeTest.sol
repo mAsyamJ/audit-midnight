@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
-import {WAD} from "../src/libraries/ConstantsLib.sol";
+import {WAD, CALLBACK_SUCCESS} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
 import {ICallbacks} from "../src/interfaces/ICallbacks.sol";
@@ -777,7 +777,7 @@ contract TakeTest is BaseTest {
         signerPrivateKey = boundPrivateKey(signerPrivateKey);
         privateKey[vm.addr(signerPrivateKey)] = signerPrivateKey;
         RatifyCallback ratifier = new RatifyCallback();
-        ratifier.setReturnData(false);
+        ratifier.setReturnValue(bytes32(0));
         lenderOffer.maker = maker;
         lenderOffer.ratifier = address(ratifier);
 
@@ -998,6 +998,30 @@ contract TakeTest is BaseTest {
         assertEq(midnight.creditOf(id, lender), units, "creditOf");
         assertEq(midnight.debtOf(id, borrower), units, "debtOf");
     }
+
+    function testTradeWithAddressZero() public {
+        // address(0) as maker with an invalid signature (ecrecover returns address(0))
+        Offer memory zeroOffer;
+        zeroOffer.buy = true;
+        zeroOffer.maker = address(0);
+        zeroOffer.maxUnits = 1;
+        zeroOffer.obligation = obligation;
+        zeroOffer.expiry = block.timestamp + 200;
+        zeroOffer.tick = 0; // tiny price so 1 unit rounds to 0 assets
+
+        // taker = borrower, needs collateral
+        collateralize(obligation, borrower, 1);
+
+        // Garbage signature: ecrecover returns address(0), matching offer.maker
+        Signature memory badSig;
+        bytes32 _root = root(zeroOffer);
+        bytes32[] memory _proof = new bytes32[](0);
+
+        vm.prank(borrower);
+        midnight.take(1, borrower, address(0), hex"", borrower, zeroOffer, badSig, _root, _proof);
+
+        assertEq(midnight.creditOf(id, address(0)), 1, "address(0) got free credit");
+    }
 }
 
 contract BorrowCallback is ICallbacks {
@@ -1023,7 +1047,7 @@ contract BorrowCallback is ICallbacks {
     ) external {}
 
     function onLiquidate(Obligation memory, uint256, uint256, uint256, address, bytes memory) external {}
-    function onRatify(Offer memory, address) external returns (bool) {}
+    function onRatify(Offer memory, address) external returns (bytes32) {}
 }
 
 contract LendCallback is ICallbacks {
@@ -1051,13 +1075,13 @@ contract LendCallback is ICallbacks {
     ) external {}
 
     function onLiquidate(Obligation memory, uint256, uint256, uint256, address, bytes memory) external {}
-    function onRatify(Offer memory, address) external returns (bool) {}
+    function onRatify(Offer memory, address) external returns (bytes32) {}
 }
 
 contract RatifyCallback is ICallbacks {
     address public recordedSigner;
     Offer internal _recordedOffer;
-    bool public returnBool = true;
+    bytes32 public returnValue = CALLBACK_SUCCESS;
 
     function onBuy(Obligation memory, address, uint256, uint256, uint256, bytes memory) external {}
     function onSell(Obligation memory, address, uint256, uint256, uint256, bytes memory) external {}
@@ -1067,13 +1091,13 @@ contract RatifyCallback is ICallbacks {
         return _recordedOffer;
     }
 
-    function onRatify(Offer memory offer, address signer) external returns (bool) {
+    function onRatify(Offer memory offer, address signer) external returns (bytes32) {
         _recordedOffer = offer;
         recordedSigner = signer;
-        return returnBool;
+        return returnValue;
     }
 
-    function setReturnData(bool _returnBool) external {
-        returnBool = _returnBool;
+    function setReturnValue(bytes32 _returnValue) external {
+        returnValue = _returnValue;
     }
 }
