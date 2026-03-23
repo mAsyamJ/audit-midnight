@@ -1000,28 +1000,29 @@ contract TakeTest is BaseTest {
         assertEq(midnight.debtOf(id, borrower), units, "debtOf");
     }
 
-    function testTradeWithAddressZero() public {
+    function testTradeWithAddressZero(uint256 units) public {
+        units = bound(units, 1, maxAssets);
+
         // address(0) as maker with an invalid signature (ecrecover returns address(0))
         Offer memory zeroOffer;
         zeroOffer.buy = true;
         zeroOffer.maker = address(0);
-        zeroOffer.maxUnits = 1;
+        zeroOffer.maxUnits = units;
         zeroOffer.obligation = obligation;
         zeroOffer.expiry = block.timestamp + 200;
-        zeroOffer.tick = 0; // tiny price so 1 unit rounds to 0 assets
+        zeroOffer.tick = 0; // 0 price so any units transfer 0 assets
 
         // taker = borrower, needs collateral
-        collateralize(obligation, borrower, 1);
+        collateralize(obligation, borrower, units);
 
-        // Garbage signature: ecrecover returns address(0), matching offer.maker
         Signature memory badSig;
-        bytes32 _root = root(zeroOffer);
-        bytes32[] memory _proof = new bytes32[](0);
 
         vm.prank(borrower);
-        midnight.take(1, borrower, address(0), hex"", borrower, zeroOffer, badSig, _root, _proof);
+        midnight.take(
+            units, borrower, address(0), hex"", borrower, zeroOffer, badSig, root(zeroOffer), new bytes32[](0)
+        );
 
-        assertEq(midnight.creditOf(id, address(0)), 1, "address(0) got free credit");
+        assertEq(midnight.creditOf(id, address(0)), units, "address(0) got free credit");
     }
 }
 
