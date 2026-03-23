@@ -384,7 +384,7 @@ contract Midnight is IMidnight {
             badDebt = badDebt.zeroFloorSub(
                 _collateralOf.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateral.maxLif)
             );
-            bitmap = bitmap.toggleBit(i);
+            bitmap = bitmap.clearBit(i);
         }
 
         require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
@@ -603,7 +603,7 @@ contract Midnight is IMidnight {
             Collateral memory collateral = obligation.collaterals[i];
             uint256 price = IOracle(collateral.oracle).price();
             maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateral.lltv, WAD);
-            bitmap = bitmap.toggleBit(i);
+            bitmap = bitmap.clearBit(i);
         }
         return maxDebt >= debt;
     }
