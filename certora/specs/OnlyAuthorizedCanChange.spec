@@ -157,10 +157,10 @@ rule unauthorizedWithdrawCollateralFails(env e, Midnight.Obligation obligation, 
     assert !lastReverted => e.msg.sender == onBehalf || isAuthorized(onBehalf, e.msg.sender);
 }
 
-/// withdraw requires the caller to be onBehalf or authorized by onBehalf.
+/// withdraw requires the caller to be onBehalf or authorized by onBehalf, or the fee recipient withdrawing for PASSIVE_FEE_RECIPIENT.
 rule unauthorizedWithdrawFails(env e, Midnight.Obligation obligation, uint256 units, address onBehalf, address receiver) {
     withdraw@withrevert(e, obligation, units, onBehalf, receiver);
-    assert !lastReverted => e.msg.sender == onBehalf || isAuthorized(onBehalf, e.msg.sender);
+    assert !lastReverted => e.msg.sender == onBehalf || isAuthorized(onBehalf, e.msg.sender) || (onBehalf == Utils.passiveFeeRecipient() && e.msg.sender == feeRecipient());
 }
 
 /// repay requires the caller to be onBehalf or authorized by onBehalf.
