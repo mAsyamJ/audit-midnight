@@ -66,7 +66,8 @@ function CVL_signer() returns address {
 /// CREDIT AND DEBT CHANGE RULES ///
 
 /// An unauthorized caller cannot change a user's credit and debt except via take, liquidate, and updatePosition.
-/// take is excluded because maker consent is verified via signature/ratification, not caller authorization.
+/// take is excluded because its special authorization and balance-change behavior is covered by
+/// unauthorizedTakeFails, takeRequiresMakerConsent, and takeEffects.
 /// PASSIVE_FEE_RECIPIENT's credit can increase via fee accrual without authorization.
 /// Assumes no reentrancy: callbacks (onBuy, onSell) and token transfers are not modeled as re-entering Midnight, so re-entrant credit and debt changes are not covered.
 rule onlyAuthorizedCanChangeCreditAndDebtExceptTakeLiquidateAndUpdatePosition(env e, method f, calldataarg args, bytes32 id, address user) filtered { f -> f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector && f.selector != sig:liquidate(Midnight.Obligation, uint256, uint256, uint256, address, bytes).selector && f.selector != sig:updatePosition(Midnight.Obligation, address).selector } {
@@ -126,9 +127,8 @@ rule onlyAuthorizedCanChangeSession(env e, method f, calldataarg args, address u
 
 /// AUTHORIZATION CHANGE RULES ///
 
-/// An unauthorized caller cannot change any entry in a user's isAuthorized mapping.
-/// setAuthorizedWithSig is excluded because it updates authorization by signature rather than by caller authorization.
-rule onlyAuthorizedCanChangeAuthorization(env e, method f, calldataarg data) filtered { f -> !f.isView && f.selector != sig:setAuthorizedWithSig(Midnight.Authorization memory, Midnight.Signature calldata).selector } {
+/// No function (except setAuthorizedWithSig) can change isAuthorized(user, someone) unless the caller is the user or authorized by the user.
+rule onlyAuthorizedCanChangeAuthorizationExceptSetAuthorizedWithSig(env e, method f, calldataarg data) filtered { f -> !f.isView && f.selector != sig:setAuthorizedWithSig(Midnight.Authorization memory, Midnight.Signature calldata).selector } {
     address user;
     address someone;
 
