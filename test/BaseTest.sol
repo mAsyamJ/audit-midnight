@@ -92,23 +92,14 @@ abstract contract BaseTest is Test {
     }
 
     // hardcodes the right root, signature, proof, and callback (no callback)
-    function take(uint256 obligationShares, address taker, Offer memory offer)
-        internal
-        returns (uint256, uint256, uint256, uint256)
-    {
+    function take(uint256 units, address taker, Offer memory offer) internal returns (uint256, uint256, uint256) {
         // receiverIfTakerIsSeller param is for taker (when offer.buy == true)
         // offer.receiverIfMakerIsSeller is for maker (when offer.buy == false)
         vm.prank(taker);
-        return midnight.take(
-            obligationShares, taker, address(0), hex"", taker, offer, sig([offer]), root([offer]), proof([offer])
-        );
+        return midnight.take(units, taker, address(0), hex"", taker, offer, sig([offer]), root([offer]), proof([offer]));
     }
 
-    function setupOtherUsers(Obligation memory obligation, uint256 shares) internal {
-        bytes32 _id = toId(obligation);
-        uint256 totalUnits = midnight.totalUnits(_id);
-        uint256 totalShares = midnight.totalShares(_id);
-        uint256 units = shares.mulDivUp(totalUnits + 1, totalShares + 1);
+    function setupOtherUsers(Obligation memory obligation, uint256 units) internal {
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         uint256 assets = units.mulDivUp(price, WAD);
         deal(address(loanToken), otherLender, assets);
@@ -117,13 +108,13 @@ abstract contract BaseTest is Test {
         lenderOffer.obligation = obligation;
         lenderOffer.buy = true;
         lenderOffer.maker = otherLender;
-        lenderOffer.obligationShares = shares;
+        lenderOffer.maxUnits = units;
         lenderOffer.group = keccak256(abi.encode("non zero group"));
         lenderOffer.expiry = block.timestamp + 200;
         lenderOffer.tick = MAX_TICK;
 
         collateralize(obligation, otherBorrower, units);
-        take(shares, otherBorrower, lenderOffer);
+        take(units, otherBorrower, lenderOffer);
     }
 
     function createBadDebt(Obligation memory obligation) internal {
@@ -138,7 +129,7 @@ abstract contract BaseTest is Test {
         badBorrowerOffer.buy = false;
         badBorrowerOffer.maker = badBorrower;
         badBorrowerOffer.receiverIfMakerIsSeller = badBorrower;
-        badBorrowerOffer.obligationShares = 100;
+        badBorrowerOffer.maxUnits = 100;
         badBorrowerOffer.start = block.timestamp;
         badBorrowerOffer.expiry = block.timestamp + 200;
         badBorrowerOffer.tick = MAX_TICK;
@@ -157,10 +148,6 @@ abstract contract BaseTest is Test {
 
         Oracle(obligation.collaterals[0].oracle).setPrice(ORACLE_PRICE_SCALE / 4);
         midnight.liquidate(obligation, 0, 0, 0, badBorrower, "");
-
-        assertNotEq(
-            midnight.totalUnits(toId(obligation)), midnight.totalShares(toId(obligation)), "total units != total shares"
-        );
 
         // then empty the market (borrow side only).
         authorize(badBorrower, address(this));
@@ -235,7 +222,7 @@ abstract contract BaseTest is Test {
         return arr;
     }
 
-    /// @dev Returns an obligation with sorted, unique collaterals and valid lltv/maxLif.
+    /// @dev Returns an obligation with sorted, unique collaterals, valid lltv/maxLif, and a creatable TTM.
     function validObligation(Obligation memory obligation) internal pure returns (Obligation memory) {
         uint256 len = obligation.collaterals.length > MAX_COLLATERALS ? MAX_COLLATERALS : obligation.collaterals.length;
         Collateral[] memory collaterals = new Collateral[](len);
@@ -250,22 +237,22 @@ abstract contract BaseTest is Test {
         return obligation;
     }
 
-    function setupObligation(Obligation memory obligation, uint256 obligationShares) internal {
-        deal(address(loanToken), lender, obligationShares); // at tick MAX_TICK, price is 1.
+    function setupObligation(Obligation memory obligation, uint256 units) internal {
+        deal(address(loanToken), lender, units); // at tick MAX_TICK, price is 1.
 
         Offer memory borrowerOffer;
         borrowerOffer.obligation = obligation;
         borrowerOffer.buy = false;
         borrowerOffer.maker = borrower;
         borrowerOffer.receiverIfMakerIsSeller = borrower;
-        borrowerOffer.obligationShares = obligationShares;
+        borrowerOffer.maxUnits = units;
         borrowerOffer.start = block.timestamp;
         borrowerOffer.expiry = block.timestamp;
         borrowerOffer.tick = MAX_TICK;
 
         vm.prank(lender);
         midnight.take(
-            obligationShares,
+            units,
             lender,
             address(0),
             hex"",

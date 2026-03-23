@@ -11,6 +11,7 @@ import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 import {
     MAX_COLLATERALS,
     MAX_COLLATERALS_PER_BORROWER,
+    MAX_CONTINUOUS_FEE,
     WAD,
     ORACLE_PRICE_SCALE,
     TIME_TO_MAX_LIF
@@ -117,47 +118,19 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(loanToken.balanceOf(borrower), 0);
     }
 
-    function testWithdrawInconsistentInput(uint256 units, uint256 shares) public {
-        vm.assume(units > 0 && shares > 0);
-        vm.prank(lender);
-        vm.expectRevert("inconsistent input");
-        midnight.withdraw(obligation, units, shares, lender, lender);
-    }
-
-    function testWithdrawWithObligations(uint256 units, uint256 withdraw) public {
+    function testWithdraw(uint256 units, uint256 withdraw) public {
         units = bound(units, 1, MAX_UNITS);
         withdraw = bound(withdraw, 1, units);
         testRepay(units, withdraw);
 
         vm.prank(lender);
-        (uint256 returnedObligationUnits, uint256 returnedShares) =
-            midnight.withdraw(obligation, withdraw, 0, lender, lender);
+        midnight.withdraw(obligation, withdraw, lender, lender);
 
-        assertEq(midnight.sharesOf(id, lender), units - withdraw, "obligationSharesOf");
+        assertEq(midnight.creditOf(id, lender), units - withdraw, "creditOf");
         assertEq(midnight.withdrawable(id), 0, "withdrawable");
-        assertEq(midnight.totalShares(id), units - withdraw, "totalShares");
+        assertEq(midnight.totalUnits(id), units - withdraw, "totalUnits");
         assertEq(loanToken.balanceOf(address(midnight)), 0, "balance of midnight");
         assertEq(loanToken.balanceOf(lender), withdraw, "balance of lender");
-        assertEq(returnedObligationUnits, withdraw, "returned obligation units");
-        assertEq(returnedShares, withdraw, "returned shares");
-    }
-
-    function testWithdrawWithShares(uint256 units, uint256 shares) public {
-        units = bound(units, 1, MAX_UNITS);
-        shares = bound(shares, 1, units);
-        testRepay(units, shares);
-
-        // TODO: sharesPrice != 1
-        vm.prank(lender);
-        (uint256 returnedObligationUnits, uint256 returnedShares) =
-            midnight.withdraw(obligation, 0, shares, lender, lender);
-
-        assertEq(midnight.sharesOf(id, lender), units - shares, "obligationSharesOf");
-        assertEq(midnight.withdrawable(id), 0, "withdrawable");
-        assertEq(loanToken.balanceOf(address(midnight)), 0, "balance of midnight");
-        assertEq(loanToken.balanceOf(lender), shares, "balance of lender");
-        assertEq(returnedObligationUnits, shares, "returned obligation units");
-        assertEq(returnedShares, shares, "returned shares");
     }
 
     function testWithdrawToReceiver(uint256 units, uint256 withdraw) public {
@@ -167,7 +140,7 @@ contract OtherFunctionsTest is BaseTest {
         address receiver = makeAddr("receiver");
 
         vm.prank(lender);
-        midnight.withdraw(obligation, withdraw, 0, lender, receiver);
+        midnight.withdraw(obligation, withdraw, lender, receiver);
 
         assertEq(loanToken.balanceOf(lender), 0, "balance of lender");
         assertEq(loanToken.balanceOf(receiver), withdraw, "balance of receiver");
@@ -223,12 +196,19 @@ contract OtherFunctionsTest is BaseTest {
         vm.assume(_obligation.collaterals.length > 0);
         _obligation = validObligation(_obligation);
 
+        midnight.setDefaultContinuousFee(_obligation.loanToken, MAX_CONTINUOUS_FEE);
+        for (uint256 i = 0; i < 7; i++) {
+            midnight.setDefaultTradingFee(_obligation.loanToken, i, midnight.maxTradingFee(i));
+        }
+
         bytes32 _id = midnight.touchObligation(_obligation);
         assertEq(midnight.obligationCreated(_id), true, "obligation created");
         uint16[7] memory fees = midnight.fees(_id);
         for (uint256 i = 0; i < 7; i++) {
-            assertEq(fees[i], midnight.defaultFees(_obligation.loanToken, i), "fees");
+            assertEq(fees[i], midnight.defaultTradingFees(_obligation.loanToken, i), "fees");
+            assertGt(fees[i], 0, "fee nonzero");
         }
+        assertEq(midnight.continuousFee(_id), MAX_CONTINUOUS_FEE, "continuousFee");
     }
 
     function testToObligation(Obligation memory _obligation) public {
