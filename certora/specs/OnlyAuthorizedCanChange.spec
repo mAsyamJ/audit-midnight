@@ -127,21 +127,15 @@ rule onlyAuthorizedCanChangeSession(env e, method f, calldataarg args, address u
 
 /// AUTHORIZATION CHANGE RULES ///
 
-/// No function (except setAuthorizedWithSig) can change isAuthorized(user, someone) unless the caller is the user or authorized by the user.
-rule onlyAuthorizedCanChangeAuthorizationExceptSetAuthorizedWithSig(env e, method f, calldataarg data) filtered { f -> !f.isView && f.selector != sig:setAuthorizedWithSig(Midnight.Authorization memory, Midnight.Signature calldata).selector } {
-    address user;
-    address someone;
+/// An unauthorized caller cannot change a user's isAuthorized mapping, except via setAuthorizedWithSig.
+rule onlyAuthorizedCanChangeIsAuthorizedExceptSetAuthorizedWithSig(env e, method f, calldataarg args, address authorizer, address authorized) filtered { f -> !f.isView && f.selector != sig:setAuthorizedWithSig(Midnight.Authorization memory, Midnight.Signature calldata).selector } {
+    bool authorizerIsAuthorized = authorizer == e.msg.sender || isAuthorized(authorizer, e.msg.sender);
 
-    require user != e.msg.sender;
-    require !isAuthorized(user, e.msg.sender);
+    bool isAuthorizedBefore = isAuthorized(authorizer, authorized);
+    f(e, args);
+    bool isAuthorizedAfter = isAuthorized(authorizer, authorized);
 
-    bool authorizedBefore = isAuthorized(user, someone);
-
-    f(e, data);
-
-    bool authorizedAfter = isAuthorized(user, someone);
-
-    assert authorizedAfter == authorizedBefore;
+    assert isAuthorizedAfter == isAuthorizedBefore || authorizerIsAuthorized;
 }
 
 /// Only an authorized caller can change ratified(user, root).
