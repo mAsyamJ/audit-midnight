@@ -78,6 +78,7 @@ rule liquidateEffects(env e, Midnight.Obligation obligation, uint256 collateralI
 
 /// ALL OTHER FUNCTIONS ///
 
+/// Effects of take, withdraw, and updatePosition are checked in BalanceEffectsWithUpdate.spec.
 /// Functions other than take, withdraw, repay, liquidate, updatePosition, and withdrawCollateral do not change any user's credit or debt.
 rule creditAndDebtUnchangedByOtherFunctions(method f, env e, calldataarg args, bytes32 id, address user)
 filtered {

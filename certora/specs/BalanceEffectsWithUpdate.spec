@@ -12,8 +12,6 @@ methods {
     function pendingFee(bytes32 id, address user) external returns (uint128) envfree;
     function Utils.passiveFeeRecipient() external returns (address) envfree;
 
-    function updatePositionView(Midnight.Obligation memory, bytes32, address) external returns (uint128, uint128, uint128);
-
     function _.price() external => NONDET;
 
     function IdLib.storeInCode(Midnight.Obligation memory) internal returns (address) => NONDET;
@@ -35,7 +33,13 @@ methods {
 /// and never participate in take.
 strong invariant feeRecipientHasNoPendingFee(bytes32 id)
     pendingFee(id, Utils.passiveFeeRecipient()) == 0
-    filtered { f -> f.selector != sig:take(uint256, address, address, bytes, address, Midnight.Offer, Midnight.Signature, bytes32, bytes32[]).selector }
+    {
+        preserved take(uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
+            require e.msg.sender != Utils.passiveFeeRecipient();
+            require offer.maker != Utils.passiveFeeRecipient();
+            require taker != Utils.passiveFeeRecipient();
+        }
+    }
 
 /// UPDATE POSITION ///
 
@@ -58,12 +62,12 @@ rule updatePositionEffects(env e, Midnight.Obligation obligation, address user, 
     updatePosition(e, obligation, user);
 
     assert debtOf(anyId, anyUser) == anyDebt;
-    assert (anyUser != passiveFeeRecipient && anyUser != user) => creditOf(anyId, anyUser) == anyCredit;
-    assert (anyId != id) => creditOf(anyId, anyUser) == anyCredit;
+    assert (anyId != id) || (anyUser != passiveFeeRecipient && anyUser != user) => creditOf(anyId, anyUser) == anyCredit;
     assert creditOf(id, user) == updatedUserCredit;
 
-    // Depends on antecedent because fee recipient is not slashed in other user updates.
+    // Premise is needed because fee recipient is not slashed in other user updates.
     assert user != passiveFeeRecipient => creditOf(id, passiveFeeRecipient) == feeRecipientCredit + userFee;
+    assert user == passiveFeeRecipient => userFee == 0;
 }
 
 /// WITHDRAW ///
@@ -88,10 +92,9 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 units, addre
 
     assert creditOf(id, onBehalf) == updatedUserCredit - units;
     assert debtOf(anyId, anyUser) == anyDebt;
-    assert (anyUser != passiveFeeRecipient && anyUser != onBehalf) => creditOf(anyId, anyUser) == anyCredit;
-    assert (anyId != id) => creditOf(anyId, anyUser) == anyCredit;
+    assert (anyId != id) || (anyUser != passiveFeeRecipient && anyUser != onBehalf) => creditOf(anyId, anyUser) == anyCredit;
 
-    // Depends on antecedent because fee recipient is not slashed in other user updates.
+    // Premise is needed because fee recipient is not slashed in other user updates.
     assert onBehalf != passiveFeeRecipient => creditOf(id, passiveFeeRecipient) == feeRecipientCredit + userFee;
 }
 
@@ -99,13 +102,13 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 units, addre
 
 /// take changes maker's and taker's net credit-debt by +/- units relative to their post-update values
 /// and only changes credit of maker, taker, and passive fee recipient and debt of maker and taker at the obligation id.
-/// Assumes the passive fee recipient cannot participate in a take.
+/// Assumes the passive fee recipient cannot participate in take since its address derives from the hash of a human readable string.
 rule takeEffects(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof, bytes32 anyId, address anyUser) {
     bytes32 id = toId(e, offer.obligation);
     address passiveFeeRecipient = Utils.passiveFeeRecipient();
 
-    require offer.maker != passiveFeeRecipient;
-    require taker != passiveFeeRecipient;
+    require offer.maker != passiveFeeRecipient, "passive fee recipient can't participate in take()";
+    require taker != passiveFeeRecipient, "passive fee recipient can't participate in take()";
 
     uint128 makerCreditBefore;
     makerCreditBefore, _, _ = updatePositionView(e, offer.obligation, id, offer.maker);
