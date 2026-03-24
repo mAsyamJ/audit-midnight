@@ -377,7 +377,7 @@ contract Midnight is IMidnight {
 
         if (oldCollateralOf == 0 && assets > 0) {
             // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
-            uint128 newBitmap = uint128(_position.activatedCollaterals.setBit(collateralIndex));
+            uint128 newBitmap = _position.activatedCollaterals.setBit(collateralIndex);
             _position.activatedCollaterals = newBitmap;
             require(UtilsLib.countBits(newBitmap) <= MAX_COLLATERALS_PER_BORROWER, "too many collaterals per borrower");
         }
@@ -405,7 +405,7 @@ contract Midnight is IMidnight {
 
         if (newCollateralOf == 0 && assets > 0) {
             // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
-            _position.activatedCollaterals = uint128(_position.activatedCollaterals.clearBit(collateralIndex));
+            _position.activatedCollaterals = _position.activatedCollaterals.clearBit(collateralIndex);
         }
 
         require(isHealthy(obligation, id, onBehalf), "unhealthy borrower");
@@ -447,7 +447,7 @@ contract Midnight is IMidnight {
         uint256 liquidatedCollatPrice;
         uint256 originalDebt = _position.debt;
         uint256 badDebt = originalDebt;
-        uint256 bitmap = _position.activatedCollaterals;
+        uint128 bitmap = _position.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
             Collateral memory _collateral = obligation.collaterals[i];
@@ -458,7 +458,7 @@ contract Midnight is IMidnight {
             badDebt = badDebt.zeroFloorSub(
                 _collateralOf.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateral.maxLif)
             );
-            bitmap = bitmap.clearBit(i);
+            bitmap = UtilsLib.clearBit(bitmap, i);
         }
 
         require(block.timestamp > obligation.maturity || originalDebt > maxDebt, "position is not liquidatable");
@@ -507,7 +507,7 @@ contract Midnight is IMidnight {
             _position.collateral[collateralIndex] = newCollateralOf;
             if (newCollateralOf == 0 && seizedAssets > 0) {
                 // forge-lint: disable-next-item(unsafe-typecast) as collateralIndex < MAX_COLLATERALS (128)
-                _position.activatedCollaterals = uint128(_position.activatedCollaterals.clearBit(collateralIndex));
+                _position.activatedCollaterals = _position.activatedCollaterals.clearBit(collateralIndex);
             }
             _obligationState.withdrawable += repaidUnits;
             _position.debt -= UtilsLib.toUint128(repaidUnits);
@@ -713,13 +713,13 @@ contract Midnight is IMidnight {
         Position storage _position = position[id][borrower];
         uint256 debt = _position.debt;
         uint256 maxDebt;
-        uint256 bitmap = _position.activatedCollaterals;
+        uint128 bitmap = _position.activatedCollaterals;
         while (maxDebt < debt && bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
             Collateral memory collateral = obligation.collaterals[i];
             uint256 price = IOracle(collateral.oracle).price();
             maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateral.lltv, WAD);
-            bitmap = bitmap.clearBit(i);
+            bitmap = UtilsLib.clearBit(bitmap, i);
         }
         return maxDebt >= debt;
     }
