@@ -29,7 +29,7 @@ function summarySetBit(uint128 bitmap, uint256 bit) returns (uint128) {
     uint128 result;
     assert bit < 128;
     require summaryGetBit(result, bit), "see Bitmap.spec";
-    require forall uint256 otherbit. otherbit != bit && otherbit < 128 => summaryGetBit(result, otherbit) == summaryGetBit(bitmap, otherbit), "see Bitmap.spec";
+    require forall uint256 otherBit. otherBit != bit && otherBit < 128 => summaryGetBit(result, otherBit) == summaryGetBit(bitmap, otherBit), "see Bitmap.spec";
     return result;
 }
 
@@ -37,7 +37,7 @@ function summaryClearBit(uint128 bitmap, uint256 bit) returns (uint128) {
     uint128 result;
     assert bit < 128;
     require !summaryGetBit(result, bit), "see Bitmap.spec";
-    require forall uint256 otherbit. otherbit != bit && otherbit < 128 => summaryGetBit(result, otherbit) == summaryGetBit(bitmap, otherbit), "see Bitmap.spec";
+    require forall uint256 otherBit. otherBit != bit && otherBit < 128 => summaryGetBit(result, otherBit) == summaryGetBit(bitmap, otherBit), "see Bitmap.spec";
     return result;
 }
 
@@ -47,7 +47,7 @@ function summaryMsb(uint128 bitmap) returns (uint256) {
 
     require bit < 128, "see Bitmap.spec";
     require summaryGetBit(bitmap, bit), "see Bitmap.spec";
-    require forall uint256 otherbit. summaryGetBit(bitmap, otherbit) => otherbit <= bit, "see Bitmap.spec";
+    require forall uint256 otherBit. summaryGetBit(bitmap, otherBit) => otherBit <= bit, "see Bitmap.spec";
     return bit;
 }
 
