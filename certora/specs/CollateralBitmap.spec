@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+import "BitmapSummaries.spec";
+
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
     function collateralOf(bytes32 id, address user, uint256) external returns (uint128) envfree;
-    function collateralBitSet(bytes32, address, uint256) external returns (bool) envfree;
     function isHealthy(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
     function isHealthyNoBitmap(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
 
@@ -33,17 +34,17 @@ persistent ghost summaryMulDivDown(uint256, uint256, uint256) returns uint256 {
 persistent ghost summaryMulDivUp(uint256, uint256, uint256) returns uint256;
 
 // Check that a collateral bit is set exactly when there is collateral for that index.
-invariant bitsetIffCollateral(bytes32 id, address borrower, uint256 idx)
-    idx < 128 => (collateralBitSet(id, borrower, idx) <=> collateralOf(id, borrower, idx) != 0);
+strong invariant nonZeroCollateralsAreActivated(bytes32 id, address user, uint256 collateralIndex)
+    collateralIndex < 128 => (collateralOf(id, user, collateralIndex) != 0 <=> summaryGetBit(currentContract.position[id][user].activatedCollaterals, collateralIndex));
 
 // This shows that the real isHealthy returns true if and only if the isHealthy function
 // that does not use collateral bitmap returns true.  We also check that the latter function
 // does not revert if isHealthy does not revert.
 rule isHealthyEquivalent(Midnight.Obligation obligation, bytes32 id, address borrower) {
     require obligation.collaterals.length <= 3, "restrict to three collaterals";
-    requireInvariant bitsetIffCollateral(id, borrower, 0);
-    requireInvariant bitsetIffCollateral(id, borrower, 1);
-    requireInvariant bitsetIffCollateral(id, borrower, 2);
+    requireInvariant nonZeroCollateralsAreActivated(id, borrower, 0);
+    requireInvariant nonZeroCollateralsAreActivated(id, borrower, 1);
+    requireInvariant nonZeroCollateralsAreActivated(id, borrower, 2);
 
     // We make no claim about isHealthyNoBitmap() if isHealthy() reverts.
     bool isHealthy1 = isHealthy(obligation, id, borrower);

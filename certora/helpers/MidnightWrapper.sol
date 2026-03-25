@@ -27,8 +27,4 @@ contract MidnightWrapper is Midnight {
         }
         return maxDebt >= debt;
     }
-
-    function collateralBitSet(bytes32 id, address borrower, uint256 index) external view returns (bool) {
-        return (position[id][borrower].activatedCollaterals & uint128(1 << index)) != 0;
-    }
 }
