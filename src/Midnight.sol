@@ -305,7 +305,6 @@ contract Midnight is IMidnight {
             receiver,
             offer.group,
             newConsumed,
-            _obligationState.totalUnits,
             buyerPendingFeeIncrease,
             sellerPendingFeeDecrease,
             buyerCreditIncrease,

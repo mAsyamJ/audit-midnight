@@ -35,7 +35,6 @@ library EventsLib {
         address sellerReceiver,
         bytes32 group,
         uint256 consumed,
-        uint256 totalUnits,
         uint256 buyerPendingFeeIncrease,
         uint256 sellerPendingFeeDecrease,
         uint256 buyerCreditIncrease,
