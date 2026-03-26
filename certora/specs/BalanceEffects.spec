@@ -96,7 +96,7 @@ rule updatePositionEffects(env e, Midnight.Obligation obligation, address user, 
     assert (anyId != id) || (anyUser != passiveFeeRecipient && anyUser != user) => creditOf(anyId, anyUser) == anyCredit;
     assert creditOf(id, user) == updatedUserCredit;
 
-    // Premise is needed because fee recipient is not slashed in other user updates.
+    // When the fee recipient is the user he is slashed so his pre-call balance is too high.
     assert user != passiveFeeRecipient => creditOf(id, passiveFeeRecipient) == feeRecipientCredit + userFee;
     assert user == passiveFeeRecipient => userFee == 0;
 }
@@ -125,7 +125,7 @@ rule withdrawEffects(env e, Midnight.Obligation obligation, uint256 units, addre
     assert debtOf(anyId, anyUser) == anyDebt;
     assert (anyId != id) || (anyUser != passiveFeeRecipient && anyUser != onBehalf) => creditOf(anyId, anyUser) == anyCredit;
 
-    // Premise is needed because fee recipient is not slashed in other user updates.
+    // When feeRecipient is onBehalf he is slashed & loses his withdrawn amount.
     assert onBehalf != passiveFeeRecipient => creditOf(id, passiveFeeRecipient) == feeRecipientCredit + userFee;
 }
 
