@@ -327,12 +327,20 @@ contract ContinuousFeeTest is BaseTest {
         vm.prank(borrower);
         midnight.repay(obligation, credit, borrower);
 
+        uint256 pendingFeeDecrease = creditAfterAccrual > 0
+            ? remainingAfterAccrual.mulDivUp(withdrawAmount, creditAfterAccrual)
+            : 0;
+
+        vm.expectEmit();
+        emit EventsLib.UpdatePosition(
+            id, lender, credit - creditAfterAccrual, remaining - remainingAfterAccrual, feeUnits
+        );
+        vm.expectEmit();
+        emit EventsLib.Withdraw(lender, id, withdrawAmount, lender, lender, pendingFeeDecrease);
         vm.prank(lender);
         midnight.withdraw(obligation, withdrawAmount, lender, lender);
 
-        uint256 expectedRemaining = creditAfterAccrual > 0
-            ? remainingAfterAccrual - remainingAfterAccrual.mulDivUp(withdrawAmount, creditAfterAccrual)
-            : 0;
+        uint256 expectedRemaining = creditAfterAccrual > 0 ? remainingAfterAccrual - pendingFeeDecrease : 0;
 
         assertEq(midnight.creditOf(id, lender), creditAfterAccrual - withdrawAmount, "credit after withdraw");
         assertApproxEqAbs(midnight.pendingFee(id, lender), expectedRemaining, 1, "remaining after withdraw");
