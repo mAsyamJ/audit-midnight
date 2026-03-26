@@ -113,6 +113,10 @@ persistent ghost uint256 globalObligationMaturity;
 
 persistent ghost uint256 globalObligationRcfThreshold;
 
+persistent ghost address globalObligationEnterGate;
+
+persistent ghost address globalObligationLiquidatorGate;
+
 persistent ghost bytes32 globalId;
 
 persistent ghost address globalBorrower;
@@ -122,7 +126,7 @@ persistent ghost address globalBorrower;
 definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index] && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index]);
 
 function equalsGlobalObligation(Midnight.Obligation obligation) returns (bool) {
-    return obligation.loanToken == globalObligationLoanToken && obligation.collaterals.length == globalObligationCollateralLength && collateralMatches(obligation, 0) && collateralMatches(obligation, 1) && collateralMatches(obligation, 2) && obligation.maturity == globalObligationMaturity && obligation.rcfThreshold == globalObligationRcfThreshold;
+    return obligation.loanToken == globalObligationLoanToken && obligation.collaterals.length == globalObligationCollateralLength && collateralMatches(obligation, 0) && collateralMatches(obligation, 1) && collateralMatches(obligation, 2) && obligation.maturity == globalObligationMaturity && obligation.rcfThreshold == globalObligationRcfThreshold && obligation.enterGate == globalObligationEnterGate && obligation.liquidatorGate == globalObligationLiquidatorGate;
 }
 
 function getGlobalObligation() returns (Midnight.Obligation) {
