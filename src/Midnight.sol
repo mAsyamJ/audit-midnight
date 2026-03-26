@@ -599,7 +599,7 @@ contract Midnight is IMidnight {
     /// SLASHING AND CONTINUOUS FEE ACCRUAL ///
 
     /// @dev Expects the id to correspond to the obligation's id.
-    /// @dev Returns the credit decrease, pending fee decrease, and accrued fee after having updated the position.
+    /// @dev Returns the new credit, new pending fee, and accrued fee after having updated the position.
     function updatePositionView(Obligation memory obligation, bytes32 id, address user)
         public
         view
@@ -620,7 +620,7 @@ contract Midnight is IMidnight {
             ? uint128(postSlashPending.mulDivDown(accrualEnd - _lastAccrual, obligation.maturity - _lastAccrual))
             : 0;
         // forge-lint: disable-next-item(unsafe-typecast) as credit and pending are <= uint128 position fields
-        return (credit - uint128(postSlashCredit) + fee, _pendingFee - uint128(postSlashPending) + fee, fee);
+        return (uint128(postSlashCredit) - fee, uint128(postSlashPending) - fee, fee);
     }
 
     /// @dev Slashes the position and accrues the continuous fee.
@@ -634,12 +634,14 @@ contract Midnight is IMidnight {
     /// @dev Expects the id to correspond to the obligation's id.
     function _updatePosition(Obligation memory obligation, bytes32 id, address user) internal {
         Position storage _position = position[id][user];
-        (uint128 creditDecrease, uint128 pendingFeeDecrease, uint128 accruedFee) =
-            updatePositionView(obligation, id, user);
+        (uint128 newCredit, uint128 newPendingFee, uint128 accruedFee) = updatePositionView(obligation, id, user);
 
-        _position.credit -= creditDecrease;
+        uint128 creditDecrease = _position.credit - newCredit;
+        uint128 pendingFeeDecrease = _position.pendingFee - newPendingFee;
+
+        _position.credit = newCredit;
         _position.lossIndex = obligationState[id].lossIndex;
-        _position.pendingFee -= pendingFeeDecrease;
+        _position.pendingFee = newPendingFee;
         _position.lastAccrual = uint128(block.timestamp);
         // The passive fee recipient's credit is increased without slashing them first, meaning that they will get
         // slashed a bit too much later.

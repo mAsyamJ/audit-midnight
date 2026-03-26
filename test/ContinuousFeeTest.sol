@@ -411,13 +411,11 @@ contract ContinuousFeeTest is BaseTest {
 
         vm.warp(block.timestamp + elapsed);
 
-        uint128 creditBefore = uint128(midnight.creditOf(id, lender));
-        uint128 pendingBefore = uint128(midnight.pendingFee(id, lender));
-        (uint128 creditDecrease, uint128 pendingFeeDecrease,) = midnight.updatePositionView(obligation, id, lender);
+        (uint128 newCredit, uint128 newPendingFee,) = midnight.updatePositionView(obligation, id, lender);
 
         midnight.updatePosition(obligation, lender);
 
-        assertEq(midnight.creditOf(id, lender), creditBefore - creditDecrease, "view matches credit");
-        assertEq(midnight.pendingFee(id, lender), pendingBefore - pendingFeeDecrease, "view matches pendingFee");
+        assertEq(midnight.creditOf(id, lender), newCredit, "view matches credit");
+        assertEq(midnight.pendingFee(id, lender), newPendingFee, "view matches pendingFee");
     }
 }
