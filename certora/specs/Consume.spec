@@ -69,7 +69,7 @@ rule takeConsumedBoundedByMax(env e, uint256 units, address taker, address taker
 }
 
 /// After a successful `take` in units mode, the change in consumed equals the units taken.
-rule takeConsumedDelta(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+rule takeConsumedDeltaUnits(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
     require offer.maxSellerAssets == 0 && offer.maxBuyerAssets == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
@@ -77,6 +77,34 @@ rule takeConsumedDelta(env e, uint256 units, address taker, address takerCallbac
     take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
 
     assert consumed(offer.maker, offer.group) == consumedBefore + units;
+}
+
+/// After a successful `take` in seller assets mode, the change in consumed equals the seller assets.
+rule takeConsumedDeltaSellerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    require offer.maxBuyerAssets == 0 && offer.maxUnits == 0;
+
+    uint256 consumedBefore = consumed(offer.maker, offer.group);
+
+    uint256 buyerAssetsOutput;
+    uint256 sellerAssetsOutput;
+    uint256 unitsOutput;
+    buyerAssetsOutput, sellerAssetsOutput, unitsOutput = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    assert consumed(offer.maker, offer.group) == consumedBefore + sellerAssetsOutput;
+}
+
+/// After a successful `take` in buyer assets mode, the change in consumed equals the buyer assets.
+rule takeConsumedDeltaBuyerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    require offer.maxSellerAssets == 0 && offer.maxUnits == 0;
+
+    uint256 consumedBefore = consumed(offer.maker, offer.group);
+
+    uint256 buyerAssetsOutput;
+    uint256 sellerAssetsOutput;
+    uint256 unitsOutput;
+    buyerAssetsOutput, sellerAssetsOutput, unitsOutput = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    assert consumed(offer.maker, offer.group) == consumedBefore + buyerAssetsOutput;
 }
 
 /// If consumed[offer.maker][offer.group] is already at or above maxUnits before a `take` in units mode,
@@ -94,7 +122,7 @@ rule takeConsumedAtMaxUnchangedUnits(env e, uint256 units, address taker, addres
 /// If consumed is already at or above maxSellerAssets before a `take` in seller assets mode,
 /// it remains unchanged.
 rule takeConsumedAtMaxUnchangedSellerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
-    require offer.maxSellerAssets > 0;
+    require offer.maxBuyerAssets == 0 && offer.maxUnits == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
@@ -106,7 +134,7 @@ rule takeConsumedAtMaxUnchangedSellerAssets(env e, uint256 units, address taker,
 /// If consumed is already at or above maxBuyerAssets before a `take` in buyer assets mode,
 /// it remains unchanged.
 rule takeConsumedAtMaxUnchangedBuyerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
-    require offer.maxSellerAssets == 0 && offer.maxBuyerAssets > 0;
+    require offer.maxSellerAssets == 0 && offer.maxUnits == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
@@ -116,7 +144,7 @@ rule takeConsumedAtMaxUnchangedBuyerAssets(env e, uint256 units, address taker, 
 }
 
 /// A fully-consumed offer in units mode only allows no-op takes.
-rule fullyConsumedOfferRevertsOnNonTrivialTake(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+rule fullyConsumedOfferRevertsOnNonTrivialTakeUnits(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
     require offer.maxSellerAssets == 0 && offer.maxBuyerAssets == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
@@ -127,4 +155,38 @@ rule fullyConsumedOfferRevertsOnNonTrivialTake(env e, uint256 units, address tak
 
     // If take does not revert, its input has to be zero.
     assert units == 0;
+}
+
+/// A fully-consumed offer in seller assets mode only allows no-op takes.
+rule fullyConsumedOfferRevertsOnNonTrivialTakeSellerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    require offer.maxBuyerAssets == 0 && offer.maxUnits == 0;
+
+    uint256 consumedBefore = consumed(offer.maker, offer.group);
+
+    require offer.maxSellerAssets > 0 && consumedBefore >= offer.maxSellerAssets, "assume the offer is fully consumed";
+
+    uint256 buyerAssetsOutput;
+    uint256 sellerAssetsOutput;
+    uint256 unitsOutput;
+    buyerAssetsOutput, sellerAssetsOutput, unitsOutput = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    // If take does not revert, seller assets have to be zero.
+    assert sellerAssetsOutput == 0;
+}
+
+/// A fully-consumed offer in buyer assets mode only allows no-op takes.
+rule fullyConsumedOfferRevertsOnNonTrivialTakeBuyerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    require offer.maxSellerAssets == 0 && offer.maxUnits == 0;
+
+    uint256 consumedBefore = consumed(offer.maker, offer.group);
+
+    require offer.maxBuyerAssets > 0 && consumedBefore >= offer.maxBuyerAssets, "assume the offer is fully consumed";
+
+    uint256 buyerAssetsOutput;
+    uint256 sellerAssetsOutput;
+    uint256 unitsOutput;
+    buyerAssetsOutput, sellerAssetsOutput, unitsOutput = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    // If take does not revert, buyer assets have to be zero.
+    assert buyerAssetsOutput == 0;
 }
