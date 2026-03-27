@@ -7,7 +7,7 @@ methods {
     function maxTradingFee(uint256 index) external returns (uint256) envfree;
     function feeSetter() external returns (address) envfree;
     function obligationCreated(bytes32 id) external returns (bool) envfree;
-    function toId(Midnight.Obligation) external returns (bytes32);
+    function toId(Midnight.Obligation) external returns (bytes32) envfree;
 
     function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
 }
@@ -23,7 +23,7 @@ definition upperIndex(uint256 ttm) returns uint256 = ttm >= breakpointTime(6) ? 
 
 definition FEE_STEP() returns uint256 = 1000000000000;
 
-definition defaultFee(address loanToken, uint256 index) returns uint256 = assert_uint256(currentContract.defaultFees[loanToken][index] * FEE_STEP());
+definition defaultFee(address loanToken, uint256 index) returns uint256 = assert_uint256(currentContract.defaultTradingFees[loanToken][index] * FEE_STEP());
 
 definition obligationFee(bytes32 id, uint256 index) returns uint256 = assert_uint256(currentContract.obligationState[id].fees[index] * FEE_STEP());
 
@@ -38,10 +38,10 @@ invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
         preserved touchObligation(Midnight.Obligation obligation) with (env e) {
             requireInvariant defaultFeePerIndexBound(obligation.loanToken, index);
         }
-        preserved withdraw(Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf, address receiver) with (env e) {
+        preserved withdraw(Midnight.Obligation obligation, uint256 units, address onBehalf, address receiver) with (env e) {
             requireInvariant defaultFeePerIndexBound(obligation.loanToken, index);
         }
-        preserved repay(Midnight.Obligation obligation, uint256 obligationUnits, address onBehalf) with (env e) {
+        preserved repay(Midnight.Obligation obligation, uint256 units, address onBehalf) with (env e) {
             requireInvariant defaultFeePerIndexBound(obligation.loanToken, index);
         }
         preserved supplyCollateral(Midnight.Obligation obligation, uint256 collateralIndex, uint256 assets, address onBehalf) with (env e) {
@@ -53,7 +53,7 @@ invariant obligationFeePerIndexBound(bytes32 id, uint256 index)
         preserved liquidate(Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) with (env e) {
             requireInvariant defaultFeePerIndexBound(obligation.loanToken, index);
         }
-        preserved take(uint256 obligationShares, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
+        preserved take(uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) with (env e) {
             requireInvariant defaultFeePerIndexBound(offer.obligation.loanToken, index);
         }
     }
