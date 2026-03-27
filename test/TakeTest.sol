@@ -306,7 +306,7 @@ contract TakeTest is BaseTest {
         assertEq(loanToken.balanceOf(otherLender), buyerAssets, "otherLender balance");
     }
 
-    // exitOnly tests.
+    // reduceOnly tests.
 
     function testExitOnlyBuySuccess(uint256 existingUnits, uint256 exitUnits) public {
         existingUnits = bound(existingUnits, 1, maxAssets);
@@ -314,7 +314,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, existingUnits);
 
         otherBorrowerOffer.maxUnits = exitUnits;
-        otherBorrowerOffer.exitOnly = true;
+        otherBorrowerOffer.reduceOnly = true;
 
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), otherBorrower, exitUnits.mulDivUp(price, WAD));
@@ -337,7 +337,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, existingUnits);
 
         otherBorrowerOffer.maxUnits = exitUnits;
-        otherBorrowerOffer.exitOnly = true;
+        otherBorrowerOffer.reduceOnly = true;
 
         vm.expectRevert("crossed");
         take(exitUnits, borrower, otherBorrowerOffer);
@@ -349,7 +349,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, existingUnits);
 
         otherLenderOffer.maxUnits = exitUnits;
-        otherLenderOffer.exitOnly = true;
+        otherLenderOffer.reduceOnly = true;
 
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), lender, exitUnits.mulDivUp(price, WAD));
@@ -372,7 +372,7 @@ contract TakeTest is BaseTest {
         setupOtherUsers(obligation, existingUnits);
 
         otherLenderOffer.maxUnits = exitUnits;
-        otherLenderOffer.exitOnly = true;
+        otherLenderOffer.reduceOnly = true;
 
         vm.expectRevert("crossed");
         take(exitUnits, lender, otherLenderOffer);
