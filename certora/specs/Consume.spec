@@ -94,7 +94,7 @@ rule takeConsumedAtMaxUnchangedUnits(env e, uint256 units, address taker, addres
 /// If consumed is already at or above maxSellerAssets before a `take` in seller assets mode,
 /// it remains unchanged.
 rule takeConsumedAtMaxUnchangedSellerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
-    require offer.maxSellerAssets > 0;
+    require offer.maxBuyerAssets == 0 && offer.maxUnits == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
@@ -106,7 +106,7 @@ rule takeConsumedAtMaxUnchangedSellerAssets(env e, uint256 units, address taker,
 /// If consumed is already at or above maxBuyerAssets before a `take` in buyer assets mode,
 /// it remains unchanged.
 rule takeConsumedAtMaxUnchangedBuyerAssets(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
-    require offer.maxSellerAssets == 0 && offer.maxBuyerAssets > 0;
+    require offer.maxSellerAssets == 0 && offer.maxUnits == 0;
 
     uint256 consumedBefore = consumed(offer.maker, offer.group);
 
