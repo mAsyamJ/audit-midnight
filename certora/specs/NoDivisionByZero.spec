@@ -26,7 +26,7 @@ methods {
     function IdLib.toId(Midnight.Obligation memory obligation, uint256 chainId, address midnight) internal returns (bytes32) => summaryToId(obligation, chainId, midnight);
 
     function UtilsLib.isLeaf(bytes32, bytes32, bytes32[] memory) internal returns (bool) => NONDET;
-    function UtilsLib.msb(uint256 bitmap) internal returns (uint256) => summaryMsbFn(bitmap);
+    function UtilsLib.msb(uint128 bitmap) internal returns (uint256) => summaryMsbFn(bitmap);
     function TickLib.tickToPrice(uint256) internal returns (uint256) => NONDET;
     function TickLib.wExp(int256) internal returns (uint256) => NONDET;
 
@@ -86,7 +86,7 @@ ghost ghostPrice() returns uint256;
 definition WAD() returns uint256 = 1000000000000000000;
 
 // bitmap >> bit == 1: bit is set and no higher bit exists.
-function summaryMsbFn(uint256 bitmap) returns uint256 {
+function summaryMsbFn(uint128 bitmap) returns uint256 {
     uint256 bit;
     require bitmap >> bit == 1;
     return bit;
