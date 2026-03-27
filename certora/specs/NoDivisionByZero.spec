@@ -11,22 +11,21 @@
 // maxLif(uint256, uint256) is excluded: it is a pure function callable with arbitrary inputs.
 // A standalone call with cursor >= WAD causes a safe revert (Solidity checked arithmetic).
 //
-// The liquidate function is verified in a separate rule (noDivisionByZeroLiquidate), restricted
-// to a single collateral due to SMT solver limitations with multi-iteration bitmap loops.
+// The liquidate function is verified in a separate rule (noDivisionByZeroLiquidate).
 // The toId summary follows the approach from PR #388: a ghost-backed deterministic function.
-// The msb summary uses a bitwise constraint (bitmap >> bit == 1).
+
+import "BitmapSummaries.spec";
 
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
-    function _.price() external => ghostPrice() expect(uint256);
+    function _.price() external => ghostPrice(calledContract) expect(uint256);
 
     function collateralOf(bytes32 id, address user, uint256 index) external returns (uint128) envfree;
 
     function IdLib.toId(Midnight.Obligation memory obligation, uint256 chainId, address midnight) internal returns (bytes32) => summaryToId(obligation, chainId, midnight);
 
     function UtilsLib.isLeaf(bytes32, bytes32, bytes32[] memory) internal returns (bool) => NONDET;
-    function UtilsLib.msb(uint128 bitmap) internal returns (uint256) => summaryMsbFn(bitmap);
     function TickLib.tickToPrice(uint256) internal returns (uint256) => NONDET;
     function TickLib.wExp(int256) internal returns (uint256) => NONDET;
 
@@ -85,16 +84,9 @@ hook Sload uint128 value obligationState[KEY bytes32 id].totalUnits {
 
 /// SUMMARIES ///
 
-ghost ghostPrice() returns uint256;
+ghost ghostPrice(address) returns uint256;
 
 definition WAD() returns uint256 = 1000000000000000000;
-
-// bitmap >> bit == 1: bit is set and no higher bit exists.
-function summaryMsbFn(uint128 bitmap) returns uint256 {
-    uint256 bit;
-    require bitmap >> bit == 1;
-    return bit;
-}
 
 definition collateralMatches(Midnight.Obligation obligation, uint256 index) returns bool = (index < globalObligationCollateralLength => obligation.collaterals[index].oracle == globalObligationCollateralOracle[index] && obligation.collaterals[index].token == globalObligationCollateralToken[index] && obligation.collaterals[index].lltv == globalObligationCollateralLLTV[index] && obligation.collaterals[index].maxLif == globalObligationCollateralMaxLif[index]);
 
@@ -151,18 +143,17 @@ rule noDivisionByZero(method f, env e, calldataarg args) filtered { f -> f.selec
 rule noDivisionByZeroLiquidate(env e, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) {
     require equalsGlobalObligation(obligation);
 
-    // Single collateral (SMT solver can't handle multi-iteration bitmap loops).
-    require obligation.collaterals.length == 1;
-    require collateralIndex == 0;
-
-    // Sound: touchObligation enforces maxLif >= WAD and maxLif*lltv <= WAD^2 (ExactMath.spec).
-    require obligation.collaterals[0].maxLif >= WAD();
+    // Sound: touchObligation enforces maxLif >= WAD for all collaterals (ExactMath.spec).
+    // Needed for the bitmap loop which calls mulDivUp(WAD, maxLif) for every activated collateral.
+    require forall uint256 i. i < obligation.collaterals.length => obligation.collaterals[i].maxLif >= WAD();
 
     // Ensures recovery close factor divisor WAD - ceil(lif*lltv/WAD) > 0; tight at lltv = WAD.
-    require to_mathint(obligation.collaterals[0].maxLif) * to_mathint(obligation.collaterals[0].lltv) <= to_mathint(WAD()) * (to_mathint(WAD()) - 1);
+    // Not true for LLTV=1.
+    require to_mathint(obligation.collaterals[collateralIndex].maxLif) * to_mathint(obligation.collaterals[collateralIndex].lltv) <= to_mathint(WAD()) * (to_mathint(WAD()) - 1);
 
-    // Sound: inactive collateral will repaid input actually revert with div by zero.
-    require (collateralOf(globalId, borrower, 0) > 0 && ghostPrice() > 0) || repaidUnits == 0;
+    // Assume that the collateral price is non-zero and the collateral is active. Otherwise, liquidate may revert with div by zero.
+    require ghostPrice(obligation.collaterals[collateralIndex].oracle) > 0, "Assumption: the collateral price is not zero";
+    require summaryGetBit(currentContract.position[globalId][borrower].activatedCollaterals, collateralIndex), "Assumption: liquidated collateral was activated";
 
     require !divisionByZero;
     liquidate(e, obligation, collateralIndex, seizedAssets, repaidUnits, borrower, data);
