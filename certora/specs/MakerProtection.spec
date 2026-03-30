@@ -1,0 +1,85 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+methods {
+    function multicall(bytes[]) external => HAVOC_ALL DELETE;
+
+    function _.price() external => NONDET;
+    function IdLib.toId(Midnight.Obligation memory obligation, uint256 chainId, address midnight) internal returns (bytes32) => CVL_toId(obligation, chainId, midnight);
+    function UtilsLib.mulDivDown(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivDown(a, b, denominator);
+    function UtilsLib.mulDivUp(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivUp(a, b, denominator);
+    function TickLib.tickToPrice(uint256 tick) internal returns (uint256) => CVL_tickToPrice(tick);
+    function tradingFee(bytes32 id, uint256 timeToMaturity) internal returns (uint256) => CVL_tradingFee(id, timeToMaturity);
+    function signer(bytes32, Midnight.Signature memory) internal returns (address) => NONDET;
+    function UtilsLib.isLeaf(bytes32, bytes32, bytes32[] memory) internal returns (bool) => NONDET;
+    function IdLib.storeInCode(Midnight.Obligation memory) internal returns (address) => NONDET;
+    function SafeTransferLib.safeTransferFrom(address, address, address, uint256) internal => NONDET;
+    function _.onBuy(bytes32, Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
+    function _.onSell(bytes32, Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
+    function isHealthy(Midnight.Obligation memory, bytes32, address) internal returns (bool) => NONDET;
+    function _.canIncreaseCredit(address) external => NONDET;
+    function _.canIncreaseDebt(address) external => NONDET;
+}
+
+// IdLib summary: remember the last id returned by toId.
+persistent ghost bytes32 lastId;
+
+function CVL_toId(Midnight.Obligation obligation, uint256 chainId, address midnight) returns bytes32 {
+    bytes32 id;
+    lastId = id;
+    return id;
+}
+
+// Exact mulDivDown: floor(a * b / d)
+function CVL_mulDivDown(uint256 a, uint256 b, uint256 d) returns uint256 {
+    require d > 0;
+    return require_uint256((to_mathint(a) * to_mathint(b)) / to_mathint(d));
+}
+
+// Exact mulDivUp: ceil(a * b / d)
+function CVL_mulDivUp(uint256 a, uint256 b, uint256 d) returns uint256 {
+    require d > 0;
+    return require_uint256((to_mathint(a) * to_mathint(b) + to_mathint(d) - 1) / to_mathint(d));
+}
+
+// TickLib summary: tickToPrice is deterministic.
+
+ghost CVL_tickToPrice(uint256) returns uint256;
+
+// tradingFee summary: deterministic; rules reconstruct the fee as CVL_tradingFee(lastId, timeToMaturity).
+
+ghost CVL_tradingFee(bytes32, uint256) returns uint256;
+
+definition WAD() returns uint256 = 10 ^ 18;
+
+// Rounding always favors the maker:
+//   1. buyer-maker pays at most floor(units * offerPrice / WAD).
+//   2. seller-maker receives at least ceil(units * offerPrice / WAD).
+rule makerFavorableRounding(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    uint256 offerPrice = CVL_tickToPrice(offer.tick);
+
+    uint256 buyerAssets;
+    uint256 sellerAssets;
+    buyerAssets, sellerAssets, _ = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    assert offer.buy => to_mathint(buyerAssets) * WAD() <= to_mathint(units) * to_mathint(offerPrice);
+    assert !offer.buy => to_mathint(sellerAssets) * WAD() >= to_mathint(units) * to_mathint(offerPrice);
+}
+
+// The trading fee is fully borne by the taker:
+//   1. buyer-maker: taker/seller receives at most floor(units * (offerPrice − fee) / WAD).
+//   2. seller-maker: taker/buyer pays at least ceil(units * (offerPrice + fee) / WAD).
+//   3. corollary: buyerAssets >= sellerAssets always.
+rule takerBearsFee(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiver, Midnight.Offer offer, Midnight.Signature signature, bytes32 root, bytes32[] proof) {
+    uint256 offerPrice = CVL_tickToPrice(offer.tick);
+    uint256 timeToMaturity = e.block.timestamp <= offer.obligation.maturity ? assert_uint256(offer.obligation.maturity - e.block.timestamp) : 0;
+
+    uint256 buyerAssets;
+    uint256 sellerAssets;
+    buyerAssets, sellerAssets, _ = take(e, units, taker, takerCallback, takerCallbackData, receiver, offer, signature, root, proof);
+
+    uint256 fee = CVL_tradingFee(lastId, timeToMaturity);
+
+    assert to_mathint(buyerAssets) >= to_mathint(sellerAssets);
+    assert offer.buy => to_mathint(sellerAssets) * WAD() <= to_mathint(units) * (to_mathint(offerPrice) - to_mathint(fee));
+    assert !offer.buy => to_mathint(buyerAssets) * WAD() >= to_mathint(units) * (to_mathint(offerPrice) + to_mathint(fee));
+}
