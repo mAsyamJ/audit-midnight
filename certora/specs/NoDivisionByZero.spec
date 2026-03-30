@@ -100,6 +100,7 @@ function summaryToId(Midnight.Obligation obligation, uint256 chainId, address mo
 function maxLifSummary(uint256 lltv) returns uint256 {
     uint256 result;
     require result >= WAD();
+
     // Proven in ExactMath.spec (lifTimesLltvStrictBound).
     require lltv < WAD() => to_mathint(result) * to_mathint(lltv) <= to_mathint(WAD()) * (to_mathint(WAD()) - 1);
     return result;
