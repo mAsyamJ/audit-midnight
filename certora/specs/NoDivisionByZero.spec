@@ -141,9 +141,6 @@ rule noDivisionByZeroLiquidate(env e, Midnight.Obligation obligation, uint256 co
     require forall uint256 i. i < obligation.collaterals.length => obligation.collaterals[i].maxLif >= WAD();
 
     // Sound: ExactMath.spec proves maxLif * lltv <= WAD * (WAD - 1) when lltv < WAD (lifTimesLltvStrictBound).
-    // The bound applies to the stored maxLif in the obligation struct, not a fresh maxLif() call,
-    // so it must be an explicit rule-level require rather than a summary constraint.
-    // When lltv = WAD the code skips the recovery close factor entirely (maxRepaid = type(uint256).max).
     require obligation.collaterals[collateralIndex].lltv < WAD() => to_mathint(obligation.collaterals[collateralIndex].maxLif) * to_mathint(obligation.collaterals[collateralIndex].lltv) <= to_mathint(WAD()) * (to_mathint(WAD()) - 1);
 
     // Assume that the collateral price is non-zero and the collateral is active. Otherwise, liquidate may revert with div by zero.
