@@ -8,7 +8,7 @@ methods {
     function ECRECOVER_RATIFIER() external returns (address) envfree;
 
     function _.price() external => NONDET;
-    function _.onRatify(Midnight.Offer, bytes32, bytes32[], bytes) external => NONDET;
+    function _.onRatify(Midnight.Offer, bytes32, bytes32[], bytes) external => DISPATCHER(true);
     function _.onBuy(bytes32, Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
     function _.onSell(bytes32, Midnight.Obligation, address, uint256, uint256, uint256, bytes) external => NONDET;
     function _.transferFrom(address, address, uint256) external => NONDET;
@@ -36,8 +36,24 @@ rule takeRequiresMakerConsent(env e, uint256 units, address taker, address taker
     assert offer.ratifier == ecrecoverRatifier || makerAuthorizedRatifier;
 }
 
+/// address(0) can't authorize another account, because it can't sign
+/// and setAuthorizedWithSig requires signatory != address(0) && signatory == authorizer.
+strong invariant addressZeroCantAuthorize(address authorized)
+    !isAuthorized(0, authorized)
+    {
+        preserved with (env e) {
+            require e.msg.sender != 0, "address(0) can't call";
+            requireInvariant addressZeroCantAuthorize(e.msg.sender);
+        }
+        preserved setAuthorizedWithSig(Midnight.Authorization authorization, Midnight.Signature signature) with (env e) {
+            require authorization.authorizer != 0, "address(0) can't sign";
+        }
+    }
+
 /// No successful take can use address(0) as maker.
 rule takeRequiresNonZeroMaker(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, bytes ratifierData, bytes32 root, bytes32[] proof) {
+    requireInvariant addressZeroCantAuthorize(offer.ratifier);
+
     take@withrevert(e, units, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, ratifierData, root, proof);
     assert !lastReverted => offer.maker != 0;
 }

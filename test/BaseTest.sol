@@ -27,6 +27,7 @@ import {
 } from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
+import {EcrecoverRatifier} from "../src/ratifiers/EcrecoverRatifier.sol";
 
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
 
@@ -50,7 +51,8 @@ abstract contract BaseTest is Test {
     bytes internal emptySig;
 
     function setUp() public virtual {
-        midnight = new Midnight();
+        EcrecoverRatifier ecrecoverRatifier = new EcrecoverRatifier();
+        midnight = new Midnight(ecrecoverRatifier);
 
         midnight.setFeeSetter(address(this));
 
@@ -209,7 +211,7 @@ abstract contract BaseTest is Test {
     }
 
     function domainSeparator() internal view returns (bytes32) {
-        return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(midnight)));
+        return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(midnight.ECRECOVER_RATIFIER())));
     }
 
     function signature(bytes32 _root, uint256 _privateKey) internal view returns (Signature memory) {

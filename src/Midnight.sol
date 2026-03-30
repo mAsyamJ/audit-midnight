@@ -36,7 +36,6 @@ import {
 import {ICallbacks, IFlashLoanCallback, IRatifier} from "./interfaces/ICallbacks.sol";
 import {IEnterGate, ILiquidatorGate} from "./interfaces/IGate.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
-import {EcrecoverRatifier} from "./ratifiers/EcrecoverRatifier.sol";
 
 /// MAX AMOUNTS
 /// @dev The max amount of totalUnits, collateral, credit, and debt is type(uint128).max (~1e38).
@@ -115,12 +114,12 @@ contract Midnight is IMidnight {
     /// @dev Address that can set trading fees.
     address public feeSetter;
 
-    EcrecoverRatifier public immutable ECRECOVER_RATIFIER;
+    IRatifier public immutable ECRECOVER_RATIFIER;
 
     /// CONSTRUCTOR ///
 
-    constructor() {
-        ECRECOVER_RATIFIER = new EcrecoverRatifier(address(this));
+    constructor(IRatifier ecrecoverRatifier) {
+        ECRECOVER_RATIFIER = ecrecoverRatifier;
         owner = msg.sender;
         emit EventsLib.Constructor(owner);
     }
