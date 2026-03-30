@@ -8,7 +8,8 @@ uint256 constant MAX_TICK = 1046;
 library TickLib {
     using TickLib for uint256;
 
-    /// @dev Returns (`x` + `d` - 1) / `d` rounded to the nearest integer with ties rounded down, without checking for overflow.
+    /// @dev Returns (`x` + `d` - 1) / `d` rounded to the nearest integer with ties rounded down, without checking for
+    /// overflow.
     function divHalfDownUnchecked(uint256 x, uint256 d) internal pure returns (uint256) {
         unchecked {
             return (x + (d - 1) / 2) / d;
