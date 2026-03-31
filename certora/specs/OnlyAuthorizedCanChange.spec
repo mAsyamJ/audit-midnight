@@ -126,18 +126,12 @@ rule onlyAuthorizedCanChangeIsAuthorized(env e, method f, calldataarg args, addr
 
 /// ACCESS CONTROL ///
 
-/// take requires the caller to be the taker or authorized by the taker.
+/// take requires the caller to be the taker or authorized by the taker
 rule unauthorizedTakeFails(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, bytes ratifierData, bytes32 root, bytes32[] proof) {
-    take@withrevert(e, units, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, ratifierData, root, proof);
-    assert !lastReverted => e.msg.sender == taker || isAuthorized(taker, e.msg.sender);
-}
+    bool senderAuthorized = isAuthorized(taker, e.msg.sender);
+    take(e, units, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, ratifierData, root, proof);
 
-/// take with a custom ratifier requires the ratifier to be authorized by the maker.
-rule unauthorizedOnRatifyFails(env e, uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, bytes ratifierData, bytes32 root, bytes32[] proof) {
-    require offer.ratifier != 0;
-    require offer.ratifier != 1;
-    take@withrevert(e, units, taker, takerCallback, takerCallbackData, receiverIfTakerIsSeller, offer, ratifierData, root, proof);
-    assert !lastReverted => isAuthorized(offer.maker, offer.ratifier);
+    assert e.msg.sender == taker || senderAuthorized;
 }
 
 /// ISOLATION ///

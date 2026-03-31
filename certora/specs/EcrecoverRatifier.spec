@@ -8,13 +8,11 @@ methods {
 
     function midnight.isAuthorized(address, address) external returns (bool) envfree;
 
-    // Summarize ecrecover-dependent internals.
     function signer(bytes32, EcrecoverRatifier.Signature memory) internal returns (address) => signerGhost();
 }
 
-// Ghost for the signer() return value. The prover can't model ECDSA,
-// so we let it pick an arbitrary non-zero address (signer() already reverts on zero).
 persistent ghost address lastSigner;
+
 function signerGhost() returns address {
     address s;
     require s != 0;
@@ -22,7 +20,7 @@ function signerGhost() returns address {
     return s;
 }
 
-/// onRatify only returns CALLBACK_SUCCESS when signer == maker or signer is authorized by maker.
+/// onRatify only succeeds when signer == maker or signer is authorized by maker.
 rule onRatifyRequiresMakerOrAuthorized(env e, EcrecoverRatifier.Offer offer, bytes32 root, bytes data) {
     onRatify(e, offer, root, data);
     assert lastSigner == offer.maker || midnight.isAuthorized(offer.maker, lastSigner);
