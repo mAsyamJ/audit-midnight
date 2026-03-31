@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
-import {Signature} from "../src/ratifiers/EcrecoverRatifier.sol";
+import {Signature, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/ratifiers/EcrecoverRatifier.sol";
 import {Midnight} from "../src/Midnight.sol";
-import {WAD, CALLBACK_SUCCESS, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/libraries/ConstantsLib.sol";
+import {WAD, CALLBACK_SUCCESS} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
 import {ICallbacks, IRatifier} from "../src/interfaces/ICallbacks.sol";

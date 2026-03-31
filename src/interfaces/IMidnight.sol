@@ -60,4 +60,7 @@ struct Position {
     uint128[128] collateral;
 }
 
-interface IMidnight {}
+interface IMidnight {
+    function isAuthorized(address authorizer, address authorized) external view returns (bool);
+    function setIsAuthorized(address onBehalf, address authorized, bool newIsAuthorized) external;
+}

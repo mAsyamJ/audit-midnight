@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Offer, Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
 
 import {ERC20} from "./helpers/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";

@@ -13,8 +13,6 @@ import {
     ORACLE_PRICE_SCALE,
     MAX_COLLATERALS,
     LIQUIDATION_CURSOR_LOW,
-    EIP712_DOMAIN_TYPEHASH,
-    ROOT_TYPEHASH,
     LLTV_0,
     LLTV_1,
     LLTV_2,
@@ -27,7 +25,12 @@ import {
 } from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
-import {EcrecoverRatifier, Signature} from "../src/ratifiers/EcrecoverRatifier.sol";
+import {
+    EcrecoverRatifier,
+    Signature,
+    EIP712_DOMAIN_TYPEHASH,
+    ROOT_TYPEHASH
+} from "../src/ratifiers/EcrecoverRatifier.sol";
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
 
 abstract contract BaseTest is Test {
@@ -52,7 +55,7 @@ abstract contract BaseTest is Test {
 
     function setUp() public virtual {
         midnight = new Midnight();
-        ecrecoverRatifier = new EcrecoverRatifier();
+        ecrecoverRatifier = new EcrecoverRatifier(address(midnight));
 
         midnight.setFeeSetter(address(this));
 
