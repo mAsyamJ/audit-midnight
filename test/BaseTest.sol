@@ -27,7 +27,7 @@ import {
 } from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
-import {EcrecoverRatifier, Signature} from "../src/EcrecoverRatifier.sol";
+import {EcrecoverRatifier, Signature} from "../src/ratifiers/EcrecoverRatifier.sol";
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
 
 abstract contract BaseTest is Test {
@@ -185,7 +185,7 @@ abstract contract BaseTest is Test {
     }
 
     function sig(Offer[1] memory offers, address _signer) internal view returns (bytes memory) {
-        return abi.encode(signature(root(offers), privateKey[_signer]));
+        return abi.encode(signature(root(offers), privateKey[_signer], offers[0].ratifier));
     }
 
     function proof(Offer[1] memory) internal pure returns (bytes32[] memory) {
@@ -216,13 +216,17 @@ abstract contract BaseTest is Test {
         return UtilsLib.commutativeHash(keccak256(abi.encode(offers[0])), keccak256(abi.encode(offers[1])));
     }
 
-    function domainSeparator() internal view returns (bytes32) {
-        return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(midnight)));
+    function domainSeparator(address verifyingContract) internal view returns (bytes32) {
+        return keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, verifyingContract));
     }
 
-    function signature(bytes32 _root, uint256 _privateKey) internal view returns (Signature memory) {
+    function signature(bytes32 _root, uint256 _privateKey, address verifyingContract)
+        internal
+        view
+        returns (Signature memory)
+    {
         bytes32 structHash = keccak256(abi.encode(ROOT_TYPEHASH, _root));
-        bytes32 messageHash = keccak256(bytes.concat("\x19\x01", domainSeparator(), structHash));
+        bytes32 messageHash = keccak256(bytes.concat("\x19\x01", domainSeparator(verifyingContract), structHash));
         Signature memory _signature;
         (_signature.v, _signature.r, _signature.s) = vm.sign(_privateKey, messageHash);
         return _signature;
@@ -230,12 +234,12 @@ abstract contract BaseTest is Test {
 
     function sig(Offer[1] memory offers) internal view returns (bytes memory) {
         bytes32 _root = root(offers);
-        return abi.encode(signature(_root, privateKey[offers[0].maker]));
+        return abi.encode(signature(_root, privateKey[offers[0].maker], offers[0].ratifier));
     }
 
     function sig(Offer[2] memory offers) internal view returns (bytes memory) {
         bytes32 _root = root(offers);
-        return abi.encode(signature(_root, privateKey[offers[0].maker]));
+        return abi.encode(signature(_root, privateKey[offers[0].maker], offers[0].ratifier));
     }
 
     function sortCollaterals(Collateral[] memory arr) internal pure returns (Collateral[] memory) {

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
-import {Signature} from "../src/EcrecoverRatifier.sol";
+import {Signature} from "../src/ratifiers/EcrecoverRatifier.sol";
 import {Midnight} from "../src/Midnight.sol";
 import {WAD, CALLBACK_SUCCESS, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
@@ -1296,7 +1296,7 @@ contract RatifyCallback is IRatifier {
         if (data.length > 0) {
             Signature memory signature = abi.decode(data, (Signature));
             bytes32 structHash = keccak256(abi.encode(ROOT_TYPEHASH, root));
-            bytes32 domainSeparator = keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, msg.sender));
+            bytes32 domainSeparator = keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(this)));
             bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, structHash));
             recordedSigner = ecrecover(digest, signature.v, signature.r, signature.s);
         }
