@@ -4,8 +4,6 @@ methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
     function IdLib.toId(Midnight.Obligation memory obligation, uint256 chainId, address midnight) internal returns (bytes32) => CVL_toId(obligation, chainId, midnight);
-    function UtilsLib.mulDivDown(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivDown(a, b, denominator);
-    function UtilsLib.mulDivUp(uint256 a, uint256 b, uint256 denominator) internal returns (uint256) => CVL_mulDivUp(a, b, denominator);
     function TickLib.tickToPrice(uint256 tick) internal returns (uint256) => CVL_tickToPrice(tick);
     function tradingFee(bytes32 id, uint256 timeToMaturity) internal returns (uint256) => CVL_tradingFee(id, timeToMaturity);
 
@@ -30,17 +28,17 @@ function CVL_toId(Midnight.Obligation obligation, uint256 chainId, address midni
     return id;
 }
 
-// Exact mulDivDown: floor(a * b / d)
-function CVL_mulDivDown(uint256 a, uint256 b, uint256 d) returns uint256 {
-    require d > 0, "see NoDivisionByZero.spec";
-    return require_uint256((to_mathint(a) * to_mathint(b)) / to_mathint(d));
-}
+// // Exact mulDivDown: floor(a * b / d)
+// function CVL_mulDivDown(uint256 a, uint256 b, uint256 d) returns uint256 {
+//     require d > 0, "see NoDivisionByZero.spec";
+//     return require_uint256((to_mathint(a) * to_mathint(b)) / to_mathint(d));
+// }
 
-// Exact mulDivUp: ceil(a * b / d)
-function CVL_mulDivUp(uint256 a, uint256 b, uint256 d) returns uint256 {
-    require d > 0, "see NoDivisionByZero.spec";
-    return require_uint256((to_mathint(a) * to_mathint(b) + to_mathint(d) - 1) / to_mathint(d));
-}
+// // Exact mulDivUp: ceil(a * b / d)
+// function CVL_mulDivUp(uint256 a, uint256 b, uint256 d) returns uint256 {
+//     require d > 0, "see NoDivisionByZero.spec";
+//     return require_uint256((to_mathint(a) * to_mathint(b) + to_mathint(d) - 1) / to_mathint(d));
+// }
 
 // TickLib summary: tickToPrice is deterministic.
 
@@ -77,8 +75,8 @@ rule feeIsNotBypassed(env e, uint256 units, address taker, address takerCallback
 
     uint256 fee = CVL_tradingFee(lastId, timeToMaturity);
 
-    assert to_mathint(buyerAssets) - to_mathint(sellerAssets) >= to_mathint(CVL_mulDivDown(units, fee, WAD()));
-    assert to_mathint(buyerAssets) - to_mathint(sellerAssets) <= to_mathint(CVL_mulDivUp(units, fee, WAD()));
+    assert to_mathint(buyerAssets) - to_mathint(sellerAssets) >= (to_mathint(units) * to_mathint(fee)) / WAD();
+    assert to_mathint(buyerAssets) - to_mathint(sellerAssets) <= (to_mathint(units) * to_mathint(fee) + WAD() - 1) / WAD();
 }
 
 // taking zero units must produce zero assets on both sides.
