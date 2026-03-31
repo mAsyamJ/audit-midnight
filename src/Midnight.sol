@@ -42,7 +42,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev The following constraints are enforced on obligation creation (in `touchObligation`):
 /// - `collaterals.length > 0`: at least one collateral is required.
 /// - `collaterals.length <= MAX_COLLATERALS` (128): at most 128 collaterals per obligation.
-/// - Collateral tokens must be strictly sorted by address (ascending, no duplicates).
+/// - Collateral tokens must be non-zero and strictly sorted by address (ascending, no duplicates).
 /// - Each collateral's `lltv` must be one of the allowed tiers (see `isLltvAllowed` in ConstantsLib).
 /// - Each collateral's `maxLif` must equal `maxLif(lltv, LIQUIDATION_CURSOR_LOW)` or
 ///   `maxLif(lltv, LIQUIDATION_CURSOR_HIGH)`.
