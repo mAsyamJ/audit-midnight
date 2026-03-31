@@ -48,8 +48,6 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 ///   `maxLif(lltv, LIQUIDATION_CURSOR_HIGH)`.
 /// @dev Additionally, a borrower can have collateral in at most `MAX_COLLATERALS_PER_BORROWER` (10) collaterals
 /// simultaneously within a single obligation.
-/// @dev The `loanToken`, `maturity`, `rcfThreshold`, `enterGate`, and `liquidatorGate` fields are unconstrained at
-/// creation and can be any value (including zero).
 ///
 /// TRADING FEES
 /// @dev The trading fee is computed using piecewise linear interpolation between breakpoints.
