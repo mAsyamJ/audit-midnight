@@ -28,18 +28,6 @@ function CVL_toId(Midnight.Obligation obligation, uint256 chainId, address midni
     return id;
 }
 
-// // Exact mulDivDown: floor(a * b / d)
-// function CVL_mulDivDown(uint256 a, uint256 b, uint256 d) returns uint256 {
-//     require d > 0, "see NoDivisionByZero.spec";
-//     return require_uint256((to_mathint(a) * to_mathint(b)) / to_mathint(d));
-// }
-
-// // Exact mulDivUp: ceil(a * b / d)
-// function CVL_mulDivUp(uint256 a, uint256 b, uint256 d) returns uint256 {
-//     require d > 0, "see NoDivisionByZero.spec";
-//     return require_uint256((to_mathint(a) * to_mathint(b) + to_mathint(d) - 1) / to_mathint(d));
-// }
-
 // TickLib summary: tickToPrice is deterministic.
 
 ghost CVL_tickToPrice(uint256) returns uint256;
