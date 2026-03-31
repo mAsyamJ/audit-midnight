@@ -41,12 +41,6 @@ struct Offer {
     uint256 maxBuyerAssets;
 }
 
-struct Signature {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-}
-
 struct ObligationState {
     uint128 totalUnits;
     uint128 lossIndex;

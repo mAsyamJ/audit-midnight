@@ -3,7 +3,13 @@
 pragma solidity 0.8.31;
 
 import {IRatifier} from "./interfaces/ICallbacks.sol";
-import {Offer, Signature} from "./interfaces/IMidnight.sol";
+import {Offer} from "./interfaces/IMidnight.sol";
+
+struct Signature {
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+}
 import {CALLBACK_SUCCESS, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "./libraries/ConstantsLib.sol";
 
 interface IIsAuthorized {
@@ -11,7 +17,7 @@ interface IIsAuthorized {
 }
 
 contract EcrecoverRatifier is IRatifier {
-    function onRatify(Offer memory offer, bytes32 root, bytes memory data) external returns (bytes32) {
+    function onRatify(Offer memory offer, bytes32 root, bytes memory data) external view returns (bytes32) {
         Signature memory sig = abi.decode(data, (Signature));
         bytes32 hashStruct = keccak256(abi.encode(ROOT_TYPEHASH, root));
         bytes32 domainSeparator = keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, msg.sender));

@@ -13,7 +13,7 @@ contract PreapprovalRatifier is IRatifier {
         approved[msg.sender][root] = newApproval;
     }
 
-    function onRatify(Offer memory offer, bytes32 root, bytes memory) external returns (bytes32) {
+    function onRatify(Offer memory offer, bytes32 root, bytes memory) external view returns (bytes32) {
         require(approved[offer.maker][root], "not approved");
         return CALLBACK_SUCCESS;
     }
