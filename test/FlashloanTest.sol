@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
-import {ERC20} from "./erc20s/ERC20.sol";
 import {SafeTransferLib} from "../src/libraries/SafeTransferLib.sol";
 import {IFlashLoanCallback} from "../src/interfaces/ICallbacks.sol";
 
