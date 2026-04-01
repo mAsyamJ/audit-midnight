@@ -247,6 +247,7 @@ contract AuthorizationTest is BaseTest {
 
     function testRepayAuthorization(address authorized) public {
         vm.assume(authorized != borrower);
+        vm.assume(!midnight.isAuthorized(borrower, authorized));
         uint256 units = 1000;
         collateralize(obligation, borrower, units);
         setupObligation(obligation, units);
