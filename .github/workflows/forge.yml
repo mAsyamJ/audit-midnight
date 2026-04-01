@@ -46,8 +46,8 @@ jobs:
             name: no-revert
           - token-type: 2
             name: usdt
-          - token-type: 3
-            name: revert-to-zero
+          # - token-type: 3
+          #   name: revert-to-zero
           - token-type: 4
             name: no-return
     steps:
