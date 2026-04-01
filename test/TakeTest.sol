@@ -9,6 +9,7 @@ import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
 import {ICallbacks} from "../src/interfaces/ICallbacks.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
+import {SafeTransferLib} from "../src/libraries/SafeTransferLib.sol";
 
 import {BaseTest} from "./BaseTest.sol";
 import {ERC20} from "./erc20s/ERC20.sol";
@@ -890,8 +891,6 @@ contract TakeTest is BaseTest {
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         uint256 assets = units.mulDivUp(price, WAD);
         (address _otherLender,) = makeAddrAndKey("otherLender");
-        vm.prank(_otherLender);
-        loanToken.approve(address(midnight), assets);
         address callback = address(new LendCallback());
         borrowerOffer.maxUnits = units;
         borrowerOffer.tick = MAX_TICK;

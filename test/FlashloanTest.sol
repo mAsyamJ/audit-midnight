@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
 import {ERC20} from "./erc20s/ERC20.sol";
+import {SafeTransferLib} from "../src/libraries/SafeTransferLib.sol";
 import {IFlashLoanCallback} from "../src/interfaces/ICallbacks.sol";
 
 contract FlashLoanTest is BaseTest, IFlashLoanCallback {
@@ -39,7 +40,6 @@ contract FlashLoanTest is BaseTest, IFlashLoanCallback {
         assertEq(token, address(loanToken), "wrong token");
         assertEq(amount, amountStored, "wrong amount");
         assertEq(data, dataStored, "wrong data");
-        ERC20(token).approve(address(midnight), amount);
-        if (discardToken) assertTrue(ERC20(token).transfer(address(0xdead), amount));
+        if (discardToken) SafeTransferLib.safeTransfer(token, address(0xdead), amount);
     }
 }

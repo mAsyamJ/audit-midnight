@@ -116,11 +116,11 @@ abstract contract BaseTest is Test {
             debt.mulDivUp(WAD, obligation.collaterals[0].lltv).mulDivUp(ORACLE_PRICE_SCALE, oraclePrice);
         deal(address(obligation.collaterals[0].token), _borrower, collateral);
 
-        vm.prank(_borrower);
+        vm.startPrank(_borrower);
+        ERC20(obligation.collaterals[0].token).approve(address(midnight), 0);
         ERC20(obligation.collaterals[0].token).approve(address(midnight), collateral);
-
-        vm.prank(_borrower);
         midnight.supplyCollateral(obligation, 0, collateral, _borrower);
+        vm.stopPrank();
     }
 
     // hardcodes the right root, signature, proof, and callback (no callback)
