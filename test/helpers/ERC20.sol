@@ -14,7 +14,7 @@ contract ERC20 {
         symbol = _symbol;
     }
 
-    function transfer(address receiver, uint256 amount) public virtual returns (bool) {
+    function transfer(address receiver, uint256 amount) public returns (bool) {
         require(amount <= balanceOf[msg.sender], "Insufficient balance");
 
         balanceOf[msg.sender] -= amount;
@@ -23,7 +23,7 @@ contract ERC20 {
         return true;
     }
 
-    function transferFrom(address sender, address receiver, uint256 amount) public virtual returns (bool) {
+    function transferFrom(address sender, address receiver, uint256 amount) public returns (bool) {
         require(amount <= balanceOf[sender], "Insufficient balance");
         require(amount <= allowance[sender][msg.sender], "Insufficient allowance");
 
@@ -34,8 +34,7 @@ contract ERC20 {
         return true;
     }
 
-    function approve(address spender, uint256 amount) public returns (bool) {
+    function approve(address spender, uint256 amount) public {
         allowance[msg.sender][spender] = amount;
-        return true;
     }
 }

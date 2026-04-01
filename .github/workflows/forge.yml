@@ -39,7 +39,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        revert-to-zero: [false, true]
+        include:
+          - token-type: 1
+            name: standard
+          - token-type: 2
+            name: no-revert
+          - token-type: 3
+            name: usdt
+          - token-type: 4
+            name: revert-to-zero
+          - token-type: 5
+            name: no-return
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,7 +57,7 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Run Forge tests (revert-to-zero=${{ matrix.revert-to-zero }})
+      - name: Run Forge tests (${{ matrix.name }})
         run: forge test --deny warnings
         env:
-          REVERT_TO_ZERO: ${{ matrix.revert-to-zero }}
+          TOKEN_TYPE: ${{ matrix.token-type }}

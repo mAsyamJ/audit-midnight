@@ -4,7 +4,11 @@ pragma solidity ^0.8.0;
 
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {ERC20} from "./helpers/ERC20.sol";
-import {ERC20RevertToZero} from "./helpers/ERC20RevertToZero.sol";
+import {ERC20Standard} from "../certora/dispatch/ERC20Standard.sol";
+import {ERC20NoRevert} from "../certora/dispatch/ERC20NoRevert.sol";
+import {ERC20USDT} from "../certora/dispatch/ERC20USDT.sol";
+import {ERC20RevertToZero} from "../certora/dispatch/ERC20RevertToZero.sol";
+import {ERC20NoReturn} from "../certora/dispatch/ERC20NoReturn.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
@@ -63,10 +67,27 @@ abstract contract BaseTest is Test {
         (otherLender, _privateKey) = makeAddrAndKey("otherLender");
         privateKey[otherLender] = _privateKey;
 
-        if (vm.envOr("REVERT_TO_ZERO", false)) {
-            loanToken = ERC20(address(new ERC20RevertToZero("loan", "loan")));
-            collateralToken1 = ERC20(address(new ERC20RevertToZero("collat1", "collat1")));
-            collateralToken2 = ERC20(address(new ERC20RevertToZero("collat2", "collat2")));
+        uint256 tokenType = vm.envOr("TOKEN_TYPE", uint256(0));
+        if (tokenType == 1) {
+            loanToken = ERC20(address(new ERC20Standard()));
+            collateralToken1 = ERC20(address(new ERC20Standard()));
+            collateralToken2 = ERC20(address(new ERC20Standard()));
+        } else if (tokenType == 2) {
+            loanToken = ERC20(address(new ERC20NoRevert()));
+            collateralToken1 = ERC20(address(new ERC20NoRevert()));
+            collateralToken2 = ERC20(address(new ERC20NoRevert()));
+        } else if (tokenType == 3) {
+            loanToken = ERC20(address(new ERC20USDT()));
+            collateralToken1 = ERC20(address(new ERC20USDT()));
+            collateralToken2 = ERC20(address(new ERC20USDT()));
+        } else if (tokenType == 4) {
+            loanToken = ERC20(address(new ERC20RevertToZero()));
+            collateralToken1 = ERC20(address(new ERC20RevertToZero()));
+            collateralToken2 = ERC20(address(new ERC20RevertToZero()));
+        } else if (tokenType == 5) {
+            loanToken = ERC20(address(new ERC20NoReturn()));
+            collateralToken1 = ERC20(address(new ERC20NoReturn()));
+            collateralToken2 = ERC20(address(new ERC20NoReturn()));
         } else {
             loanToken = new ERC20("loan", "loan");
             collateralToken1 = new ERC20("collat1", "collat1");
