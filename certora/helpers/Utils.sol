@@ -28,7 +28,7 @@ contract Utils {
         return UtilsLib.msb(bitmap);
     }
 
-    function passiveFeeRecipient() external pure returns (address) {
+    function passiveFeeClaimer() external pure returns (address) {
         return PASSIVE_FEE_RECIPIENT;
     }
 }

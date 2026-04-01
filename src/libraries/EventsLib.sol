@@ -12,7 +12,7 @@ library EventsLib {
     event SetFeeSetter(address indexed feeSetter);
     event SetObligationTradingFee(bytes32 indexed id_, uint256 indexed index, uint256 newTradingFee);
     event SetDefaultTradingFee(address indexed loanToken, uint256 indexed index, uint256 newTradingFee);
-    event SetFeeRecipient(address indexed feeRecipient);
+    event SetFeeClaimer(address indexed feeClaimer);
     event SetObligationContinuousFee(bytes32 indexed id_, uint256 newContinuousFee);
     event SetDefaultContinuousFee(address indexed loanToken, uint256 newContinuousFee);
     event UpdatePosition(

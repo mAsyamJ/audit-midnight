@@ -29,7 +29,7 @@ contract TradingFeeTest is BaseTest {
     bytes32 internal id;
     Offer internal lenderOffer;
     Offer internal borrowerOffer;
-    address internal feeRecipient = makeAddr("feeRecipient");
+    address internal feeClaimer = makeAddr("feeClaimer");
 
     function setUp() public override {
         super.setUp();
@@ -76,7 +76,7 @@ contract TradingFeeTest is BaseTest {
 
         deal(address(loanToken), address(lender), MAX_TEST_AMOUNT * 10000);
 
-        midnight.setFeeRecipient(feeRecipient);
+        midnight.setFeeClaimer(feeClaimer);
     }
 
     function testBuyUnits(uint256 tradingFee, uint256 sellerTick, uint256 units) public {
@@ -259,17 +259,17 @@ contract TradingFeeTest is BaseTest {
         withdrawAmount = bound(withdrawAmount, 1, fee);
         address receiver = makeAddr("receiver");
 
-        vm.prank(feeRecipient);
+        vm.prank(feeClaimer);
         midnight.claimTradingFee(address(loanToken), withdrawAmount, receiver);
 
         assertEq(loanToken.balanceOf(receiver), withdrawAmount, "receiver balance");
         assertEq(midnight.claimableTradingFee(address(loanToken)), fee - withdrawAmount, "remaining fee");
     }
 
-    function testClaimTradingFeeOnlyFeeRecipient(address caller) public {
-        vm.assume(caller != feeRecipient);
+    function testClaimTradingFeeOnlyFeeClaimer(address caller) public {
+        vm.assume(caller != feeClaimer);
         vm.prank(caller);
-        vm.expectRevert("only fee recipient");
+        vm.expectRevert("only fee claimer");
         midnight.claimTradingFee(address(loanToken), 0, caller);
     }
 
@@ -283,9 +283,9 @@ contract TradingFeeTest is BaseTest {
 
         uint256 fee = midnight.claimableTradingFee(address(loanToken));
 
-        vm.prank(feeRecipient);
+        vm.prank(feeClaimer);
         vm.expectRevert();
-        midnight.claimTradingFee(address(loanToken), fee + 1, feeRecipient);
+        midnight.claimTradingFee(address(loanToken), fee + 1, feeClaimer);
     }
 
     function testTradingFeesAccumulate() public {

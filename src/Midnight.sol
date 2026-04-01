@@ -67,7 +67,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// SLASHING
 /// @dev When some bad debt is realized, it is socialized among lenders in the obligation.
 /// @dev At each lender's next interaction, their credit is slashed proportionally.
-/// @dev The fee recipient is not slashed when receiving fees, so it will be slashed a bit too much later.
+/// @dev The fee claimer is not slashed when receiving fees, so it will be slashed a bit too much later.
 ///
 /// ROUNDINGS
 /// @dev Because of roundings, trading and continuous fees might charge less than expected, which can become problematic
@@ -112,11 +112,11 @@ contract Midnight is IMidnight {
     /// feeSetter.
     mapping(address loanToken => uint32) public defaultContinuousFee;
 
-    /// @dev If a fee recipient does not claim a fee after a take, a future fee recipient could claim that fee in his
+    /// @dev If a fee claimer does not claim a fee after a take, a future fee claimer could claim that fee in his
     /// place.
     mapping(address token => uint256) public claimableTradingFee;
 
-    address public feeRecipient;
+    address public feeClaimer;
 
     /// @dev Contract owner for administrative functions.
     address public owner;
@@ -181,10 +181,10 @@ contract Midnight is IMidnight {
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
 
-    function setFeeRecipient(address newFeeRecipient) external {
+    function setFeeClaimer(address newFeeClaimer) external {
         require(msg.sender == owner, "only owner");
-        feeRecipient = newFeeRecipient;
-        emit EventsLib.SetFeeRecipient(newFeeRecipient);
+        feeClaimer = newFeeClaimer;
+        emit EventsLib.SetFeeClaimer(newFeeClaimer);
     }
 
     function setObligationContinuousFee(bytes32 id, uint256 newContinuousFee) external {
@@ -205,7 +205,7 @@ contract Midnight is IMidnight {
     }
 
     function claimTradingFee(address token, uint256 amount, address receiver) external {
-        require(msg.sender == feeRecipient, "only fee recipient");
+        require(msg.sender == feeClaimer, "only fee claimer");
         claimableTradingFee[token] -= amount;
 
         emit EventsLib.ClaimTradingFee(msg.sender, token, amount, receiver);
@@ -373,7 +373,7 @@ contract Midnight is IMidnight {
     function withdraw(Obligation memory obligation, uint256 units, address onBehalf, address receiver) external {
         require(
             onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender]
-                || (onBehalf == PASSIVE_FEE_RECIPIENT && msg.sender == feeRecipient),
+                || (onBehalf == PASSIVE_FEE_RECIPIENT && msg.sender == feeClaimer),
             "unauthorized"
         );
         bytes32 id = touchObligation(obligation);
@@ -691,7 +691,7 @@ contract Midnight is IMidnight {
         _position.lossIndex = obligationState[id].lossIndex;
         _position.pendingFee = newPendingFee;
         _position.lastAccrual = uint128(block.timestamp);
-        // The passive fee recipient's credit is increased without slashing them first, meaning that they will get
+        // The passive fee claimer's credit is increased without slashing them first, meaning that they will get
         // slashed a bit too much later.
         position[id][PASSIVE_FEE_RECIPIENT].credit += accruedFee;
 
