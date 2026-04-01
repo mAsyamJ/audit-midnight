@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "../lib/forge-std/src/Test.sol";
 import {ERC20} from "./helpers/ERC20.sol";
+import {ERC20RevertToZero} from "./helpers/ERC20RevertToZero.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
@@ -62,9 +63,15 @@ abstract contract BaseTest is Test {
         (otherLender, _privateKey) = makeAddrAndKey("otherLender");
         privateKey[otherLender] = _privateKey;
 
-        loanToken = new ERC20("loan", "loan");
-        collateralToken1 = new ERC20("collat1", "collat1");
-        collateralToken2 = new ERC20("collat2", "collat2");
+        if (vm.envOr("REVERT_TO_ZERO", false)) {
+            loanToken = ERC20(address(new ERC20RevertToZero("loan", "loan")));
+            collateralToken1 = ERC20(address(new ERC20RevertToZero("collat1", "collat1")));
+            collateralToken2 = ERC20(address(new ERC20RevertToZero("collat2", "collat2")));
+        } else {
+            loanToken = new ERC20("loan", "loan");
+            collateralToken1 = new ERC20("collat1", "collat1");
+            collateralToken2 = new ERC20("collat2", "collat2");
+        }
 
         oracle1 = new Oracle();
         oracle2 = new Oracle();
