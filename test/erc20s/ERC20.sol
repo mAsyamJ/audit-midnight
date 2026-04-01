@@ -34,7 +34,8 @@ contract ERC20 {
         return true;
     }
 
-    function approve(address spender, uint256 amount) public {
+    function approve(address spender, uint256 amount) public returns (bool) {
         allowance[msg.sender][spender] = amount;
+        return true;
     }
 }

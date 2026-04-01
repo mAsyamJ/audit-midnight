@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {BaseTest} from "./BaseTest.sol";
-import {ERC20} from "./helpers/ERC20.sol";
+import {ERC20} from "./erc20s/ERC20.sol";
 import {IFlashLoanCallback} from "../src/interfaces/ICallbacks.sol";
 
 contract FlashLoanTest is BaseTest, IFlashLoanCallback {

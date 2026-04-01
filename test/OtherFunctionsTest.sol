@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
 
-import {ERC20} from "./helpers/ERC20.sol";
+import {ERC20} from "./erc20s/ERC20.sol";
 import {Oracle} from "./helpers/Oracle.sol";
 import {RevertingOracle} from "./helpers/RevertingOracle.sol";
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";

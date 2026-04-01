@@ -11,7 +11,7 @@ import {ICallbacks} from "../src/interfaces/ICallbacks.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
 
 import {BaseTest} from "./BaseTest.sol";
-import {ERC20} from "./helpers/ERC20.sol";
+import {ERC20} from "./erc20s/ERC20.sol";
 
 contract TakeTest is BaseTest {
     using UtilsLib for uint256;
