@@ -219,10 +219,9 @@ contract Midnight is IMidnight {
         require(offer.maker != taker, "buyer and seller cannot be the same");
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
+        require(isAuthorized[offer.maker][offer.ratifier], "ratifier not authorized");
         require(
-            isAuthorized[offer.maker][offer.ratifier]
-                && IRatifier(offer.ratifier).onRatify(offer, root, ratifierData) == CALLBACK_SUCCESS,
-            "unauthorized"
+            IRatifier(offer.ratifier).onRatify(offer, root, ratifierData) == CALLBACK_SUCCESS, "ratification failed"
         );
 
         bytes32 id = touchObligation(offer.obligation);
