@@ -80,4 +80,6 @@ library EventsLib {
     event SetIsAuthorized(
         address indexed caller, address indexed onBehalf, address indexed authorized, bool newIsAuthorized
     );
+
+    event ClaimContinuousFee(address indexed caller, bytes32 indexed id_, uint256 amount, address indexed receiver);
 }

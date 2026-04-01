@@ -18,7 +18,6 @@ import {
     LIQUIDATION_CURSOR_HIGH,
     EIP712_DOMAIN_TYPEHASH,
     ROOT_TYPEHASH,
-    PASSIVE_FEE_RECIPIENT,
     isLltvAllowed
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
@@ -67,7 +66,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// SLASHING
 /// @dev When some bad debt is realized, it is socialized among lenders in the obligation.
 /// @dev At each lender's next interaction, their credit is slashed proportionally.
-/// @dev The fee recipient is not slashed when receiving fees, so it will be slashed a bit too much later.
+/// @dev The continuous fee amount is slashed proportionally when bad debt is realized.
 ///
 /// ROUNDINGS
 /// @dev Because of roundings, trading and continuous fees might charge less than expected, which can become problematic
@@ -357,11 +356,7 @@ contract Midnight is IMidnight {
 
     /// @dev Will revert if there is no withdrawable funds.
     function withdraw(Obligation memory obligation, uint256 units, address onBehalf, address receiver) external {
-        require(
-            onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender]
-                || (onBehalf == PASSIVE_FEE_RECIPIENT && msg.sender == feeRecipient),
-            "unauthorized"
-        );
+        require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
         ObligationState storage _obligationState = obligationState[id];
         _updatePosition(obligation, id, onBehalf);
@@ -373,7 +368,7 @@ contract Midnight is IMidnight {
             _position.pendingFee -= pendingFeeDecrease;
         }
         _position.credit -= UtilsLib.toUint128(units);
-        _obligationState.withdrawable -= units;
+        _obligationState.withdrawable -= UtilsLib.toUint128(units);
         _obligationState.totalUnits -= UtilsLib.toUint128(units);
 
         emit EventsLib.Withdraw(msg.sender, id, units, onBehalf, receiver, pendingFeeDecrease);
@@ -381,12 +376,27 @@ contract Midnight is IMidnight {
         SafeTransferLib.safeTransfer(obligation.loanToken, receiver, units);
     }
 
+    function claimContinuousFee(Obligation memory obligation, uint256 amount, address receiver) external {
+        require(msg.sender == feeRecipient, "only fee recipient");
+        bytes32 id = toId(obligation);
+        require(obligationState[id].created, "not created");
+        ObligationState storage _obligationState = obligationState[id];
+
+        _obligationState.continuousFeeAmount -= UtilsLib.toUint128(amount);
+        _obligationState.totalUnits -= UtilsLib.toUint128(amount);
+        _obligationState.withdrawable -= UtilsLib.toUint128(amount);
+
+        emit EventsLib.ClaimContinuousFee(msg.sender, id, amount, receiver);
+
+        SafeTransferLib.safeTransfer(obligation.loanToken, receiver, amount);
+    }
+
     function repay(Obligation memory obligation, uint256 units, address onBehalf) external {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
 
         position[id][onBehalf].debt -= UtilsLib.toUint128(units);
-        obligationState[id].withdrawable += units;
+        obligationState[id].withdrawable += UtilsLib.toUint128(units);
 
         emit EventsLib.Repay(msg.sender, id, units, onBehalf);
 
@@ -494,6 +504,12 @@ contract Midnight is IMidnight {
             // forge-lint: disable-next-item(unsafe-typecast) as badDebt <= _position.debt
             _position.debt -= uint128(badDebt);
             uint256 oldTotalUnits = _obligationState.totalUnits;
+            // Slash continuousFeeAmount proportionally.
+            uint256 _continuousFeeAmount = _obligationState.continuousFeeAmount;
+            if (_continuousFeeAmount > 0) {
+                _obligationState.continuousFeeAmount =
+                    UtilsLib.toUint128(_continuousFeeAmount.mulDivDown(oldTotalUnits - badDebt, oldTotalUnits));
+            }
             _obligationState.lossIndex = UtilsLib.toUint128(
                 type(uint128).max
                     - (type(uint128).max - _obligationState.lossIndex)
@@ -537,7 +553,7 @@ contract Midnight is IMidnight {
             if (newCollateralOf == 0 && seizedAssets > 0) {
                 _position.activatedCollaterals = _position.activatedCollaterals.clearBit(collateralIndex);
             }
-            _obligationState.withdrawable += repaidUnits;
+            _obligationState.withdrawable += UtilsLib.toUint128(repaidUnits);
             _position.debt -= UtilsLib.toUint128(repaidUnits);
         }
 
@@ -677,9 +693,7 @@ contract Midnight is IMidnight {
         _position.lossIndex = obligationState[id].lossIndex;
         _position.pendingFee = newPendingFee;
         _position.lastAccrual = uint128(block.timestamp);
-        // The passive fee recipient's credit is increased without slashing them first, meaning that they will get
-        // slashed a bit too much later.
-        position[id][PASSIVE_FEE_RECIPIENT].credit += accruedFee;
+        obligationState[id].continuousFeeAmount += UtilsLib.toUint128(accruedFee);
 
         emit EventsLib.UpdatePosition(id, user, creditDecrease, pendingFeeDecrease, accruedFee);
     }
@@ -744,6 +758,10 @@ contract Midnight is IMidnight {
 
     function continuousFee(bytes32 id) external view returns (uint32) {
         return obligationState[id].continuousFee;
+    }
+
+    function continuousFeeAmount(bytes32 id) external view returns (uint256) {
+        return obligationState[id].continuousFeeAmount;
     }
 
     function pendingFee(bytes32 id, address user) external view returns (uint128) {
