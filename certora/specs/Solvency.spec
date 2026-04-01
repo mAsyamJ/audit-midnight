@@ -3,6 +3,8 @@
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
+    function claimableTradingFee(address token) external returns (uint256) envfree;
+
     function _.price() external => NONDET;
 
     // Summarize mulDivUp and mulDivDown by ghost functions. This is for performance of the prover.
@@ -131,24 +133,12 @@ hook Sstore obligationState[KEY bytes32 id].withdrawable uint256 newWithdrawable
     withdrawableMirror[id][loantoken[id]] = newWithdrawable;
 }
 
-ghost mapping(address => mathint) claimableTradingFeeMirror {
-    init_state axiom (forall address token. claimableTradingFeeMirror[token] == 0);
-}
-
-hook Sload uint256 value claimableTradingFee[KEY address token] {
-    require value == claimableTradingFeeMirror[token], "ghost mirror";
-}
-
-hook Sstore claimableTradingFee[KEY address token] uint256 newValue (uint256 oldValue) {
-    claimableTradingFeeMirror[token] = newValue;
-}
-
 /// INVARIANTS AND RULES ///
 
-// For any token, the balance of the contract is always greater than or equal to the sum of all collateral, withdrawable, and withdrawable trading fee amounts for that token minus the flash loaned amount.
+// For any token, the balance of the contract is always greater than or equal to the sum of all collateral, withdrawable, and claimable trading fee amounts for that token minus the flash loaned amount.
 // Note: this invariant is strong, so it also holds before each external call.
 strong invariant tokenBalanceCorrect(address token)
-    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token) + claimableTradingFeeMirror[token] - flashloans[token]
+    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token) + claimableTradingFee(token) - flashloans[token]
     {
         preserved with (env e) {
             require e.msg.sender != currentContract, "only external calls";
