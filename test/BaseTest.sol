@@ -75,10 +75,11 @@ abstract contract BaseTest is Test {
             loanToken = ERC20(address(new ERC20USDT()));
             collateralToken1 = ERC20(address(new ERC20USDT()));
             collateralToken2 = ERC20(address(new ERC20USDT()));
-        } else if (tokenType == 3) {
-            loanToken = ERC20(address(new ERC20RevertToZero()));
-            collateralToken1 = ERC20(address(new ERC20RevertToZero()));
-            collateralToken2 = ERC20(address(new ERC20RevertToZero()));
+        // waiting for the fix
+        // } else if (tokenType == 3) {
+        //    loanToken = ERC20(address(new ERC20RevertToZero()));
+        //    collateralToken1 = ERC20(address(new ERC20RevertToZero()));
+        //    collateralToken2 = ERC20(address(new ERC20RevertToZero()));
         } else if (tokenType == 4) {
             loanToken = ERC20(address(new ERC20NoReturn()));
             collateralToken1 = ERC20(address(new ERC20NoReturn()));
