@@ -8,8 +8,7 @@ import {CALLBACK_SUCCESS} from "../src/libraries/ConstantsLib.sol";
 import {BaseTest} from "./BaseTest.sol";
 
 contract SignatureTest is BaseTest {
-    function testSigner(bytes32 root, uint256 privateKey) public view {
-        privateKey = boundPrivateKey(privateKey);
+    function testDomainSeparator() public view {
         bytes32 domainSeparator =
             keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(ecrecoverRatifier)));
         bytes32 expectedDomainSeparator = vm.eip712HashStruct(
