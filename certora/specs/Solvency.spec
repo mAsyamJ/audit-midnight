@@ -131,16 +131,16 @@ hook Sstore obligationState[KEY bytes32 id].withdrawable uint256 newWithdrawable
     withdrawableMirror[id][loantoken[id]] = newWithdrawable;
 }
 
-ghost mapping(address => mathint) withdrawableTradingFeeMirror {
-    init_state axiom (forall address token. withdrawableTradingFeeMirror[token] == 0);
+ghost mapping(address => mathint) claimableTradingFeeMirror {
+    init_state axiom (forall address token. claimableTradingFeeMirror[token] == 0);
 }
 
-hook Sload uint256 value withdrawableTradingFee[KEY address token] {
-    require value == withdrawableTradingFeeMirror[token], "ghost mirror";
+hook Sload uint256 value claimableTradingFee[KEY address token] {
+    require value == claimableTradingFeeMirror[token], "ghost mirror";
 }
 
-hook Sstore withdrawableTradingFee[KEY address token] uint256 newValue (uint256 oldValue) {
-    withdrawableTradingFeeMirror[token] = newValue;
+hook Sstore claimableTradingFee[KEY address token] uint256 newValue (uint256 oldValue) {
+    claimableTradingFeeMirror[token] = newValue;
 }
 
 /// INVARIANTS AND RULES ///
@@ -148,7 +148,7 @@ hook Sstore withdrawableTradingFee[KEY address token] uint256 newValue (uint256 
 // For any token, the balance of the contract is always greater than or equal to the sum of all collateral, withdrawable, and withdrawable trading fee amounts for that token minus the flash loaned amount.
 // Note: this invariant is strong, so it also holds before each external call.
 strong invariant tokenBalanceCorrect(address token)
-    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token) + withdrawableTradingFeeMirror[token] - flashloans[token]
+    tokenBalances[token][currentContract] >= collateralSum(token) + withdrawableSum(token) + claimableTradingFeeMirror[token] - flashloans[token]
     {
         preserved with (env e) {
             require e.msg.sender != currentContract, "only external calls";

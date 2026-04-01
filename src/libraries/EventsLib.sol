@@ -81,5 +81,5 @@ library EventsLib {
         address indexed caller, address indexed onBehalf, address indexed authorized, bool newIsAuthorized
     );
 
-    event WithdrawTradingFee(address indexed caller, address indexed token, uint256 amount, address indexed receiver);
+    event ClaimTradingFee(address indexed caller, address indexed token, uint256 amount, address indexed receiver);
 }

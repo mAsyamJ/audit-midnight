@@ -98,7 +98,7 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
@@ -120,7 +120,7 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, borrower, lenderOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
@@ -143,7 +143,7 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
@@ -179,7 +179,7 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
@@ -210,7 +210,7 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
@@ -242,11 +242,11 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), expectedFee, "withdrawable trading fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), expectedFee, "claimable trading fee");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, expectedFee, "contract balance increase");
     }
 
-    function testWithdrawTradingFee(uint256 tradingFee, uint256 units, uint256 withdrawAmount) public {
+    function testClaimTradingFee(uint256 tradingFee, uint256 units, uint256 withdrawAmount) public {
         units = bound(units, 1, MAX_DEBT);
         tradingFee = bound(tradingFee, 1e12, midnight.maxTradingFee(1)) / 1e12 * 1e12;
         midnight.setDefaultTradingFee(address(loanToken), 1, tradingFee);
@@ -254,26 +254,26 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(units, lender, borrowerOffer);
 
-        uint256 fee = midnight.withdrawableTradingFee(address(loanToken));
+        uint256 fee = midnight.claimableTradingFee(address(loanToken));
         vm.assume(fee > 0);
         withdrawAmount = bound(withdrawAmount, 1, fee);
         address receiver = makeAddr("receiver");
 
         vm.prank(feeRecipient);
-        midnight.withdrawTradingFee(address(loanToken), withdrawAmount, receiver);
+        midnight.claimTradingFee(address(loanToken), withdrawAmount, receiver);
 
         assertEq(loanToken.balanceOf(receiver), withdrawAmount, "receiver balance");
-        assertEq(midnight.withdrawableTradingFee(address(loanToken)), fee - withdrawAmount, "remaining fee");
+        assertEq(midnight.claimableTradingFee(address(loanToken)), fee - withdrawAmount, "remaining fee");
     }
 
-    function testWithdrawTradingFeeOnlyFeeRecipient(address caller) public {
+    function testClaimTradingFeeOnlyFeeRecipient(address caller) public {
         vm.assume(caller != feeRecipient);
         vm.prank(caller);
         vm.expectRevert("only fee recipient");
-        midnight.withdrawTradingFee(address(loanToken), 0, caller);
+        midnight.claimTradingFee(address(loanToken), 0, caller);
     }
 
-    function testWithdrawTradingFeeExcessReverts() public {
+    function testClaimTradingFeeExcessReverts() public {
         uint256 tradingFee = midnight.maxTradingFee(1) / 1e12 * 1e12;
         midnight.setDefaultTradingFee(address(loanToken), 1, tradingFee);
         borrowerOffer.tick = 0;
@@ -281,11 +281,11 @@ contract TradingFeeTest is BaseTest {
         collateralize(obligation, borrower, MAX_DEBT);
         take(1000, lender, borrowerOffer);
 
-        uint256 fee = midnight.withdrawableTradingFee(address(loanToken));
+        uint256 fee = midnight.claimableTradingFee(address(loanToken));
 
         vm.prank(feeRecipient);
         vm.expectRevert();
-        midnight.withdrawTradingFee(address(loanToken), fee + 1, feeRecipient);
+        midnight.claimTradingFee(address(loanToken), fee + 1, feeRecipient);
     }
 
     function testTradingFeesAccumulate() public {
@@ -297,11 +297,11 @@ contract TradingFeeTest is BaseTest {
         uint256 balanceBefore = loanToken.balanceOf(address(midnight));
         collateralize(obligation, borrower, MAX_DEBT);
         take(1000, lender, borrowerOffer);
-        uint256 feeAfterFirst = midnight.withdrawableTradingFee(address(loanToken));
+        uint256 feeAfterFirst = midnight.claimableTradingFee(address(loanToken));
 
         borrowerOffer.group = keccak256("g2");
         take(1000, lender, borrowerOffer);
-        uint256 feeAfterSecond = midnight.withdrawableTradingFee(address(loanToken));
+        uint256 feeAfterSecond = midnight.claimableTradingFee(address(loanToken));
 
         assertEq(feeAfterSecond, feeAfterFirst * 2, "fees accumulated");
         assertEq(loanToken.balanceOf(address(midnight)) - balanceBefore, feeAfterSecond, "contract balance increase");

@@ -112,7 +112,7 @@ contract Midnight is IMidnight {
     /// feeSetter.
     mapping(address loanToken => uint32) public defaultContinuousFee;
 
-    mapping(address token => uint256) public withdrawableTradingFee;
+    mapping(address token => uint256) public claimableTradingFee;
 
     address public feeRecipient;
 
@@ -202,11 +202,11 @@ contract Midnight is IMidnight {
         emit EventsLib.SetDefaultContinuousFee(loanToken, newContinuousFee);
     }
 
-    function withdrawTradingFee(address token, uint256 amount, address receiver) external {
+    function claimTradingFee(address token, uint256 amount, address receiver) external {
         require(msg.sender == feeRecipient, "only fee recipient");
-        withdrawableTradingFee[token] -= amount;
+        claimableTradingFee[token] -= amount;
 
-        emit EventsLib.WithdrawTradingFee(msg.sender, token, amount, receiver);
+        emit EventsLib.ClaimTradingFee(msg.sender, token, amount, receiver);
 
         SafeTransferLib.safeTransfer(token, receiver, amount);
     }
@@ -354,7 +354,7 @@ contract Midnight is IMidnight {
         }
 
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, address(this), buyerAssets - sellerAssets);
-        withdrawableTradingFee[offer.obligation.loanToken] += buyerAssets - sellerAssets;
+        claimableTradingFee[offer.obligation.loanToken] += buyerAssets - sellerAssets;
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, receiver, sellerAssets);
 
         if (sellerCallback != address(0)) {
