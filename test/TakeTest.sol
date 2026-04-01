@@ -1010,7 +1010,7 @@ contract LendCallback is ICallbacks {
         require(obligationId == IdLib.toId(obligation, block.chainid, msg.sender), "wrong obligationId");
         recordedObligationId = obligationId;
         recordedData = data;
-        require(ERC20(obligation.loanToken).transfer(buyer, buyerAssets), "transfer failed");
+        SafeTransferLib.safeTransfer(obligation.loanToken, buyer, buyerAssets);
     }
 
     function onSell(bytes32, Obligation memory, address, uint256, uint256, uint256, bytes memory) external {}

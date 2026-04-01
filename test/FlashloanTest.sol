@@ -31,7 +31,7 @@ contract FlashLoanTest is BaseTest, IFlashLoanCallback {
         discardToken = true;
 
         deal(address(loanToken), address(midnight), amount);
-        vm.expectRevert("Insufficient balance");
+        vm.expectRevert(); // exact message depends on the token.
         midnight.flashLoan(address(loanToken), amount, address(this), data);
     }
 
