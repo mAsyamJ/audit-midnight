@@ -22,7 +22,8 @@ import {
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
 import {IMidnight, Obligation, Offer, Collateral, ObligationState, Position} from "./interfaces/IMidnight.sol";
-import {ICallbacks, IFlashLoanCallback, IRatifier} from "./interfaces/ICallbacks.sol";
+import {ICallbacks, IFlashLoanCallback} from "./interfaces/ICallbacks.sol";
+import {IRatifier} from "./interfaces/IRatifier.sol";
 import {IEnterGate, ILiquidatorGate} from "./interfaces/IGate.sol";
 import {EventsLib} from "./libraries/EventsLib.sol";
 

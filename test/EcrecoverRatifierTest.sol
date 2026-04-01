@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Signature, AUTHORIZATION_TYPEHASH, EIP712_DOMAIN_TYPEHASH} from "../src/ratifiers/EcrecoverRatifier.sol";
+import {Signature, EIP712_DOMAIN_TYPEHASH, AUTHORIZATION_TYPEHASH} from "../src/interfaces/IEcrecover.sol";
 import {BaseTest} from "./BaseTest.sol";
 
 contract EcrecoverRatifierTest is BaseTest {
@@ -13,11 +13,11 @@ contract EcrecoverRatifierTest is BaseTest {
     {
         bytes32 structHash = keccak256(
             abi.encode(
-                AUTHORIZATION_TYPEHASH, authorizer, authorized, isAuthorized, ecrecoverRatifier.nonce(authorizer)
+                AUTHORIZATION_TYPEHASH, authorizer, authorized, isAuthorized, setIsAuthorizedWithSig.nonce(authorizer)
             )
         );
         bytes32 domainSeparator =
-            keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(ecrecoverRatifier)));
+            keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(setIsAuthorizedWithSig)));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey[_signer], digest);
         return Signature({v: v, r: r, s: s});
@@ -27,18 +27,18 @@ contract EcrecoverRatifierTest is BaseTest {
         Signature memory sig = authorizationSig(borrower, lender, true, borrower);
 
         vm.prank(borrower);
-        ecrecoverRatifier.setIsAuthorizedWithSig(borrower, lender, true, sig);
+        setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, lender, true, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), true);
-        assertEq(ecrecoverRatifier.nonce(borrower), 1);
+        assertEq(setIsAuthorizedWithSig.nonce(borrower), 1);
 
         sig = authorizationSig(borrower, lender, false, borrower);
 
         vm.prank(borrower);
-        ecrecoverRatifier.setIsAuthorizedWithSig(borrower, lender, false, sig);
+        setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, lender, false, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), false);
-        assertEq(ecrecoverRatifier.nonce(borrower), 2);
+        assertEq(setIsAuthorizedWithSig.nonce(borrower), 2);
     }
 
     function testSetIsAuthorizedWithSigAuthorizedCaller() public {
@@ -48,10 +48,10 @@ contract EcrecoverRatifierTest is BaseTest {
         Signature memory sig = authorizationSig(borrower, otherLender, true, borrower);
 
         vm.prank(lender);
-        ecrecoverRatifier.setIsAuthorizedWithSig(borrower, otherLender, true, sig);
+        setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, otherLender, true, sig);
 
         assertEq(midnight.isAuthorized(borrower, otherLender), true);
-        assertEq(ecrecoverRatifier.nonce(borrower), 1);
+        assertEq(setIsAuthorizedWithSig.nonce(borrower), 1);
     }
 
     function testSetIsAuthorizedWithSigUnauthorizedCaller() public {
@@ -59,10 +59,10 @@ contract EcrecoverRatifierTest is BaseTest {
 
         vm.prank(otherLender);
         vm.expectRevert("unauthorized");
-        ecrecoverRatifier.setIsAuthorizedWithSig(borrower, lender, true, sig);
+        setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, lender, true, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), false);
-        assertEq(ecrecoverRatifier.nonce(borrower), 0);
+        assertEq(setIsAuthorizedWithSig.nonce(borrower), 0);
     }
 
     function testSetIsAuthorizedWithSigInvalidSignature() public {
@@ -70,10 +70,10 @@ contract EcrecoverRatifierTest is BaseTest {
 
         vm.prank(borrower);
         vm.expectRevert("invalid signature");
-        ecrecoverRatifier.setIsAuthorizedWithSig(borrower, lender, true, sig);
+        setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, lender, true, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), false);
-        assertEq(ecrecoverRatifier.nonce(borrower), 0);
+        assertEq(setIsAuthorizedWithSig.nonce(borrower), 0);
     }
 
     function testSetIsAuthorizedWithSigNonce(uint8 n) public {
@@ -84,9 +84,9 @@ contract EcrecoverRatifierTest is BaseTest {
             Signature memory sig = authorizationSig(borrower, lender, isAuthorized, borrower);
 
             vm.prank(borrower);
-            ecrecoverRatifier.setIsAuthorizedWithSig(borrower, lender, isAuthorized, sig);
+            setIsAuthorizedWithSig.setIsAuthorizedWithSig(borrower, lender, isAuthorized, sig);
 
-            assertEq(ecrecoverRatifier.nonce(borrower), i + 1);
+            assertEq(setIsAuthorizedWithSig.nonce(borrower), i + 1);
             assertEq(midnight.isAuthorized(borrower, lender), isAuthorized);
         }
     }

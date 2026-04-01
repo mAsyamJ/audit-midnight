@@ -25,12 +25,9 @@ import {
 } from "../src/libraries/ConstantsLib.sol";
 import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
-import {
-    EcrecoverRatifier,
-    Signature,
-    EIP712_DOMAIN_TYPEHASH,
-    ROOT_TYPEHASH
-} from "../src/ratifiers/EcrecoverRatifier.sol";
+import {Signature, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/interfaces/IEcrecover.sol";
+import {EcrecoverRatifier} from "../src/ratifiers/EcrecoverRatifier.sol";
+import {SetIsAuthorizedWithSig} from "../src/authorizers/SetIsAuthorizedWithSig.sol";
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
 
 abstract contract BaseTest is Test {
@@ -50,12 +47,14 @@ abstract contract BaseTest is Test {
     address internal otherLender;
     address internal liquidator = makeAddr("liquidator");
     EcrecoverRatifier internal ecrecoverRatifier;
+    SetIsAuthorizedWithSig internal setIsAuthorizedWithSig;
 
     bytes internal emptySig;
 
     function setUp() public virtual {
         midnight = new Midnight();
         ecrecoverRatifier = new EcrecoverRatifier(address(midnight));
+        setIsAuthorizedWithSig = new SetIsAuthorizedWithSig(address(midnight));
 
         midnight.setFeeSetter(address(this));
 
@@ -73,6 +72,11 @@ abstract contract BaseTest is Test {
         authorize(lender, address(ecrecoverRatifier));
         authorize(otherBorrower, address(ecrecoverRatifier));
         authorize(otherLender, address(ecrecoverRatifier));
+
+        authorize(borrower, address(setIsAuthorizedWithSig));
+        authorize(lender, address(setIsAuthorizedWithSig));
+        authorize(otherBorrower, address(setIsAuthorizedWithSig));
+        authorize(otherLender, address(setIsAuthorizedWithSig));
 
         loanToken = new ERC20("loan", "loan");
         collateralToken1 = new ERC20("collat1", "collat1");

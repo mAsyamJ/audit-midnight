@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity 0.8.31;
 
-import {IRatifier} from "../interfaces/ICallbacks.sol";
+import {IRatifier} from "../interfaces/IRatifier.sol";
 import {Offer} from "../interfaces/IMidnight.sol";
 import {CALLBACK_SUCCESS} from "../libraries/ConstantsLib.sol";
 
