@@ -979,7 +979,7 @@ contract TakeTest is BaseTest {
 
         vm.prank(maker);
         midnight.setIsAuthorized(maker, address(ratifier), true);
-        vm.expectRevert("unauthorized");
+        vm.expectRevert("ratification failed");
         vm.prank(sender);
         midnight.take(
             0,
@@ -1213,7 +1213,7 @@ contract TakeTest is BaseTest {
 
         Signature memory badSig;
 
-        vm.expectRevert("unauthorized");
+        vm.expectRevert("ratifier not authorized");
         vm.prank(borrower);
         midnight.take(
             units,
