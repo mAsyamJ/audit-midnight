@@ -30,7 +30,7 @@ contract TakeTest is BaseTest {
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -39,7 +39,7 @@ contract TakeTest is BaseTest {
                     oracle: address(oracle1)
                 })
             );
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken2),
@@ -48,7 +48,7 @@ contract TakeTest is BaseTest {
                     oracle: address(oracle2)
                 })
             );
-        obligation.collaterals = sortCollaterals(obligation.collaterals);
+        obligation.collateralParams = sortCollaterals(obligation.collateralParams);
         obligation.rcfThreshold = 0;
 
         id = toId(obligation);
@@ -822,14 +822,14 @@ contract TakeTest is BaseTest {
 
     function testBuySellerCallback(uint256 units) public {
         units = bound(units, 0, maxAssets);
-        uint256 collateral = units.mulDivUp(WAD, obligation.collaterals[0].lltv);
+        uint256 collateral = units.mulDivUp(WAD, obligation.collateralParams[0].lltv);
         borrowerOffer.callback = address(new BorrowCallback());
         borrowerOffer.callbackData = abi.encode(0, collateral);
         borrowerOffer.maxUnits = units;
         borrowerOffer.tick = MAX_TICK;
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), lender, units.mulDivUp(price, WAD));
-        deal(obligation.collaterals[0].token, borrowerOffer.callback, collateral);
+        deal(obligation.collateralParams[0].token, borrowerOffer.callback, collateral);
         assertEq(midnight.collateral(id, borrower, 0), 0);
 
         authorize(borrower, borrowerOffer.callback);
@@ -842,13 +842,13 @@ contract TakeTest is BaseTest {
 
     function testSellSellerCallback(uint256 units) public {
         units = bound(units, 0, maxAssets);
-        uint256 collateral = units.mulDivUp(WAD, obligation.collaterals[0].lltv);
+        uint256 collateral = units.mulDivUp(WAD, obligation.collateralParams[0].lltv);
         lenderOffer.maxUnits = units;
         lenderOffer.tick = MAX_TICK;
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         address callback = address(new BorrowCallback());
         deal(address(loanToken), lender, units.mulDivDown(price, WAD));
-        deal(obligation.collaterals[0].token, callback, collateral);
+        deal(obligation.collateralParams[0].token, callback, collateral);
 
         authorize(borrower, callback);
 
@@ -983,7 +983,7 @@ contract BorrowCallback is ICallbacks {
         recordedid = id;
         recordedData = data;
         (uint256 collateralIndex, uint256 amount) = abi.decode(data, (uint256, uint256));
-        address collateralToken = obligation.collaterals[collateralIndex].token;
+        address collateralToken = obligation.collateralParams[collateralIndex].token;
         ERC20(collateralToken).approve(msg.sender, amount);
         Midnight(msg.sender).supplyCollateral(obligation, collateralIndex, amount, seller);
     }

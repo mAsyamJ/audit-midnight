@@ -19,7 +19,7 @@ contract AuthorizationTest is BaseTest {
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -70,7 +70,7 @@ contract AuthorizationTest is BaseTest {
     function testWithdrawCollateralUnauthorized() public {
         uint256 collateralAmount = 1000;
         address user = makeAddr("user");
-        address collateralToken = obligation.collaterals[0].token;
+        address collateralToken = obligation.collateralParams[0].token;
 
         deal(collateralToken, user, collateralAmount);
         vm.prank(user);
@@ -113,7 +113,7 @@ contract AuthorizationTest is BaseTest {
         uint256 collateralAmount = 1000;
         address user = makeAddr("user");
         address operator = makeAddr("operator");
-        address collateralToken = obligation.collaterals[0].token;
+        address collateralToken = obligation.collateralParams[0].token;
 
         // User authorizes operator
         vm.prank(user);
@@ -138,7 +138,7 @@ contract AuthorizationTest is BaseTest {
         uint256 collateralAmount = 1000;
         address user = makeAddr("user");
         address operator = makeAddr("operator");
-        address collateralToken = obligation.collaterals[0].token;
+        address collateralToken = obligation.collateralParams[0].token;
 
         deal(collateralToken, operator, collateralAmount);
         vm.prank(operator);
@@ -179,7 +179,7 @@ contract AuthorizationTest is BaseTest {
     function testWithdrawCollateralSelf() public {
         uint256 collateralAmount = 1000;
         address user = makeAddr("user");
-        address collateralToken = obligation.collaterals[0].token;
+        address collateralToken = obligation.collateralParams[0].token;
 
         deal(collateralToken, user, collateralAmount);
         vm.prank(user);

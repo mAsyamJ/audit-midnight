@@ -53,14 +53,14 @@ contract SettersTest is BaseTest {
         oneEightyDaysFee = bound(oneEightyDaysFee, 0, midnight.maxTradingFee(5)) / 1e12 * 1e12;
         threeSixtyDaysFee = bound(threeSixtyDaysFee, 0, midnight.maxTradingFee(6)) / 1e12 * 1e12;
 
-        Collateral[] memory collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({
+        Collateral[] memory collateralParams = new Collateral[](1);
+        collateralParams[0] = Collateral({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
             loanToken: loanToken,
             maturity: block.timestamp + 1 days,
-            collaterals: collaterals,
+            collateralParams: collateralParams,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)
@@ -178,14 +178,14 @@ contract SettersTest is BaseTest {
         midnight.setDefaultTradingFee(loanToken, 6, threeSixtyDaysFee);
 
         // touch obligation with this loan token
-        Collateral[] memory collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({
+        Collateral[] memory collateralParams = new Collateral[](1);
+        collateralParams[0] = Collateral({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
             loanToken: loanToken,
             maturity: block.timestamp + 1 days,
-            collaterals: collaterals,
+            collateralParams: collateralParams,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)
@@ -242,7 +242,7 @@ contract SettersTest is BaseTest {
         Obligation memory obligation = Obligation({
             loanToken: address(0),
             maturity: block.timestamp + 1 days,
-            collaterals: cols,
+            collateralParams: cols,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)
@@ -287,14 +287,14 @@ contract SettersTest is BaseTest {
     function testSetContinuousFeeOnlyFeeSetter(address rdm) public {
         vm.assume(rdm != address(this));
 
-        Collateral[] memory collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({
+        Collateral[] memory collateralParams = new Collateral[](1);
+        collateralParams[0] = Collateral({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
-            collaterals: collaterals,
+            collateralParams: collateralParams,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)
@@ -314,14 +314,14 @@ contract SettersTest is BaseTest {
     function testSetContinuousFeeTooHigh(uint256 fee) public {
         fee = bound(fee, MAX_CONTINUOUS_FEE + 1, type(uint256).max);
 
-        Collateral[] memory collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({
+        Collateral[] memory collateralParams = new Collateral[](1);
+        collateralParams[0] = Collateral({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
-            collaterals: collaterals,
+            collateralParams: collateralParams,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)
@@ -344,14 +344,14 @@ contract SettersTest is BaseTest {
         midnight.setDefaultContinuousFee(address(loanToken), fee);
         assertEq(midnight.defaultContinuousFee(address(loanToken)), fee, "default fee updated");
 
-        Collateral[] memory collaterals = new Collateral[](1);
-        collaterals[0] = Collateral({
+        Collateral[] memory collateralParams = new Collateral[](1);
+        collateralParams[0] = Collateral({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
             loanToken: address(loanToken),
             maturity: block.timestamp + 100 days,
-            collaterals: collaterals,
+            collateralParams: collateralParams,
             rcfThreshold: 0,
             enterGate: address(0),
             liquidatorGate: address(0)

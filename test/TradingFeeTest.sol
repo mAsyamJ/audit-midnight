@@ -38,7 +38,7 @@ contract TradingFeeTest is BaseTest {
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 1 days; // TTM = 1 day (exactly at breakpoint)
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -47,7 +47,7 @@ contract TradingFeeTest is BaseTest {
                     oracle: address(oracle1)
                 })
             );
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken2),
@@ -56,7 +56,7 @@ contract TradingFeeTest is BaseTest {
                     oracle: address(oracle2)
                 })
             );
-        obligation.collaterals = sortCollaterals(obligation.collaterals);
+        obligation.collateralParams = sortCollaterals(obligation.collateralParams);
 
         id = toId(obligation);
 

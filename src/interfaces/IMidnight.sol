@@ -5,7 +5,7 @@ pragma solidity >=0.5.0;
 struct Obligation {
     address loanToken;
     // Must be sorted by address.
-    Collateral[] collaterals;
+    Collateral[] collateralParams;
     uint256 maturity;
     // The recovery close factor is deactivated for a collateral if the liquidation could leave a collateral value that
     // would not be enough to repay rcfThreshold units.

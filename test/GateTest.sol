@@ -44,7 +44,7 @@ contract GateTest is BaseTest {
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -53,11 +53,11 @@ contract GateTest is BaseTest {
                     maxLif: maxLif(0.77e18, LIQUIDATION_CURSOR_LOW)
                 })
             );
-        obligation.collaterals = sortCollaterals(obligation.collaterals);
+        obligation.collateralParams = sortCollaterals(obligation.collateralParams);
 
         gatedObligation.loanToken = address(loanToken);
         gatedObligation.maturity = block.timestamp + 100;
-        gatedObligation.collaterals
+        gatedObligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -66,7 +66,7 @@ contract GateTest is BaseTest {
                     maxLif: maxLif(0.77e18, LIQUIDATION_CURSOR_LOW)
                 })
             );
-        gatedObligation.collaterals = sortCollaterals(gatedObligation.collaterals);
+        gatedObligation.collateralParams = sortCollaterals(gatedObligation.collateralParams);
         gatedObligation.enterGate = address(gate);
         gatedObligation.liquidatorGate = address(gate);
 
@@ -240,7 +240,7 @@ contract GateTest is BaseTest {
         collateralize(gatedObligation, borrower, units);
         take(units, lender, borrowerOffer);
 
-        Oracle(gatedObligation.collaterals[0].oracle).setPrice(ORACLE_PRICE_SCALE / 2);
+        Oracle(gatedObligation.collateralParams[0].oracle).setPrice(ORACLE_PRICE_SCALE / 2);
 
         deal(address(loanToken), liquidator, units);
         vm.prank(liquidator);
@@ -257,7 +257,7 @@ contract GateTest is BaseTest {
         collateralize(gatedObligation, borrower, units);
         take(units, lender, borrowerOffer);
 
-        Oracle(gatedObligation.collaterals[0].oracle).setPrice(0);
+        Oracle(gatedObligation.collateralParams[0].oracle).setPrice(0);
 
         vm.prank(liquidator);
         if (!isWhitelisted) vm.expectRevert("liquidator gated from liquidating");

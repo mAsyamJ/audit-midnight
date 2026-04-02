@@ -78,7 +78,7 @@ function CVL_toId(Midnight.Obligation obligation, uint256 chainId, address midni
     // Assume the obligation id already maps to this loan token.
     // We could also initialize on first use, but then token(0) handling needs extra constraints.
     require(loantoken[id] == obligation.loanToken), "remember the loan token of the obligation";
-    require(forall uint128 collateralIndex. collateralIndex < obligation.collaterals.length => collateralToken[id][collateralIndex] == obligation.collaterals[collateralIndex].token), "remember the collateral tokens of the obligation";
+    require(forall uint128 collateralIndex. collateralIndex < obligation.collateralParams.length => collateralToken[id][collateralIndex] == obligation.collateralParams[collateralIndex].token), "remember the collateral tokens of the obligation";
     return id;
 }
 
@@ -108,12 +108,12 @@ ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) collat
     init_state axiom (forall address token. collateralSum(token) == 0);
 }
 
-// Safe require as obligations limit the number of collaterals.
+// Safe require as obligations limit the number of collateralParams.
 hook Sload uint128 value position[KEY bytes32 id][KEY address owner].collateral[INDEX uint256 collateralIndex] {
     require value == collateralMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]], "ghost mirror";
 }
 
-// Safe require as obligations limit the number of collaterals.
+// Safe require as obligations limit the number of collateralParams.
 hook Sstore position[KEY bytes32 id][KEY address owner].collateral[INDEX uint256 collateralIndex] uint128 newCollateral (uint128 oldCollateral) {
     collateralMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]] = newCollateral;
 }

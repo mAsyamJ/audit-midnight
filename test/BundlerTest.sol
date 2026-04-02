@@ -31,7 +31,7 @@ contract BundlerTest is BaseTest {
 
         obligation.loanToken = address(loanToken);
         obligation.maturity = block.timestamp + 100;
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken1),
@@ -40,7 +40,7 @@ contract BundlerTest is BaseTest {
                     oracle: address(oracle1)
                 })
             );
-        obligation.collaterals
+        obligation.collateralParams
             .push(
                 Collateral({
                     token: address(collateralToken2),
@@ -49,7 +49,7 @@ contract BundlerTest is BaseTest {
                     oracle: address(oracle2)
                 })
             );
-        obligation.collaterals = sortCollaterals(obligation.collaterals);
+        obligation.collateralParams = sortCollaterals(obligation.collateralParams);
         obligation.rcfThreshold = 0;
 
         id = midnight.touchObligation(obligation);

@@ -40,13 +40,13 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 ///
 /// OBLIGATIONS
 /// @dev The following constraints are enforced on obligation creation (in `touchObligation`):
-/// - `collaterals.length > 0`: at least one collateral is required.
-/// - `collaterals.length <= MAX_COLLATERALS` (128): at most 128 collaterals per obligation.
+/// - `collateralParams.length > 0`: at least one collateral is required.
+/// - `collateralParams.length <= MAX_COLLATERALS` (128): at most 128 collateralParams per obligation.
 /// - Collateral tokens must be non-zero and strictly sorted by address (ascending, no duplicates).
 /// - Each collateral's `lltv` must be one of the allowed tiers (see `isLltvAllowed` in ConstantsLib).
 /// - Each collateral's `maxLif` must equal `maxLif(lltv, LIQUIDATION_CURSOR_LOW)` or
 ///   `maxLif(lltv, LIQUIDATION_CURSOR_HIGH)`.
-/// @dev Additionally, a borrower can have collateral in at most `MAX_COLLATERALS_PER_BORROWER` (10) collaterals
+/// @dev Additionally, a borrower can have collateral in at most `MAX_COLLATERALS_PER_BORROWER` (10) collateralParams
 /// simultaneously within a single obligation.
 ///
 /// TRADING FEES
@@ -410,7 +410,7 @@ contract Midnight is IMidnight {
     {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
-        address collateralToken = obligation.collaterals[collateralIndex].token;
+        address collateralToken = obligation.collateralParams[collateralIndex].token;
 
         Position storage _position = position[id][onBehalf];
         uint256 oldCollateralOf = _position.collateral[collateralIndex];
@@ -437,7 +437,7 @@ contract Midnight is IMidnight {
     ) external {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
-        address collateralToken = obligation.collaterals[collateralIndex].token;
+        address collateralToken = obligation.collateralParams[collateralIndex].token;
 
         Position storage _position = position[id][onBehalf];
         uint256 newCollateralOf = _position.collateral[collateralIndex] - assets;
@@ -488,13 +488,14 @@ contract Midnight is IMidnight {
         uint128 bitmap = _position.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
-            Collateral memory _collateral = obligation.collaterals[i];
-            uint256 price = IOracle(_collateral.oracle).price();
+            Collateral memory _collateralParam = obligation.collateralParams[i];
+            uint256 price = IOracle(_collateralParam.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
             uint256 _collateral = _position.collateral[i];
-            maxDebt += _collateral.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
-            badDebt =
-                badDebt.zeroFloorSub(_collateral.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateral.maxLif));
+            maxDebt += _collateral.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateralParam.lltv, WAD);
+            badDebt = badDebt.zeroFloorSub(
+                _collateral.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateralParam.maxLif)
+            );
             bitmap = bitmap.clearBit(i);
         }
 
@@ -513,7 +514,7 @@ contract Midnight is IMidnight {
         }
 
         if (repaidUnits > 0 || seizedAssets > 0) {
-            uint256 _maxLif = obligation.collaterals[collateralIndex].maxLif;
+            uint256 _maxLif = obligation.collateralParams[collateralIndex].maxLif;
             uint256 lif = originalDebt > maxDebt
                 ? _maxLif
                 : UtilsLib.min(
@@ -527,7 +528,7 @@ contract Midnight is IMidnight {
             }
 
             if (block.timestamp <= obligation.maturity) {
-                uint256 lltv = obligation.collaterals[collateralIndex].lltv;
+                uint256 lltv = obligation.collateralParams[collateralIndex].lltv;
                 // Rounded up to avoid consecutive max liquidations.
                 // Acknowledged that the position could be slightly healthy after a liquidation.
                 // Note that debt >= maxDebt in this branch.
@@ -554,7 +555,7 @@ contract Midnight is IMidnight {
         emit EventsLib.Liquidate(
             msg.sender,
             id,
-            obligation.collaterals[collateralIndex].token,
+            obligation.collateralParams[collateralIndex].token,
             seizedAssets,
             repaidUnits,
             borrower,
@@ -562,7 +563,7 @@ contract Midnight is IMidnight {
             _obligationState.lossIndex
         );
 
-        SafeTransferLib.safeTransfer(obligation.collaterals[collateralIndex].token, msg.sender, seizedAssets);
+        SafeTransferLib.safeTransfer(obligation.collateralParams[collateralIndex].token, msg.sender, seizedAssets);
 
         if (data.length > 0) {
             ICallbacks(msg.sender)
@@ -614,17 +615,17 @@ contract Midnight is IMidnight {
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
         bytes32 id = toId(obligation);
         if (!obligationState[id].created) {
-            require(obligation.collaterals.length > 0, "no collaterals");
-            require(obligation.collaterals.length <= MAX_COLLATERALS, "too many collaterals");
+            require(obligation.collateralParams.length > 0, "no collateralParams");
+            require(obligation.collateralParams.length <= MAX_COLLATERALS, "too many collateralParams");
             address previousCollateralToken;
-            for (uint256 i = 0; i < obligation.collaterals.length; i++) {
-                address collateralToken = obligation.collaterals[i].token;
-                require(collateralToken > previousCollateralToken, "collaterals not sorted");
-                uint256 lltv = obligation.collaterals[i].lltv;
+            for (uint256 i = 0; i < obligation.collateralParams.length; i++) {
+                address collateralToken = obligation.collateralParams[i].token;
+                require(collateralToken > previousCollateralToken, "collateralParams not sorted");
+                uint256 lltv = obligation.collateralParams[i].lltv;
                 require(isLltvAllowed(lltv), "lltv not allowed");
                 require(
-                    obligation.collaterals[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_LOW)
-                        || obligation.collaterals[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_HIGH),
+                    obligation.collateralParams[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_LOW)
+                        || obligation.collateralParams[i].maxLif == maxLif(lltv, LIQUIDATION_CURSOR_HIGH),
                     "invalid maxLif"
                 );
                 previousCollateralToken = collateralToken;
@@ -774,9 +775,10 @@ contract Midnight is IMidnight {
         uint128 bitmap = _position.activatedCollaterals;
         while (maxDebt < debt && bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
-            Collateral memory collateral = obligation.collaterals[i];
-            uint256 price = IOracle(collateral.oracle).price();
-            maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateral.lltv, WAD);
+            Collateral memory collateralParam = obligation.collateralParams[i];
+            uint256 price = IOracle(collateralParam.oracle).price();
+            maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE)
+                .mulDivDown(collateralParam.lltv, WAD);
             bitmap = bitmap.clearBit(i);
         }
         return maxDebt >= debt;

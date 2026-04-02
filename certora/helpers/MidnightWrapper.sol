@@ -12,18 +12,18 @@ contract MidnightWrapper is Midnight {
     using UtilsLib for uint256;
     using UtilsLib for uint128;
     
-    /* This isHealthy function iterates over all collaterals, it doesn't use the collateral bitmap. */
+    /* This isHealthy function iterates over all collateralParams, it doesn't use the collateral bitmap. */
 
     function isHealthyNoBitmap(Obligation memory obligation, bytes32 id, address borrower) public view returns (bool) {
         Position storage _position = position[id][borrower];
         uint256 debt = _position.debt;
         uint256 maxDebt;
-        uint256 len = obligation.collaterals.length;
+        uint256 len = obligation.collateralParams.length;
         for (uint256 i = len; i > 0 && maxDebt < debt; ) {
             i--;
-            Collateral memory collateral = obligation.collaterals[i];
-            uint256 price = IOracle(collateral.oracle).price();
-            maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateral.lltv, WAD);
+            Collateral memory collateralParam = obligation.collateralParams[i];
+            uint256 price = IOracle(collateralParam.oracle).price();
+            maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateralParam.lltv, WAD);
         }
         return maxDebt >= debt;
     }

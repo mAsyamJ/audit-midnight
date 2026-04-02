@@ -41,7 +41,7 @@ strong invariant nonZeroCollateralsAreActivated(bytes32 id, address user, uint25
 // that does not use collateral bitmap returns true.  We also check that the latter function
 // does not revert if isHealthy does not revert.
 rule isHealthyEquivalent(Midnight.Obligation obligation, bytes32 id, address borrower) {
-    require obligation.collaterals.length <= 3, "restrict to three collaterals";
+    require obligation.collateralParams.length <= 3, "restrict to three collateralParams";
     requireInvariant nonZeroCollateralsAreActivated(id, borrower, 0);
     requireInvariant nonZeroCollateralsAreActivated(id, borrower, 1);
     requireInvariant nonZeroCollateralsAreActivated(id, borrower, 2);
