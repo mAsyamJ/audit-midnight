@@ -32,7 +32,6 @@ contract IdleCallback is ICallbacks {
         address buyer,
         uint256 buyerAssets,
         uint256,
-        uint256,
         bytes memory
     ) external returns (bytes32) {
         require(msg.sender == MIDNIGHT);
@@ -41,7 +40,7 @@ contract IdleCallback is ICallbacks {
         return CALLBACK_SUCCESS;
     }
 
-    function onSell(bytes32, Obligation memory, address, uint256, uint256, uint256, bytes memory) external {}
+    function onSell(bytes32, Obligation memory, address, uint256, uint256, bytes memory) external {}
 
     function onLiquidate(bytes32, Obligation memory, uint256, uint256, uint256, address, bytes memory) external {}
 }
