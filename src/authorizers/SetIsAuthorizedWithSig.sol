@@ -2,8 +2,8 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity 0.8.31;
 
-import {IMidnight, Authorization} from "../interfaces/IMidnight.sol";
-import {Signature, AUTHORIZATION_TYPEHASH, EIP712_DOMAIN_TYPEHASH} from "../interfaces/IEcrecover.sol";
+import {IMidnight} from "../interfaces/IMidnight.sol";
+import {Authorization, Signature, AUTHORIZATION_TYPEHASH, EIP712_DOMAIN_TYPEHASH} from "../interfaces/IEcrecover.sol";
 
 contract SetIsAuthorizedWithSig {
     event SetIsAuthorizedWithSig(
@@ -33,9 +33,14 @@ contract SetIsAuthorizedWithSig {
         );
 
         emit SetIsAuthorizedWithSig(
-            msg.sender, authorization.authorizer, authorization.authorized, authorization.isAuthorized, authorization.nonce
+            msg.sender,
+            authorization.authorizer,
+            authorization.authorized,
+            authorization.isAuthorized,
+            authorization.nonce
         );
 
-        IMidnight(MIDNIGHT).setIsAuthorized(authorization.authorizer, authorization.authorized, authorization.isAuthorized);
+        IMidnight(MIDNIGHT)
+            .setIsAuthorized(authorization.authorizer, authorization.authorized, authorization.isAuthorized);
     }
 }
