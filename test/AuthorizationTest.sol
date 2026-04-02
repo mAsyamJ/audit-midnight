@@ -155,7 +155,7 @@ contract AuthorizationTest is BaseTest {
         vm.prank(operator);
         midnight.supplyCollateral(obligation, 0, collateralAmount, user);
 
-        assertEq(midnight.collateralOf(id, user, 0), collateralAmount);
+        assertEq(midnight.collateral(id, user, 0), collateralAmount);
     }
 
     function testWithdrawSelf() public {

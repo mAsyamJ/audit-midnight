@@ -830,13 +830,13 @@ contract TakeTest is BaseTest {
         uint256 price = TickLib.tickToPrice(MAX_TICK);
         deal(address(loanToken), lender, units.mulDivUp(price, WAD));
         deal(obligation.collaterals[0].token, borrowerOffer.callback, collateral);
-        assertEq(midnight.collateralOf(id, borrower, 0), 0);
+        assertEq(midnight.collateral(id, borrower, 0), 0);
 
         authorize(borrower, borrowerOffer.callback);
 
         take(units, lender, borrowerOffer);
 
-        assertEq(midnight.collateralOf(id, borrower, 0), collateral);
+        assertEq(midnight.collateral(id, borrower, 0), collateral);
         assertEq(BorrowCallback(borrowerOffer.callback).recordedData(), borrowerOffer.callbackData);
     }
 
@@ -864,7 +864,7 @@ contract TakeTest is BaseTest {
             root([lenderOffer]),
             proof([lenderOffer])
         );
-        assertEq(midnight.collateralOf(id, borrower, 0), collateral);
+        assertEq(midnight.collateral(id, borrower, 0), collateral);
         assertEq(BorrowCallback(callback).recordedData(), abi.encode(0, collateral));
     }
 
@@ -968,10 +968,10 @@ contract TakeTest is BaseTest {
 
 contract BorrowCallback is ICallbacks {
     bytes public recordedData;
-    bytes32 public recordedObligationId;
+    bytes32 public recordedid;
 
     function onSell(
-        bytes32 obligationId,
+        bytes32 id,
         Obligation memory obligation,
         address seller,
         uint256,
@@ -979,8 +979,8 @@ contract BorrowCallback is ICallbacks {
         uint256,
         bytes memory data
     ) external {
-        require(obligationId == IdLib.toId(obligation, block.chainid, msg.sender), "wrong obligationId");
-        recordedObligationId = obligationId;
+        require(id == IdLib.toId(obligation, block.chainid, msg.sender), "wrong id");
+        recordedid = id;
         recordedData = data;
         (uint256 collateralIndex, uint256 amount) = abi.decode(data, (uint256, uint256));
         address collateralToken = obligation.collaterals[collateralIndex].token;
@@ -996,10 +996,10 @@ contract BorrowCallback is ICallbacks {
 contract LendCallback is ICallbacks {
     bytes public recordedData;
 
-    bytes32 public recordedObligationId;
+    bytes32 public recordedid;
 
     function onBuy(
-        bytes32 obligationId,
+        bytes32 id,
         Obligation memory obligation,
         address buyer,
         uint256 buyerAssets,
@@ -1007,8 +1007,8 @@ contract LendCallback is ICallbacks {
         uint256,
         bytes memory data
     ) external {
-        require(obligationId == IdLib.toId(obligation, block.chainid, msg.sender), "wrong obligationId");
-        recordedObligationId = obligationId;
+        require(id == IdLib.toId(obligation, block.chainid, msg.sender), "wrong id");
+        recordedid = id;
         recordedData = data;
         require(ERC20(obligation.loanToken).transfer(buyer, buyerAssets), "transfer failed");
     }

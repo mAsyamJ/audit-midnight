@@ -25,7 +25,7 @@ methods {
 
     // Hook on callbacks, this adds no assumption: see FlashLiquidateCallback.sol and the summaries below.
     function _.onFlashLoan(address token, uint256 amount, bytes data) external => DISPATCHER(true);
-    function _.onLiquidate(bytes32 obligationId, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => DISPATCHER(true);
+    function _.onLiquidate(bytes32 id, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => DISPATCHER(true);
     function FlashLiquidateCallback.startFlashloan(address token, uint256 amount) internal => CVL_flashLoanStart(token, amount);
     function FlashLiquidateCallback.endFlashloan(address token, uint256 amount) internal => CVL_flashLoanEnd(token, amount);
 
@@ -101,21 +101,21 @@ function CVL_flashLoanEnd(address token, uint256 amount) {
 
 // Define collateral sum and withdrawable sum.
 
-definition collateralSum(address token) returns mathint = usum bytes32 id, address owner. collateralOfMirror[id][owner][token];
+definition collateralSum(address token) returns mathint = usum bytes32 id, address owner. collateralMirror[id][owner][token];
 
-ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) collateralOfMirror {
-    init_state axiom (forall bytes32 id. forall address owner. forall address token. collateralOfMirror[id][owner][token] == 0);
+ghost mapping(bytes32 => mapping(address => mapping(address => mathint))) collateralMirror {
+    init_state axiom (forall bytes32 id. forall address owner. forall address token. collateralMirror[id][owner][token] == 0);
     init_state axiom (forall address token. collateralSum(token) == 0);
 }
 
 // Safe require as obligations limit the number of collaterals.
 hook Sload uint128 value position[KEY bytes32 id][KEY address owner].collateral[INDEX uint256 collateralIndex] {
-    require value == collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]], "ghost mirror";
+    require value == collateralMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]], "ghost mirror";
 }
 
 // Safe require as obligations limit the number of collaterals.
 hook Sstore position[KEY bytes32 id][KEY address owner].collateral[INDEX uint256 collateralIndex] uint128 newCollateral (uint128 oldCollateral) {
-    collateralOfMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]] = newCollateral;
+    collateralMirror[id][owner][collateralToken[id][require_uint128(collateralIndex)]] = newCollateral;
 }
 
 definition withdrawableSum(address token) returns mathint = usum bytes32 id. withdrawableMirror[id][token];

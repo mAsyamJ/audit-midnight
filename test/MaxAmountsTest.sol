@@ -106,7 +106,7 @@ contract MaxAmountsTest is BaseTest {
 
         midnight.supplyCollateral(obligation, 0, amount, borrower);
 
-        assertEq(midnight.collateralOf(id, borrower, 0), amount, "collateral at max");
+        assertEq(midnight.collateral(id, borrower, 0), amount, "collateral at max");
     }
 
     function testSupplyCollateralAboveMaxAmountReverts() public {

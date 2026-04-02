@@ -7,7 +7,7 @@ using Havoc as callback;
 methods {
     function multicall(bytes[]) external => HAVOC_ALL DELETE;
 
-    function collateralOf(bytes32 id, address user, uint256) external returns (uint128) envfree;
+    function collateral(bytes32 id, address user, uint256) external returns (uint128) envfree;
     function isHealthy(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
     function isHealthyNoBitmap(Midnight.Obligation, bytes32, address) external returns (bool) envfree;
 
@@ -30,9 +30,9 @@ methods {
 
     function _.transferFrom(address from, address to, uint256 amount) external with(env e) => genericCallbackBool() expect(bool);
     function _.transfer(address to, uint256 amount) external with(env e) => genericCallbackBool() expect(bool);
-    function _.onBuy(bytes32 obligationId, Midnight.Obligation obligation, address buyer, uint256 buyerAssets, uint256 sellerAssets, uint256 units, bytes data) external => genericCallback() expect void;
-    function _.onSell(bytes32 obligationId, Midnight.Obligation obligation, address seller, uint256 buyerAssets, uint256 sellerAssets, uint256 units, bytes data) external => genericCallback() expect void;
-    function _.onLiquidate(bytes32 obligationId, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => genericCallback() expect void;
+    function _.onBuy(bytes32 id, Midnight.Obligation obligation, address buyer, uint256 buyerAssets, uint256 sellerAssets, uint256 units, bytes data) external => genericCallback() expect void;
+    function _.onSell(bytes32 id, Midnight.Obligation obligation, address seller, uint256 buyerAssets, uint256 sellerAssets, uint256 units, bytes data) external => genericCallback() expect void;
+    function _.onLiquidate(bytes32 id, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => genericCallback() expect void;
     function _.onFlashLoan(address token, uint256 amount, bytes data) external => genericCallback() expect void;
 }
 
@@ -145,9 +145,9 @@ function summaryToId(Midnight.Obligation obligation, uint256 chainId, address mo
     return id;
 }
 
-// Call either isHealthy() or isHealthyNoBitmap() depending on global setting. 
+// Call either isHealthy() or isHealthyNoBitmap() depending on global setting.
 // We show in CollateralBitmap.spec that both functions return the same value, so calling any of them is okay.
-// To avoid the need for bitprecise reasoning, we select for each case the most suitable function, by setting the variable useIsHealthyNoBitmap. 
+// To avoid the need for bitprecise reasoning, we select for each case the most suitable function, by setting the variable useIsHealthyNoBitmap.
 function callIsHealthy(Midnight.Obligation obligation, bytes32 id, address borrower) returns (bool) {
     if (useIsHealthyNoBitmap) {
         return isHealthyNoBitmap(obligation, id, borrower);
@@ -187,7 +187,7 @@ function genericCallbackBool() returns (bool) {
 // The remaining rules show that a healthy borrower cannot get unhealthy by calling any function of the contract.
 // Since we have a ghost summary for price(), we assume the price will not change during the call.
 
-// To avoid timeouts, we split out two cases for liquidate: 
+// To avoid timeouts, we split out two cases for liquidate:
 //  1) the borrower under consideration is the one that is liquidated on the obligation under consideration.
 //  2) the borrower is different from the liquidated user, or the obligation is different.
 // and then we have a final rule for all other functions of the contract.
@@ -207,13 +207,13 @@ rule stayHealthyLiquidateSameBorrower(env e, uint256 collateralIndex, uint256 se
 
     require callIsHealthy(globalObligation, globalId, globalBorrower), "user is healthy before call";
 
-    uint256 collateralBefore = collateralOf(globalId, globalBorrower, collateralIndex);
+    uint256 collateralBefore = collateral(globalId, globalBorrower, collateralIndex);
     uint256 seizedAssetsOut;
     uint256 repaidUnitsOut;
 
     seizedAssetsOut, repaidUnitsOut = liquidate(e, globalObligation, collateralIndex, seizedAssetsIn, repaidUnitsIn, globalBorrower, data);
 
-    // we cannot use collateralOf, as it may already have been changed by the callbacks.
+    // we cannot use collateral, as it may already have been changed by the callbacks.
     mathint collateralAfter = collateralBefore - seizedAssetsOut;
     mathint price = summaryPrice(globalObligation.collaterals[collateralIndex].oracle);
 

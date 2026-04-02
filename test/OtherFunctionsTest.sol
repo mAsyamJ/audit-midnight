@@ -70,12 +70,12 @@ contract OtherFunctionsTest is BaseTest {
         deal(collateralToken, address(this), additionalCollateral);
         midnight.supplyCollateral(obligation, 0, additionalCollateral, borrower);
         withdraw = bound(withdraw, 0, additionalCollateral);
-        uint256 initialCollateral = midnight.collateralOf(id, borrower, 0);
+        uint256 initialCollateral = midnight.collateral(id, borrower, 0);
 
         vm.prank(borrower);
         midnight.withdrawCollateral(obligation, 0, withdraw, borrower, borrower);
 
-        assertEq(midnight.collateralOf(id, borrower, 0), initialCollateral - withdraw, "collateral of");
+        assertEq(midnight.collateral(id, borrower, 0), initialCollateral - withdraw, "collateral of");
         assertEq(
             ERC20(collateralToken).balanceOf(address(midnight)), initialCollateral - withdraw, "balance of midnight"
         );
@@ -92,7 +92,7 @@ contract OtherFunctionsTest is BaseTest {
         setupObligation(obligation, units);
         deal(collateralToken, address(this), additionalCollateral);
         midnight.supplyCollateral(obligation, 0, additionalCollateral, borrower);
-        uint256 initialCollateral = midnight.collateralOf(id, borrower, 0);
+        uint256 initialCollateral = midnight.collateral(id, borrower, 0);
         withdraw = bound(withdraw, additionalCollateral + 1, initialCollateral);
 
         vm.prank(borrower);
@@ -302,7 +302,7 @@ contract OtherFunctionsTest is BaseTest {
         midnight.supplyCollateral(obligationWithRevertingOracle, 0, collateral, borrower);
 
         bytes32 _id = toId(obligationWithRevertingOracle);
-        assertEq(midnight.collateralOf(_id, borrower, 0), collateral, "collateral should be set");
+        assertEq(midnight.collateral(_id, borrower, 0), collateral, "collateral should be set");
 
         revertingOracle.stopOracle();
 

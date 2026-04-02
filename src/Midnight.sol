@@ -157,6 +157,12 @@ contract Midnight is IMidnight {
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
+    function setFeeClaimer(address newFeeClaimer) external {
+        require(msg.sender == owner, "only owner");
+        feeClaimer = newFeeClaimer;
+        emit EventsLib.SetFeeClaimer(newFeeClaimer);
+    }
+
     /// @dev Overrides the fee of a specific obligation.
     function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee) external {
         require(msg.sender == feeSetter, "only fee setter");
@@ -180,12 +186,6 @@ contract Midnight is IMidnight {
         emit EventsLib.SetDefaultTradingFee(loanToken, index, newTradingFee);
     }
 
-    function setFeeClaimer(address newFeeClaimer) external {
-        require(msg.sender == owner, "only owner");
-        feeClaimer = newFeeClaimer;
-        emit EventsLib.SetFeeClaimer(newFeeClaimer);
-    }
-
     function setObligationContinuousFee(bytes32 id, uint256 newContinuousFee) external {
         require(msg.sender == feeSetter, "only fee setter");
         require(newContinuousFee <= MAX_CONTINUOUS_FEE, "continuous fee too high");
@@ -207,7 +207,6 @@ contract Midnight is IMidnight {
         require(msg.sender == feeClaimer, "only fee claimer");
         claimableTradingFee[token] -= amount;
         emit EventsLib.ClaimTradingFee(msg.sender, token, amount, receiver);
-
         SafeTransferLib.safeTransfer(token, receiver, amount);
     }
 
@@ -492,11 +491,10 @@ contract Midnight is IMidnight {
             Collateral memory _collateral = obligation.collaterals[i];
             uint256 price = IOracle(_collateral.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
-            uint256 _collateralOf = _position.collateral[i];
-            maxDebt += _collateralOf.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
-            badDebt = badDebt.zeroFloorSub(
-                _collateralOf.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateral.maxLif)
-            );
+            uint256 _collateral = _position.collateral[i];
+            maxDebt += _collateral.mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(_collateral.lltv, WAD);
+            badDebt =
+                badDebt.zeroFloorSub(_collateral.mulDivUp(price, ORACLE_PRICE_SCALE).mulDivUp(WAD, _collateral.maxLif));
             bitmap = bitmap.clearBit(i);
         }
 
@@ -710,7 +708,7 @@ contract Midnight is IMidnight {
         return position[id][user].activatedCollaterals;
     }
 
-    function collateralOf(bytes32 id, address user, uint256 index) external view returns (uint128) {
+    function collateral(bytes32 id, address user, uint256 index) external view returns (uint128) {
         return position[id][user].collateral[index];
     }
 
