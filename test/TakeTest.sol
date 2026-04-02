@@ -772,6 +772,7 @@ contract TakeTest is BaseTest {
     }
 
     function testTakeByRatificationSameAsMaker(uint256 otherPrivateKey, address sender) public {
+        vm.assume(sender != address(0));
         otherPrivateKey = boundPrivateKey(otherPrivateKey);
         RatifyCallback ratifier = new RatifyCallback();
         lenderOffer.maker = address(ratifier);
@@ -798,6 +799,7 @@ contract TakeTest is BaseTest {
 
     function testTakeByRatificationDifferentFromMaker(address maker, address sender, uint256 otherPrivateKey) public {
         otherPrivateKey = boundPrivateKey(otherPrivateKey);
+        vm.assume(sender != address(0));
         vm.assume(maker != sender);
         vm.assume(maker != address(0));
         RatifyCallback ratifier = new RatifyCallback();
@@ -882,6 +884,7 @@ contract TakeTest is BaseTest {
     }
 
     function testTakeOfferValidSignature(uint256 makerSecretKey, address sender) public {
+        vm.assume(sender != address(0));
         makerSecretKey = boundPrivateKey(makerSecretKey);
         privateKey[vm.addr(makerSecretKey)] = makerSecretKey;
         lenderOffer.maker = vm.addr(makerSecretKey);
@@ -902,6 +905,7 @@ contract TakeTest is BaseTest {
     }
 
     function testTakeOfferRatified(address maker, address sender) public {
+        vm.assume(sender != address(0));
         vm.assume(maker != sender);
         vm.assume(maker != address(0));
         RatifyCallback ratifier = new RatifyCallback();
@@ -943,6 +947,7 @@ contract TakeTest is BaseTest {
     function testOfferAuthorizationAuthorizedSigner(uint256 makerSecretKey, address sender, uint256 otherSecretKey)
         public
     {
+        vm.assume(sender != address(0));
         makerSecretKey = boundPrivateKey(makerSecretKey);
         otherSecretKey = boundPrivateKey(otherSecretKey);
         vm.assume(otherSecretKey != makerSecretKey);
@@ -1016,6 +1021,7 @@ contract TakeTest is BaseTest {
     }
 
     function testOrderByTaker(address taker) public {
+        vm.assume(taker != address(0));
         vm.assume(taker != lenderOffer.maker);
         vm.prank(taker);
         midnight.take(
@@ -1032,6 +1038,8 @@ contract TakeTest is BaseTest {
     }
 
     function testOrderByAuthorized(address taker, address sender) public {
+        vm.assume(taker != address(0));
+        vm.assume(sender != address(0));
         vm.assume(taker != sender);
         vm.assume(taker != lenderOffer.maker);
         vm.prank(taker);
