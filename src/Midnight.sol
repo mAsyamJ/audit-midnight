@@ -348,8 +348,7 @@ contract Midnight is IMidnight {
         );
 
         if (buyerCallback != address(0)) {
-            ICallbacks(buyerCallback)
-                .onBuy(id, offer.obligation, buyer, buyerAssets, sellerAssets, units, buyerCallbackData);
+            ICallbacks(buyerCallback).onBuy(id, offer.obligation, buyer, buyerAssets, units, buyerCallbackData);
         }
 
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, address(this), buyerAssets - sellerAssets);
@@ -357,8 +356,7 @@ contract Midnight is IMidnight {
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, buyer, receiver, sellerAssets);
 
         if (sellerCallback != address(0)) {
-            ICallbacks(sellerCallback)
-                .onSell(id, offer.obligation, seller, buyerAssets, sellerAssets, units, sellerCallbackData);
+            ICallbacks(sellerCallback).onSell(id, offer.obligation, seller, sellerAssets, units, sellerCallbackData);
         }
 
         require(isHealthy(offer.obligation, id, seller), "seller is unhealthy");
@@ -392,7 +390,7 @@ contract Midnight is IMidnight {
         SafeTransferLib.safeTransfer(obligation.loanToken, receiver, units);
     }
 
-    function repay(Obligation memory obligation, uint256 units, address onBehalf) external {
+    function repay(Obligation memory obligation, uint256 units, address onBehalf, bytes calldata data) external {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
 
@@ -400,6 +398,10 @@ contract Midnight is IMidnight {
         obligationState[id].withdrawable += units;
 
         emit EventsLib.Repay(msg.sender, id, units, onBehalf);
+
+        if (data.length > 0) {
+            ICallbacks(msg.sender).onRepay(id, obligation, units, onBehalf, data);
+        }
 
         SafeTransferLib.safeTransferFrom(obligation.loanToken, msg.sender, address(this), units);
     }
