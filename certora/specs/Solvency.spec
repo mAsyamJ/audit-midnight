@@ -25,6 +25,8 @@ methods {
     function _.onRatify(Midnight.Offer, bytes32, bytes) external => NONDET;
 
     // Hook on callbacks, this adds no assumption: see FlashLiquidateCallback.sol and the summaries below.
+    function _.onBuy(bytes32, Midnight.Obligation, address, uint256, uint256, bytes) external => NONDET;
+    function _.onSell(bytes32, Midnight.Obligation, address, uint256, uint256, bytes) external => NONDET;
     function _.onFlashLoan(address token, uint256 amount, bytes data) external => DISPATCHER(true);
     function _.onLiquidate(bytes32 obligationId, Midnight.Obligation obligation, uint256 collateralIndex, uint256 seizedAssets, uint256 repaidUnits, address borrower, bytes data) external => DISPATCHER(true);
     function _.onRepay(bytes32 obligationId, Midnight.Obligation obligation, uint256 units, address onBehalf, bytes data) external => DISPATCHER(true);
@@ -146,8 +148,11 @@ strong invariant tokenBalanceCorrect(address token)
             require e.msg.sender != currentContract, "only external calls";
         }
         preserved take(uint256 units, address taker, address takerCallback, bytes takerCallbackData, address receiverIfTakerIsSeller, Midnight.Offer offer, bytes ratifierData, bytes32 root, bytes32[] proof) with (env e) {
+            require e.msg.sender != currentContract, "only external calls";
             require taker != currentContract, "no trading with contract";
             require offer.maker != currentContract, "no trading with contract";
+            require offer.callback != currentContract, "midnight reverts on callbacks";
+            require takerCallback != currentContract, "midnight reverts on callbacks";
         }
     }
 
