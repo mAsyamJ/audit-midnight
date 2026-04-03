@@ -578,10 +578,15 @@ contract OtherFunctionsTest is BaseTest {
         assertEq(midnight.obligationCreated(toId(_obligation)), true, "obligation created with cursor 0.5");
     }
 
-    function testMidnightRevertsOnCallbacks(address sender, bytes calldata data) public {
-        bytes4[2] memory selectors = [ICallbacks.onBuy.selector, ICallbacks.onSell.selector];
+    function testMidnightRevertsOnCallbacks(address msgSender, bytes calldata data) public {
+        bytes4[4] memory selectors = [
+            ICallbacks.onBuy.selector,
+            ICallbacks.onSell.selector,
+            ICallbacks.onLiquidate.selector,
+            ICallbacks.onRepay.selector
+        ];
         for (uint256 i = 0; i < selectors.length; i++) {
-            vm.prank(sender);
+            vm.prank(msgSender);
             (bool success,) = address(midnight).call(abi.encodePacked(selectors[i], data));
             assertFalse(success);
         }
