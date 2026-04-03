@@ -20,7 +20,7 @@ interface ICallbacks {
         uint256 sellerAssets,
         uint256 units,
         bytes memory data
-    ) external;
+    ) external returns (bytes32);
     function onLiquidate(
         bytes32 obligationId,
         Obligation memory obligation,

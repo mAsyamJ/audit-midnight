@@ -368,7 +368,11 @@ contract Midnight is IMidnight {
         SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, fundingSource, receiver, sellerAssets);
 
         if (sellerCallback != address(0)) {
-            ICallbacks(sellerCallback).onSell(id, offer.obligation, seller, sellerAssets, units, sellerCallbackData);
+            require(
+                ICallbacks(sellerCallback).onSell(id, offer.obligation, seller, sellerAssets, units, sellerCallbackData)
+                    == CALLBACK_SUCCESS,
+                "invalid callback"
+            );
         }
 
         require(isHealthy(offer.obligation, id, seller), "seller is unhealthy");
