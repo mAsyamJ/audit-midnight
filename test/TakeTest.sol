@@ -1045,6 +1045,7 @@ contract LendCallback is ICallbacks {
 
     function onSell(bytes32, Obligation memory, address, uint256, uint256, bytes memory)
         external
+        pure
         returns (bytes32)
     {
         return CALLBACK_SUCCESS;
