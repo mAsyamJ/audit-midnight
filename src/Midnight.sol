@@ -357,10 +357,10 @@ contract Midnight is IMidnight {
             );
         }
 
-        address funder = buyerCallback != address(0) ? buyerCallback : (offer.buy ? buyer : msg.sender);
-        SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, funder, address(this), buyerAssets - sellerAssets);
+        address payer = buyerCallback != address(0) ? buyerCallback : (offer.buy ? buyer : msg.sender);
+        SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, payer, address(this), buyerAssets - sellerAssets);
         claimableTradingFee[offer.obligation.loanToken] += buyerAssets - sellerAssets;
-        SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, funder, receiver, sellerAssets);
+        SafeTransferLib.safeTransferFrom(offer.obligation.loanToken, payer, receiver, sellerAssets);
 
         if (sellerCallback != address(0)) {
             require(
