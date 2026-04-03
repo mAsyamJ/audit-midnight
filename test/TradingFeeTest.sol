@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {WAD} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
-import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, Offer, CollateralParams} from "../src/interfaces/IMidnight.sol";
 
 import {BaseTest, MAX_TEST_AMOUNT} from "./BaseTest.sol";
 
@@ -40,7 +40,7 @@ contract TradingFeeTest is BaseTest {
         obligation.maturity = block.timestamp + 1 days; // TTM = 1 day (exactly at breakpoint)
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),
@@ -49,7 +49,7 @@ contract TradingFeeTest is BaseTest {
             );
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken2),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),

@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, Offer, Signature, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
 import {WAD} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
@@ -33,7 +33,7 @@ contract TakeTest is BaseTest {
         obligation.maturity = block.timestamp + 100;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),
@@ -42,7 +42,7 @@ contract TakeTest is BaseTest {
             );
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken2),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),

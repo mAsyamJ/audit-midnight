@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Offer, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, Offer, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {IEnterGate, ILiquidatorGate} from "../src/interfaces/IGate.sol";
 import {LIQUIDATION_CURSOR_LOW, ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
 import {MAX_TICK} from "../src/libraries/TickLib.sol";
@@ -46,7 +46,7 @@ contract GateTest is BaseTest {
         obligation.maturity = block.timestamp + 100;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     oracle: address(oracle1),
@@ -59,7 +59,7 @@ contract GateTest is BaseTest {
         gatedObligation.maturity = block.timestamp + 100;
         gatedObligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     oracle: address(oracle1),

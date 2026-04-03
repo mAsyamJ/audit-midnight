@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Collateral, Offer} from "../src/interfaces/IMidnight.sol";
+import {Obligation, CollateralParams, Offer} from "../src/interfaces/IMidnight.sol";
 import {BaseTest} from "./BaseTest.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {ERC20} from "./erc20s/ERC20.sol";
@@ -21,7 +21,7 @@ contract AuthorizationTest is BaseTest {
         obligation.maturity = block.timestamp + 100;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),

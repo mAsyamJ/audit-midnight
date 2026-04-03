@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {MAX_CONTINUOUS_FEE} from "../src/libraries/ConstantsLib.sol";
 import {BaseTest} from "./BaseTest.sol";
-import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, CollateralParams} from "../src/interfaces/IMidnight.sol";
 
 contract SettersTest is BaseTest {
     function testInitialOwner() public view {
@@ -53,8 +53,8 @@ contract SettersTest is BaseTest {
         oneEightyDaysFee = bound(oneEightyDaysFee, 0, midnight.maxTradingFee(5)) / 1e12 * 1e12;
         threeSixtyDaysFee = bound(threeSixtyDaysFee, 0, midnight.maxTradingFee(6)) / 1e12 * 1e12;
 
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
@@ -178,8 +178,8 @@ contract SettersTest is BaseTest {
         midnight.setDefaultTradingFee(loanToken, 6, threeSixtyDaysFee);
 
         // touch obligation with this loan token
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
@@ -235,8 +235,8 @@ contract SettersTest is BaseTest {
         fee5 = bound(fee5, 0, midnight.maxTradingFee(5)) / 1e12 * 1e12;
         fee6 = bound(fee6, 0, midnight.maxTradingFee(6)) / 1e12 * 1e12;
 
-        Collateral[] memory cols = new Collateral[](1);
-        cols[0] = Collateral({
+        CollateralParams[] memory cols = new CollateralParams[](1);
+        cols[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
@@ -287,8 +287,8 @@ contract SettersTest is BaseTest {
     function testSetContinuousFeeOnlyFeeSetter(address rdm) public {
         vm.assume(rdm != address(this));
 
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
@@ -314,8 +314,8 @@ contract SettersTest is BaseTest {
     function testSetContinuousFeeTooHigh(uint256 fee) public {
         fee = bound(fee, MAX_CONTINUOUS_FEE + 1, type(uint256).max);
 
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({
@@ -344,8 +344,8 @@ contract SettersTest is BaseTest {
         midnight.setDefaultContinuousFee(address(loanToken), fee);
         assertEq(midnight.defaultContinuousFee(address(loanToken)), fee, "default fee updated");
 
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         Obligation memory obligation = Obligation({

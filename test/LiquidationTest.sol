@@ -9,7 +9,7 @@ import {
     LLTV_8,
     LIQUIDATION_CURSOR_LOW
 } from "../src/libraries/ConstantsLib.sol";
-import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
 import {IOracle} from "../src/interfaces/IOracle.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
@@ -39,7 +39,7 @@ contract LiquidationTest is BaseTest {
         obligation.maturity = block.timestamp + 100;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),
@@ -48,7 +48,7 @@ contract LiquidationTest is BaseTest {
             );
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken2),
                     lltv: 0.86e18,
                     maxLif: maxLif(0.86e18, 0.25e18),
@@ -796,7 +796,7 @@ contract LiquidationTest is BaseTest {
         uint128 bitmap = midnight.activatedCollaterals(id, borrower);
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
-            Collateral memory _collateral = obligation.collateralParams[i];
+            CollateralParams memory _collateral = obligation.collateralParams[i];
             uint256 price = IOracle(_collateral.oracle).price();
             badDebt = badDebt.zeroFloorSub(
                 midnight.collateral(id, borrower, i).mulDivUp(price, ORACLE_PRICE_SCALE)
@@ -853,7 +853,7 @@ contract LiquidationTest is BaseTest {
         delete obligation.collateralParams;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: LLTV_8,
                     maxLif: maxLif(LLTV_8, LIQUIDATION_CURSOR_LOW),

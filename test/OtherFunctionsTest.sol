@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Obligation, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
 
@@ -37,7 +37,7 @@ contract OtherFunctionsTest is BaseTest {
         obligation.maturity = block.timestamp + 100;
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken1),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),
@@ -46,7 +46,7 @@ contract OtherFunctionsTest is BaseTest {
             );
         obligation.collateralParams
             .push(
-                Collateral({
+                CollateralParams({
                     token: address(collateralToken2),
                     lltv: 0.77e18,
                     maxLif: maxLif(0.77e18, 0.25e18),
@@ -286,8 +286,8 @@ contract OtherFunctionsTest is BaseTest {
     function testSupplyCollateralDoesNotCallOracle(uint256 collateral) public {
         collateral = bound(collateral, 0, MAX_TEST_AMOUNT);
         RevertingOracle revertingOracle = new RevertingOracle();
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1),
             lltv: 0.77e18,
             maxLif: maxLif(0.77e18, 0.25e18),
@@ -310,8 +310,8 @@ contract OtherFunctionsTest is BaseTest {
         collateral = bound(collateral, 0, MAX_TEST_AMOUNT);
 
         RevertingOracle revertingOracle = new RevertingOracle();
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1),
             lltv: 0.77e18,
             maxLif: maxLif(0.77e18, 0.25e18),
@@ -338,11 +338,11 @@ contract OtherFunctionsTest is BaseTest {
     // Bitmap tests.
 
     function _createMultiCollateralObligation(uint256 numCollaterals) internal returns (Obligation memory _obligation) {
-        Collateral[] memory collateralParams = new Collateral[](numCollaterals);
+        CollateralParams[] memory collateralParams = new CollateralParams[](numCollaterals);
         for (uint256 i = 0; i < numCollaterals; i++) {
             ERC20 token = new ERC20("", "");
             Oracle _oracle = new Oracle();
-            collateralParams[i] = Collateral({
+            collateralParams[i] = CollateralParams({
                 token: address(token), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(_oracle)
             });
         }
@@ -357,7 +357,7 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        _obligation.collateralParams = new Collateral[](0);
+        _obligation.collateralParams = new CollateralParams[](0);
         vm.expectRevert("no collateralParams");
         midnight.touchObligation(_obligation);
     }
@@ -374,11 +374,11 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        Collateral[] memory collateralParams = new Collateral[](2);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](2);
+        collateralParams[0] = CollateralParams({
             token: address(uint160(2)), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
-        collateralParams[1] = Collateral({
+        collateralParams[1] = CollateralParams({
             token: address(uint160(1)), lltv: 0.77e18, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle2)
         });
         _obligation.collateralParams = collateralParams;
@@ -391,8 +391,8 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: lltv, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         _obligation.collateralParams = collateralParams;
@@ -406,8 +406,8 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: lltv, maxLif: maxLif(0.77e18, 0.25e18), oracle: address(oracle1)
         });
         _obligation.collateralParams = collateralParams;
@@ -542,9 +542,9 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        Collateral[] memory collateralParams = new Collateral[](1);
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
         collateralParams[0] =
-            Collateral({token: address(collateralToken1), lltv: lltv, maxLif: lif, oracle: address(oracle1)});
+            CollateralParams({token: address(collateralToken1), lltv: lltv, maxLif: lif, oracle: address(oracle1)});
         _obligation.collateralParams = collateralParams;
 
         vm.expectRevert("invalid maxLif");
@@ -556,8 +556,8 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 100;
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: lltv, maxLif: maxLif(lltv, 0.25e18), oracle: address(oracle1)
         });
         _obligation.collateralParams = collateralParams;
@@ -571,8 +571,8 @@ contract OtherFunctionsTest is BaseTest {
         Obligation memory _obligation;
         _obligation.loanToken = address(loanToken);
         _obligation.maturity = block.timestamp + 200;
-        Collateral[] memory collateralParams = new Collateral[](1);
-        collateralParams[0] = Collateral({
+        CollateralParams[] memory collateralParams = new CollateralParams[](1);
+        collateralParams[0] = CollateralParams({
             token: address(collateralToken1), lltv: lltv, maxLif: maxLif(lltv, 0.5e18), oracle: address(oracle1)
         });
         _obligation.collateralParams = collateralParams;

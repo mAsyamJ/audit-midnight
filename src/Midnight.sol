@@ -27,7 +27,7 @@ import {
     Obligation,
     Offer,
     Signature,
-    Collateral,
+    CollateralParams,
     ObligationState,
     Position
 } from "./interfaces/IMidnight.sol";
@@ -490,7 +490,7 @@ contract Midnight is IMidnight {
         uint128 bitmap = _position.activatedCollaterals;
         while (bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
-            Collateral memory _collateralParam = obligation.collateralParams[i];
+            CollateralParams memory _collateralParam = obligation.collateralParams[i];
             uint256 price = IOracle(_collateralParam.oracle).price();
             if (i == collateralIndex) liquidatedCollatPrice = price;
             uint256 _collateral = _position.collateral[i];
@@ -777,7 +777,7 @@ contract Midnight is IMidnight {
         uint128 bitmap = _position.activatedCollaterals;
         while (maxDebt < debt && bitmap != 0) {
             uint256 i = UtilsLib.msb(bitmap);
-            Collateral memory collateralParam = obligation.collateralParams[i];
+            CollateralParams memory collateralParam = obligation.collateralParams[i];
             uint256 price = IOracle(collateralParam.oracle).price();
             maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE)
                 .mulDivDown(collateralParam.lltv, WAD);

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Midnight} from "../../src/Midnight.sol";
-import {Position, Collateral, Obligation} from "../../src/interfaces/IMidnight.sol";
+import {Position, CollateralParams, Obligation} from "../../src/interfaces/IMidnight.sol";
 import {IOracle} from "../../src/interfaces/IOracle.sol";
 import {UtilsLib} from "../../src/libraries/UtilsLib.sol";
 import {ORACLE_PRICE_SCALE, WAD} from "../../src/libraries/ConstantsLib.sol";
@@ -21,7 +21,7 @@ contract MidnightWrapper is Midnight {
         uint256 len = obligation.collateralParams.length;
         for (uint256 i = len; i > 0 && maxDebt < debt; ) {
             i--;
-            Collateral memory collateralParam = obligation.collateralParams[i];
+            CollateralParams memory collateralParam = obligation.collateralParams[i];
             uint256 price = IOracle(collateralParam.oracle).price();
             maxDebt += _position.collateral[i].mulDivDown(price, ORACLE_PRICE_SCALE).mulDivDown(collateralParam.lltv, WAD);
         }

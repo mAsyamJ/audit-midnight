@@ -29,7 +29,7 @@ import {
     LLTV_7,
     LLTV_8
 } from "../src/libraries/ConstantsLib.sol";
-import {Obligation, Offer, Signature, Collateral} from "../src/interfaces/IMidnight.sol";
+import {Obligation, Offer, Signature, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {Midnight} from "../src/Midnight.sol";
 
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
@@ -241,11 +241,11 @@ abstract contract BaseTest is Test {
         return sig(_root, privateKey[offers[0].maker]);
     }
 
-    function sortCollaterals(Collateral[] memory arr) internal pure returns (Collateral[] memory) {
+    function sortCollaterals(CollateralParams[] memory arr) internal pure returns (CollateralParams[] memory) {
         for (uint256 i = 1; i < arr.length; i++) {
             uint256 j = i;
             while (j > 0 && bytes20(arr[j].token) < bytes20(arr[j - 1].token)) {
-                Collateral memory temp = arr[j];
+                CollateralParams memory temp = arr[j];
                 arr[j] = arr[j - 1];
                 arr[j - 1] = temp;
                 j--;
@@ -264,7 +264,7 @@ abstract contract BaseTest is Test {
     function validObligation(Obligation memory obligation) internal pure returns (Obligation memory) {
         uint256 len =
             obligation.collateralParams.length > MAX_COLLATERALS ? MAX_COLLATERALS : obligation.collateralParams.length;
-        Collateral[] memory collateralParams = new Collateral[](len);
+        CollateralParams[] memory collateralParams = new CollateralParams[](len);
         for (uint256 i = 0; i < len; i++) {
             collateralParams[i].token =
                 address(uint160(uint256(keccak256(abi.encode(obligation.collateralParams[i].token, i)))));
