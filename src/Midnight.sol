@@ -415,10 +415,10 @@ contract Midnight is IMidnight {
         address collateralToken = obligation.collateralParams[collateralIndex].token;
 
         Position storage _position = position[id][onBehalf];
-        uint256 oldCollateralOf = _position.collateral[collateralIndex];
-        _position.collateral[collateralIndex] = UtilsLib.toUint128(oldCollateralOf + assets);
+        uint256 oldCollateral = _position.collateral[collateralIndex];
+        _position.collateral[collateralIndex] = UtilsLib.toUint128(oldCollateral + assets);
 
-        if (oldCollateralOf == 0 && assets > 0) {
+        if (oldCollateral == 0 && assets > 0) {
             uint128 newBitmap = _position.activatedCollaterals.setBit(collateralIndex);
             _position.activatedCollaterals = newBitmap;
             require(UtilsLib.countBits(newBitmap) <= MAX_COLLATERALS_PER_BORROWER, "too many collaterals per borrower");
@@ -442,10 +442,10 @@ contract Midnight is IMidnight {
         address collateralToken = obligation.collateralParams[collateralIndex].token;
 
         Position storage _position = position[id][onBehalf];
-        uint256 newCollateralOf = _position.collateral[collateralIndex] - assets;
-        _position.collateral[collateralIndex] = UtilsLib.toUint128(newCollateralOf);
+        uint256 newCollateral = _position.collateral[collateralIndex] - assets;
+        _position.collateral[collateralIndex] = UtilsLib.toUint128(newCollateral);
 
-        if (newCollateralOf == 0 && assets > 0) {
+        if (newCollateral == 0 && assets > 0) {
             _position.activatedCollaterals = _position.activatedCollaterals.clearBit(collateralIndex);
         }
 
@@ -545,9 +545,9 @@ contract Midnight is IMidnight {
                 );
             }
 
-            uint128 newCollateralOf = _position.collateral[collateralIndex] - UtilsLib.toUint128(seizedAssets);
-            _position.collateral[collateralIndex] = newCollateralOf;
-            if (newCollateralOf == 0 && seizedAssets > 0) {
+            uint128 newCollateral = _position.collateral[collateralIndex] - UtilsLib.toUint128(seizedAssets);
+            _position.collateral[collateralIndex] = newCollateral;
+            if (newCollateral == 0 && seizedAssets > 0) {
                 _position.activatedCollaterals = _position.activatedCollaterals.clearBit(collateralIndex);
             }
             _obligationState.withdrawable += repaidUnits;
