@@ -415,7 +415,7 @@ contract ContinuousFeeTest is BaseTest {
         // Repay so withdrawable covers the claim.
         deal(address(loanToken), borrower, credit);
         vm.prank(borrower);
-        midnight.repay(obligation, credit, borrower);
+        midnight.repay(obligation, credit, borrower, hex"");
 
         address receiver = makeAddr("receiver");
         uint256 totalUnitsBefore = midnight.totalUnits(id);
