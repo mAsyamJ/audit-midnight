@@ -209,6 +209,21 @@ contract Midnight is IMidnight {
         SafeTransferLib.safeTransfer(token, receiver, amount);
     }
 
+    function claimContinuousFee(Obligation memory obligation, uint256 amount, address receiver) external {
+        require(msg.sender == feeClaimer, "only fee claimer");
+        bytes32 id = toId(obligation);
+        require(obligationState[id].created, "not created");
+        ObligationState storage _obligationState = obligationState[id];
+
+        _obligationState.continuousFeeAmount -= UtilsLib.toUint128(amount);
+        _obligationState.totalUnits -= UtilsLib.toUint128(amount);
+        _obligationState.withdrawable -= UtilsLib.toUint128(amount);
+
+        emit EventsLib.ClaimContinuousFee(msg.sender, id, amount, receiver);
+
+        SafeTransferLib.safeTransfer(obligation.loanToken, receiver, amount);
+    }
+
     /// ENTRY-POINTS ///
 
     /// @dev Returns buyerAssets, sellerAssets, units.
@@ -392,21 +407,6 @@ contract Midnight is IMidnight {
         emit EventsLib.Withdraw(msg.sender, id, units, onBehalf, receiver, pendingFeeDecrease);
 
         SafeTransferLib.safeTransfer(obligation.loanToken, receiver, units);
-    }
-
-    function claimContinuousFee(Obligation memory obligation, uint256 amount, address receiver) external {
-        require(msg.sender == feeClaimer, "only fee claimer");
-        bytes32 id = toId(obligation);
-        require(obligationState[id].created, "not created");
-        ObligationState storage _obligationState = obligationState[id];
-
-        _obligationState.continuousFeeAmount -= UtilsLib.toUint128(amount);
-        _obligationState.totalUnits -= UtilsLib.toUint128(amount);
-        _obligationState.withdrawable -= UtilsLib.toUint128(amount);
-
-        emit EventsLib.ClaimContinuousFee(msg.sender, id, amount, receiver);
-
-        SafeTransferLib.safeTransfer(obligation.loanToken, receiver, amount);
     }
 
     function repay(Obligation memory obligation, uint256 units, address onBehalf, bytes calldata data) external {
