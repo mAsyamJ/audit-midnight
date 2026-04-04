@@ -212,8 +212,8 @@ contract Midnight is IMidnight {
     function claimContinuousFee(Obligation memory obligation, uint256 amount, address receiver) external {
         require(msg.sender == feeClaimer, "only fee claimer");
         bytes32 id = toId(obligation);
-        require(obligationState[id].created, "not created");
         ObligationState storage _obligationState = obligationState[id];
+        require(_obligationState.created, "not created");
 
         _obligationState.continuousFeeAmount -= UtilsLib.toUint128(amount);
         _obligationState.totalUnits -= UtilsLib.toUint128(amount);
