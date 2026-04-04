@@ -798,6 +798,10 @@ contract Midnight is IMidnight {
         return position[id][user].lastAccrual;
     }
 
+    function liquidationLocked(bytes32 id, address user) external view returns (bool) {
+        return UtilsLib.tGet(LIQUIDATION_LOCK_SLOT, id, user);
+    }
+
     /// @dev This function should be called with the id corresponding to the obligation.
     /// @dev This function does not call any oracle if debt is 0.
     /// @dev Expects the id to correspond to the obligation's id.
