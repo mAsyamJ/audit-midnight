@@ -5,8 +5,8 @@ pragma solidity 0.8.31;
 import {IMidnight} from "../interfaces/IMidnight.sol";
 import {Authorization, Signature, AUTHORIZATION_TYPEHASH, EIP712_DOMAIN_TYPEHASH} from "../interfaces/IEcrecover.sol";
 
-contract SetIsAuthorizedWithSig {
-    event AuthorizationWithSig(
+contract EcrecoverAuthorizer {
+    event SetIsAuthorized(
         address indexed caller, address indexed authorizer, address indexed authorized, bool isAuthorized, uint256 nonce
     );
 
@@ -17,7 +17,7 @@ contract SetIsAuthorizedWithSig {
         MIDNIGHT = _midnight;
     }
 
-    function setIsAuthorizedWithSig(Authorization memory authorization, Signature calldata signature) external {
+    function setIsAuthorized(Authorization memory authorization, Signature calldata signature) external {
         require(block.timestamp <= authorization.deadline, "expired");
         require(authorization.nonce == nonce[authorization.authorizer]++, "invalid nonce");
 
@@ -32,7 +32,7 @@ contract SetIsAuthorizedWithSig {
             "invalid signature"
         );
 
-        emit AuthorizationWithSig(
+        emit SetIsAuthorized(
             msg.sender,
             authorization.authorizer,
             authorization.authorized,

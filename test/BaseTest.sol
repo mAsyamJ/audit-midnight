@@ -31,7 +31,7 @@ import {Obligation, Offer, CollateralParams} from "../src/interfaces/IMidnight.s
 import {Midnight} from "../src/Midnight.sol";
 import {Signature, EIP712_DOMAIN_TYPEHASH, ROOT_TYPEHASH} from "../src/interfaces/IEcrecover.sol";
 import {EcrecoverRatifier} from "../src/ratifiers/EcrecoverRatifier.sol";
-import {SetIsAuthorizedWithSig} from "../src/authorizers/SetIsAuthorizedWithSig.sol";
+import {EcrecoverAuthorizer} from "../src/authorizers/EcrecoverAuthorizer.sol";
 uint256 constant MAX_TEST_AMOUNT = type(uint128).max;
 
 abstract contract BaseTest is Test {
@@ -51,14 +51,14 @@ abstract contract BaseTest is Test {
     address internal otherLender;
     address internal liquidator = makeAddr("liquidator");
     EcrecoverRatifier internal ecrecoverRatifier;
-    SetIsAuthorizedWithSig internal setIsAuthorizedWithSig;
+    EcrecoverAuthorizer internal ecrecoverAuthorizer;
 
     bytes internal emptySig;
 
     function setUp() public virtual {
         midnight = new Midnight();
         ecrecoverRatifier = new EcrecoverRatifier(address(midnight));
-        setIsAuthorizedWithSig = new SetIsAuthorizedWithSig(address(midnight));
+        ecrecoverAuthorizer = new EcrecoverAuthorizer(address(midnight));
 
         midnight.setFeeSetter(address(this));
 

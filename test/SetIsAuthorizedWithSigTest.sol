@@ -10,7 +10,7 @@ import {
 } from "../src/interfaces/IEcrecover.sol";
 import {BaseTest} from "./BaseTest.sol";
 
-contract SetIsAuthorizedWithSigTest is BaseTest {
+contract EcrecoverAuthorizerTest is BaseTest {
     function makeAuthorization(address authorizer, address authorized, bool isAuth)
         internal
         view
@@ -20,7 +20,7 @@ contract SetIsAuthorizedWithSigTest is BaseTest {
             authorizer: authorizer,
             authorized: authorized,
             isAuthorized: isAuth,
-            nonce: setIsAuthorizedWithSig.nonce(authorizer),
+            nonce: ecrecoverAuthorizer.nonce(authorizer),
             deadline: block.timestamp + 1 days
         });
     }
@@ -32,75 +32,75 @@ contract SetIsAuthorizedWithSigTest is BaseTest {
     {
         bytes32 structHash = keccak256(abi.encode(AUTHORIZATION_TYPEHASH, authorization));
         bytes32 domainSeparator =
-            keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(setIsAuthorizedWithSig)));
+            keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, block.chainid, address(ecrecoverAuthorizer)));
         bytes32 digest = keccak256(bytes.concat("\x19\x01", domainSeparator, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey[_signer], digest);
         return Signature({v: v, r: r, s: s});
     }
 
-    function testSetIsAuthorizedWithSig() public {
-        authorize(borrower, address(setIsAuthorizedWithSig));
+    function testEcrecoverAuthorizer() public {
+        authorize(borrower, address(ecrecoverAuthorizer));
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         Signature memory sig = signAuthorization(auth, borrower);
 
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), true);
-        assertEq(setIsAuthorizedWithSig.nonce(borrower), 1);
+        assertEq(ecrecoverAuthorizer.nonce(borrower), 1);
 
         auth = makeAuthorization(borrower, lender, false);
         sig = signAuthorization(auth, borrower);
 
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), false);
-        assertEq(setIsAuthorizedWithSig.nonce(borrower), 2);
+        assertEq(ecrecoverAuthorizer.nonce(borrower), 2);
     }
 
-    function testSetIsAuthorizedWithSigPermissionless() public {
-        authorize(borrower, address(setIsAuthorizedWithSig));
+    function testEcrecoverAuthorizerPermissionless() public {
+        authorize(borrower, address(ecrecoverAuthorizer));
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         Signature memory sig = signAuthorization(auth, borrower);
 
         // Anyone can submit — no caller auth needed
         vm.prank(otherLender);
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), true);
-        assertEq(setIsAuthorizedWithSig.nonce(borrower), 1);
+        assertEq(ecrecoverAuthorizer.nonce(borrower), 1);
     }
 
-    function testSetIsAuthorizedWithSigInvalidSignature() public {
+    function testEcrecoverAuthorizerInvalidSignature() public {
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         Signature memory sig = signAuthorization(auth, lender); // wrong signer
 
         vm.expectRevert("invalid signature");
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
 
         assertEq(midnight.isAuthorized(borrower, lender), false);
-        assertEq(setIsAuthorizedWithSig.nonce(borrower), 0);
+        assertEq(ecrecoverAuthorizer.nonce(borrower), 0);
     }
 
-    function testSetIsAuthorizedWithSigExpired() public {
+    function testEcrecoverAuthorizerExpired() public {
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         auth.deadline = block.timestamp - 1;
         Signature memory sig = signAuthorization(auth, borrower);
 
         vm.expectRevert("expired");
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
     }
 
-    function testSetIsAuthorizedWithSigInvalidNonce() public {
+    function testEcrecoverAuthorizerInvalidNonce() public {
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         auth.nonce = 999; // wrong nonce
         Signature memory sig = signAuthorization(auth, borrower);
 
         vm.expectRevert("invalid nonce");
-        setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+        ecrecoverAuthorizer.setIsAuthorized(auth, sig);
     }
 
-    function testSetIsAuthorizedWithSigNonce(uint8 n) public {
-        authorize(borrower, address(setIsAuthorizedWithSig));
+    function testEcrecoverAuthorizerNonce(uint8 n) public {
+        authorize(borrower, address(ecrecoverAuthorizer));
         n = uint8(bound(n, 1, 32));
 
         for (uint8 i = 0; i < n; i++) {
@@ -108,9 +108,9 @@ contract SetIsAuthorizedWithSigTest is BaseTest {
             Authorization memory auth = makeAuthorization(borrower, lender, isAuth);
             Signature memory sig = signAuthorization(auth, borrower);
 
-            setIsAuthorizedWithSig.setIsAuthorizedWithSig(auth, sig);
+            ecrecoverAuthorizer.setIsAuthorized(auth, sig);
 
-            assertEq(setIsAuthorizedWithSig.nonce(borrower), i + 1);
+            assertEq(ecrecoverAuthorizer.nonce(borrower), i + 1);
             assertEq(midnight.isAuthorized(borrower, lender), isAuth);
         }
     }
