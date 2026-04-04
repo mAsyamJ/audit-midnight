@@ -868,7 +868,7 @@ contract TakeTest is BaseTest {
         assertEq(BorrowCallback(callback).recordedData(), abi.encode(0, collateral));
     }
 
-    function testSellSellerCallbackLiquidateRevertsWhileHealthCheckDeferred() public {
+    function testSellSellerCallbackLiquidateRevertsWhileLiquidationLocked() public {
         uint256 units = 100e18;
         uint256 repaidUnits = 1e18;
         uint256 collateral = units.mulDivUp(WAD, obligation.collateralParams[0].lltv);
@@ -897,7 +897,7 @@ contract TakeTest is BaseTest {
         );
 
         assertFalse(callback.liquidateSucceeded());
-        assertEq(callback.liquidateError(), "health check deferred");
+        assertEq(callback.liquidateError(), "liquidation locked");
         assertEq(midnight.debtOf(id, borrower), units);
         assertEq(midnight.collateral(id, borrower, 0), collateral);
     }
