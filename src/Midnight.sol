@@ -89,7 +89,7 @@ contract Midnight is IMidnight {
     /// STORAGE ///
 
     mapping(bytes32 id => mapping(address user => Position)) public position;
-    mapping(bytes32 id => ObligationState) private _obligationState;
+    mapping(bytes32 id => ObligationState) public obligationState;
 
     /// @dev Groups are useful to have a global offered amount shared across multiple offers ("OCO").
     /// @dev To work as expected, all offers in the same group should have the same max values and loan token.
@@ -168,7 +168,7 @@ contract Midnight is IMidnight {
         require(index <= 6, "invalid index");
         require(newTradingFee <= maxTradingFee(index), "value too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         require(_state.created, "obligation not created");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee <= maxTradingFee <= uint16.max * FEE_STEP
         _setObligationFee(_state, index, uint16(newTradingFee / FEE_STEP));
@@ -189,7 +189,7 @@ contract Midnight is IMidnight {
     function setObligationContinuousFee(bytes32 id, uint256 newContinuousFee) external {
         require(msg.sender == feeSetter, "only fee setter");
         require(newContinuousFee <= MAX_CONTINUOUS_FEE, "continuous fee too high");
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         require(_state.created, "obligation not created");
         // forge-lint: disable-next-line(unsafe-typecast) as newContinuousFee <= MAX_CONTINUOUS_FEE < type(uint32).max
         _state.continuousFee = uint32(newContinuousFee);
@@ -214,7 +214,7 @@ contract Midnight is IMidnight {
     function claimContinuousFee(Obligation memory obligation, uint256 amount, address receiver) external {
         require(msg.sender == feeClaimer, "only fee claimer");
         bytes32 id = toId(obligation);
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         require(_state.created, "not created");
 
         _state.continuousFeeAmount -= UtilsLib.toUint128(amount);
@@ -255,7 +255,6 @@ contract Midnight is IMidnight {
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
         bytes32 id = touchObligation(offer.obligation);
-        ObligationState storage _state = _obligationState[id];
 
         (
             address buyer,
@@ -315,7 +314,7 @@ contract Midnight is IMidnight {
         uint256 sellerCreditDecrease = UtilsLib.min(units, sellerPos.credit);
         buyerPos.debt -= UtilsLib.toUint128(units - buyerCreditIncrease);
         uint128 buyerPendingFeeIncrease =
-            UtilsLib.toUint128(buyerCreditIncrease.mulDivDown(_state.continuousFee * timeToMaturity, WAD));
+            UtilsLib.toUint128(buyerCreditIncrease.mulDivDown(obligationState[id].continuousFee * timeToMaturity, WAD));
         buyerPos.pendingFee += buyerPendingFeeIncrease;
         buyerPos.credit += UtilsLib.toUint128(buyerCreditIncrease);
         uint128 sellerPendingFeeDecrease;
@@ -326,7 +325,8 @@ contract Midnight is IMidnight {
         }
         sellerPos.credit -= UtilsLib.toUint128(sellerCreditDecrease);
         sellerPos.debt += UtilsLib.toUint128(units - sellerCreditDecrease);
-        _state.totalUnits = UtilsLib.toUint128(_state.totalUnits + buyerCreditIncrease - sellerCreditDecrease);
+        obligationState[id].totalUnits =
+            UtilsLib.toUint128(obligationState[id].totalUnits + buyerCreditIncrease - sellerCreditDecrease);
 
         require(buyerPos.pendingFee <= buyerPos.credit, "buyer pendingFee exceeds credit");
         if (offer.reduceOnly) {
@@ -392,7 +392,7 @@ contract Midnight is IMidnight {
     function withdraw(Obligation memory obligation, uint256 units, address onBehalf, address receiver) external {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], "unauthorized");
         bytes32 id = touchObligation(obligation);
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         _updatePosition(obligation, id, onBehalf);
 
         Position storage _position = position[id][onBehalf];
@@ -415,7 +415,7 @@ contract Midnight is IMidnight {
         bytes32 id = touchObligation(obligation);
 
         position[id][onBehalf].debt -= UtilsLib.toUint128(units);
-        _obligationState[id].withdrawable += UtilsLib.toUint128(units);
+        obligationState[id].withdrawable += UtilsLib.toUint128(units);
 
         emit EventsLib.Repay(msg.sender, id, units, onBehalf);
 
@@ -495,7 +495,7 @@ contract Midnight is IMidnight {
     ) external returns (uint256, uint256) {
         require(UtilsLib.atMostOneNonZero(repaidUnits, seizedAssets), "inconsistent input");
         bytes32 id = touchObligation(obligation);
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         require(
             obligation.liquidatorGate == address(0)
                 || ILiquidatorGate(obligation.liquidatorGate).canLiquidate(msg.sender),
@@ -642,7 +642,7 @@ contract Midnight is IMidnight {
     /// @dev Returns the obligation id and creates the obligation if it doesn't exist yet.
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
         bytes32 id = toId(obligation);
-        if (!_obligationState[id].created) {
+        if (!obligationState[id].created) {
             require(obligation.collateralParams.length > 0, "no collateralParams");
             require(obligation.collateralParams.length <= MAX_COLLATERALS, "too many collateralParams");
             address previousCollateralToken;
@@ -659,7 +659,7 @@ contract Midnight is IMidnight {
                 previousCollateralToken = collateralToken;
             }
 
-            ObligationState storage _state = _obligationState[id];
+            ObligationState storage _state = obligationState[id];
             _setObligationFees(_state, defaultTradingFees[obligation.loanToken]);
             _state.continuousFee = defaultContinuousFee[obligation.loanToken];
             _state.created = true;
@@ -683,7 +683,7 @@ contract Midnight is IMidnight {
         uint128 credit = _position.credit;
         uint128 _lossIndex = _position.lossIndex;
         uint256 postSlashCredit = _lossIndex < type(uint128).max
-            ? credit.mulDivDown(type(uint128).max - _obligationState[id].lossIndex, type(uint128).max - _lossIndex)
+            ? credit.mulDivDown(type(uint128).max - obligationState[id].lossIndex, type(uint128).max - _lossIndex)
             : 0;
         uint128 _pendingFee = _position.pendingFee;
         uint256 postSlashPending = credit > 0 ? _pendingFee - _pendingFee.mulDivUp(credit - postSlashCredit, credit) : 0;
@@ -700,7 +700,7 @@ contract Midnight is IMidnight {
     /// @dev Slashes the position and accrues the continuous fee.
     function updatePosition(Obligation memory obligation, address user) external {
         bytes32 id = toId(obligation);
-        require(_obligationState[id].created, "not created");
+        require(obligationState[id].created, "not created");
         _updatePosition(obligation, id, user);
     }
 
@@ -714,10 +714,10 @@ contract Midnight is IMidnight {
         uint128 pendingFeeDecrease = _position.pendingFee - newPendingFee;
 
         _position.credit = newCredit;
-        _position.lossIndex = _obligationState[id].lossIndex;
+        _position.lossIndex = obligationState[id].lossIndex;
         _position.pendingFee = newPendingFee;
         _position.lastAccrual = uint128(block.timestamp);
-        _obligationState[id].continuousFeeAmount += UtilsLib.toUint128(accruedFee);
+        obligationState[id].continuousFeeAmount += UtilsLib.toUint128(accruedFee);
 
         emit EventsLib.UpdatePosition(id, user, creditDecrease, pendingFeeDecrease, accruedFee);
     }
@@ -747,7 +747,7 @@ contract Midnight is IMidnight {
     /// @dev Returns the obligation corresponding to the given id.
     /// @dev Reverts if the id is not a valid id of a touched obligation.
     function toObligation(bytes32 id) external view returns (Obligation memory) {
-        require(_obligationState[id].created, "not created");
+        require(obligationState[id].created, "not created");
         address create2Address = address(uint160(uint256(id)));
         return abi.decode(create2Address.code, (Obligation));
     }
@@ -761,35 +761,23 @@ contract Midnight is IMidnight {
     }
 
     function totalUnits(bytes32 id) external view returns (uint256) {
-        return _obligationState[id].totalUnits;
+        return obligationState[id].totalUnits;
     }
 
     function lossIndex(bytes32 id) external view returns (uint128) {
-        return _obligationState[id].lossIndex;
+        return obligationState[id].lossIndex;
     }
 
     function obligationCreated(bytes32 id) external view returns (bool) {
-        return _obligationState[id].created;
-    }
-
-    function obligationState(bytes32 id) external view returns (uint128, uint128, uint128, uint128, bool, uint32) {
-        ObligationState storage _state = _obligationState[id];
-        return (
-            _state.totalUnits,
-            _state.lossIndex,
-            _state.withdrawable,
-            _state.continuousFeeAmount,
-            _state.created,
-            _state.continuousFee
-        );
+        return obligationState[id].created;
     }
 
     function withdrawable(bytes32 id) external view returns (uint256) {
-        return _obligationState[id].withdrawable;
+        return obligationState[id].withdrawable;
     }
 
     function fees(bytes32 id) external view returns (uint16[7] memory result) {
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         result[0] = _state.fee0;
         result[1] = _state.fee1;
         result[2] = _state.fee2;
@@ -800,11 +788,11 @@ contract Midnight is IMidnight {
     }
 
     function continuousFee(bytes32 id) external view returns (uint32) {
-        return _obligationState[id].continuousFee;
+        return obligationState[id].continuousFee;
     }
 
     function continuousFeeAmount(bytes32 id) external view returns (uint256) {
-        return _obligationState[id].continuousFeeAmount;
+        return obligationState[id].continuousFeeAmount;
     }
 
     function pendingFee(bytes32 id, address user) external view returns (uint128) {
@@ -857,36 +845,49 @@ contract Midnight is IMidnight {
 
     /// @dev Returns the trading fee using piecewise linear interpolation between breakpoints.
     function tradingFee(bytes32 id, uint256 timeToMaturity) public view returns (uint256) {
-        ObligationState storage _state = _obligationState[id];
+        ObligationState storage _state = obligationState[id];
         require(_state.created, "not created");
 
-        if (timeToMaturity >= 360 days) return _obligationFee(_state, 6) * FEE_STEP;
+        if (timeToMaturity >= 360 days) return _state.fee6 * FEE_STEP;
 
-        // forgefmt: disable-start
-        (uint256 index, uint256 start, uint256 end) =
-            timeToMaturity < 1 days   ? (0, 0 days, 1 days) :
-            timeToMaturity < 7 days   ? (1, 1 days, 7 days) :
-            timeToMaturity < 30 days  ? (2, 7 days, 30 days) :
-            timeToMaturity < 90 days  ? (3, 30 days, 90 days) :
-            timeToMaturity < 180 days ? (4, 90 days, 180 days) :
-                                        (5, 180 days, 360 days);
-        // forgefmt: disable-end
+        uint256 start;
+        uint256 end;
+        uint256 feeLower;
+        uint256 feeUpper;
 
-        uint256 feeLower = _obligationFee(_state, index) * FEE_STEP;
-        uint256 feeUpper = _obligationFee(_state, index + 1) * FEE_STEP;
+        if (timeToMaturity < 1 days) {
+            start = 0 days;
+            end = 1 days;
+            feeLower = _state.fee0 * FEE_STEP;
+            feeUpper = _state.fee1 * FEE_STEP;
+        } else if (timeToMaturity < 7 days) {
+            start = 1 days;
+            end = 7 days;
+            feeLower = _state.fee1 * FEE_STEP;
+            feeUpper = _state.fee2 * FEE_STEP;
+        } else if (timeToMaturity < 30 days) {
+            start = 7 days;
+            end = 30 days;
+            feeLower = _state.fee2 * FEE_STEP;
+            feeUpper = _state.fee3 * FEE_STEP;
+        } else if (timeToMaturity < 90 days) {
+            start = 30 days;
+            end = 90 days;
+            feeLower = _state.fee3 * FEE_STEP;
+            feeUpper = _state.fee4 * FEE_STEP;
+        } else if (timeToMaturity < 180 days) {
+            start = 90 days;
+            end = 180 days;
+            feeLower = _state.fee4 * FEE_STEP;
+            feeUpper = _state.fee5 * FEE_STEP;
+        } else {
+            start = 180 days;
+            end = 360 days;
+            feeLower = _state.fee5 * FEE_STEP;
+            feeUpper = _state.fee6 * FEE_STEP;
+        }
 
         return (feeLower * (end - timeToMaturity) + feeUpper * (timeToMaturity - start)) / (end - start);
-    }
-
-    function _obligationFee(ObligationState storage _state, uint256 index) internal view returns (uint16) {
-        if (index == 0) return _state.fee0;
-        if (index == 1) return _state.fee1;
-        if (index == 2) return _state.fee2;
-        if (index == 3) return _state.fee3;
-        if (index == 4) return _state.fee4;
-        if (index == 5) return _state.fee5;
-        if (index == 6) return _state.fee6;
-        revert("invalid index");
     }
 
     function _setObligationFee(ObligationState storage _state, uint256 index, uint16 fee) internal {
