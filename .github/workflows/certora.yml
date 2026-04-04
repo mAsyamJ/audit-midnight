@@ -57,10 +57,15 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Copy solc
+      - name: Install solc 0.8.34
         run: |
-          forge build
+          mkdir -p ~/.svm/0.8.34
+          curl -L --retry 3 --retry-all-errors \
+            https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.34+commit.80d5c536 \
+            -o ~/.svm/0.8.34/solc-0.8.34
+          chmod +x ~/.svm/0.8.34/solc-0.8.34
           cp ~/.svm/0.8.34/solc-0.8.34 /usr/local/bin
+          forge build
 
       - name: Verify ${{ matrix.conf }}
         run: certoraRun certora/confs/${{ matrix.conf }}.conf

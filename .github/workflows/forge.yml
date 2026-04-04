@@ -32,6 +32,14 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
+      - name: Install solc 0.8.34
+        run: |
+          mkdir -p ~/.svm/0.8.34
+          curl -L --retry 3 --retry-all-errors \
+            https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.34+commit.80d5c536 \
+            -o ~/.svm/0.8.34/solc-0.8.34
+          chmod +x ~/.svm/0.8.34/solc-0.8.34
+
       - name: Run forge lint
         run: forge lint --deny notes
   test:
@@ -57,6 +65,13 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+      - name: Install solc 0.8.34
+        run: |
+          mkdir -p ~/.svm/0.8.34
+          curl -L --retry 3 --retry-all-errors \
+            https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.34+commit.80d5c536 \
+            -o ~/.svm/0.8.34/solc-0.8.34
+          chmod +x ~/.svm/0.8.34/solc-0.8.34
       - name: Run Forge tests (${{ matrix.name }})
         run: forge test --deny warnings
         env:
