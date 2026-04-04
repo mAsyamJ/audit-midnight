@@ -60,7 +60,7 @@ jobs:
       - name: Copy solc
         run: |
           forge build
-          cp ~/.svm/0.8.31/solc-0.8.31 /usr/local/bin
+          cp ~/.svm/0.8.34/solc-0.8.34 /usr/local/bin
 
       - name: Verify ${{ matrix.conf }}
         run: certoraRun certora/confs/${{ matrix.conf }}.conf
