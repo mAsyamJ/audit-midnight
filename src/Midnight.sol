@@ -384,9 +384,8 @@ contract Midnight is IMidnight {
                 "invalid callback"
             );
         }
-        if (!wasLocked) UtilsLib.tExchange(LIQUIDATION_LOCK_SLOT, id, seller, false);
-
         require(isHealthy(offer.obligation, id, seller), "seller is unhealthy");
+        if (!wasLocked) UtilsLib.tExchange(LIQUIDATION_LOCK_SLOT, id, seller, false);
 
         return (buyerAssets, sellerAssets, units);
     }
