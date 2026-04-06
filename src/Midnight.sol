@@ -83,6 +83,11 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev even when the entry gate is reverting.
 /// @dev The liquidator gate prevents the user from liquidating the obligation (and realizing bad debt).
 ///
+/// MISC
+/// @dev Zero checks are not systematically performed.
+/// @dev No-ops are allowed.
+/// @dev NatSpec comments are included only when they bring clarity.
+///
 /// TOKEN REQUIREMENTS
 /// @dev List of assumptions on tokens that guarantee that Midnight behaves as expected:
 /// - It should be ERC-20 compliant, except that it can omit return values on `transfer` and `transferFrom`.
