@@ -17,7 +17,6 @@ import {
     MAX_COLLATERALS_PER_BORROWER,
     LIQUIDATION_CURSOR_LOW,
     LIQUIDATION_CURSOR_HIGH,
-    CALLBACK_SUCCESS,
     isLltvAllowed
 } from "./libraries/ConstantsLib.sol";
 import {IOracle} from "./interfaces/IOracle.sol";
