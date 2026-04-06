@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Copyright (c) 2025 Morpho Association
-pragma solidity 0.8.31;
+pragma solidity 0.8.34;
 
 import {UtilsLib} from "./libraries/UtilsLib.sol";
 import {IdLib} from "./libraries/IdLib.sol";
@@ -74,6 +74,11 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev In particular, it does not prevent the user from exiting the obligation
 /// @dev even when the entry gate is reverting.
 /// @dev The liquidator gate prevents the user from liquidating the obligation (and realizing bad debt).
+///
+/// MISC
+/// @dev Zero checks are not systematically performed.
+/// @dev No-ops are allowed.
+/// @dev NatSpec comments are included only when they bring clarity.
 ///
 /// TOKEN REQUIREMENTS
 /// @dev List of assumptions on tokens that guarantee that Midnight behaves as expected:
