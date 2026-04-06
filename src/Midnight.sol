@@ -90,8 +90,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// - It should be ERC-20 compliant, except that it can omit return values on `transfer` and `transferFrom`.
 /// - Midnight's balance of the token should only decrease on `transfer` and `transferFrom`.
 /// - It should not re-enter Midnight on `transfer` nor `transferFrom`.
-/// - The token balance of the sender (resp. receiver) should decrease (resp. increase) by exactly the given amount on
-///   `transfer` and `transferFrom`. In particular, tokens with fees on transfer are not supported.
+/// - Midnight must send/receive exactly the requested amount on transfers.
 /// - It should not revert on `transfer` and `transferFrom` if balances and approvals are right.
 /// - It should not revert on no-op transfers.
 contract Midnight is IMidnight {
