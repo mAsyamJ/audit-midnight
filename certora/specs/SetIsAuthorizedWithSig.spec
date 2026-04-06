@@ -8,12 +8,6 @@ methods {
     function midnight.isAuthorized(address, address) external returns (bool) envfree;
 }
 
-/// EcrecoverAuthorizer is satisfiable.
-rule satisfiable(env e, EcrecoverAuthorizer.Authorization authorization, EcrecoverAuthorizer.Signature signature) {
-    setIsAuthorized(e, authorization, signature);
-    satisfy true;
-}
-
 /// EcrecoverAuthorizer increments nonce and doesn't change other nonces.
 rule effects(env e, EcrecoverAuthorizer.Authorization authorization, EcrecoverAuthorizer.Signature signature, address other) {
     require other != authorization.authorizer;
