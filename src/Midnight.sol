@@ -82,6 +82,11 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev In particular, it does not prevent the user from exiting the obligation
 /// @dev even when the entry gate is reverting.
 /// @dev The liquidator gate prevents the user from liquidating the obligation (and realizing bad debt).
+///
+/// MISC
+/// @dev Zero checks are not performed.
+/// @dev No-ops are allowed.
+/// @dev NatSpec comments are included only when they bring clarity.
 contract Midnight is IMidnight {
     using UtilsLib for uint256;
     using UtilsLib for uint128;
