@@ -72,10 +72,15 @@ abstract contract BaseTest is Test {
         (otherLender, _privateKey) = makeAddrAndKey("otherLender");
         privateKey[otherLender] = _privateKey;
 
-        authorize(borrower, address(ecrecoverRatifier));
-        authorize(lender, address(ecrecoverRatifier));
-        authorize(otherBorrower, address(ecrecoverRatifier));
-        authorize(otherLender, address(ecrecoverRatifier));
+        vm.prank(borrower);
+
+        midnight.setIsAuthorized(borrower, address(ecrecoverRatifier), true);
+        vm.prank(lender);
+        midnight.setIsAuthorized(lender, address(ecrecoverRatifier), true);
+        vm.prank(otherBorrower);
+        midnight.setIsAuthorized(otherBorrower, address(ecrecoverRatifier), true);
+        vm.prank(otherLender);
+        midnight.setIsAuthorized(otherLender, address(ecrecoverRatifier), true);
 
         uint256 tokenType = vm.envOr("TOKEN_TYPE", uint256(0));
         if (tokenType == 1) {
@@ -178,8 +183,11 @@ abstract contract BaseTest is Test {
         badBorrowerOffer.expiry = block.timestamp + 200;
         badBorrowerOffer.tick = MAX_TICK;
 
-        authorize(badBorrower, address(ecrecoverRatifier));
-        authorize(badBorrower, address(this));
+        vm.prank(badBorrower);
+
+        midnight.setIsAuthorized(badBorrower, address(ecrecoverRatifier), true);
+        vm.prank(badBorrower);
+        midnight.setIsAuthorized(badBorrower, address(this), true);
 
         deal(obligation.collateralParams[0].token, address(this), 135);
         midnight.supplyCollateral(obligation, 0, 135, badBorrower);
@@ -195,7 +203,8 @@ abstract contract BaseTest is Test {
         midnight.liquidate(obligation, 0, 0, 0, badBorrower, "");
 
         // then empty the market (borrow side only).
-        authorize(badBorrower, address(this));
+        vm.prank(badBorrower);
+        midnight.setIsAuthorized(badBorrower, address(this), true);
         deal(address(loanToken), address(this), midnight.debtOf(toId(obligation), badBorrower));
         midnight.repay(obligation, midnight.debtOf(toId(obligation), badBorrower), badBorrower, hex"");
         assertEq(midnight.debtOf(toId(obligation), badBorrower), 0, "debt");
@@ -225,11 +234,6 @@ abstract contract BaseTest is Test {
 
     function root(Offer memory offer) internal pure returns (bytes32) {
         return keccak256(abi.encode(offer));
-    }
-
-    function authorize(address from, address to) internal {
-        vm.prank(from);
-        midnight.setIsAuthorized(from, to, true);
     }
 
     function root(Offer[1] memory offers) internal pure returns (bytes32) {

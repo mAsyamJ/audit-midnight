@@ -39,7 +39,8 @@ contract EcrecoverAuthorizerTest is BaseTest {
     }
 
     function testEcrecoverAuthorizer() public {
-        authorize(borrower, address(ecrecoverAuthorizer));
+        vm.prank(borrower);
+        midnight.setIsAuthorized(borrower, address(ecrecoverAuthorizer), true);
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         Signature memory sig = signAuthorization(auth, borrower);
 
@@ -58,7 +59,8 @@ contract EcrecoverAuthorizerTest is BaseTest {
     }
 
     function testEcrecoverAuthorizerPermissionless() public {
-        authorize(borrower, address(ecrecoverAuthorizer));
+        vm.prank(borrower);
+        midnight.setIsAuthorized(borrower, address(ecrecoverAuthorizer), true);
         Authorization memory auth = makeAuthorization(borrower, lender, true);
         Signature memory sig = signAuthorization(auth, borrower);
 
@@ -100,7 +102,8 @@ contract EcrecoverAuthorizerTest is BaseTest {
     }
 
     function testEcrecoverAuthorizerNonce(uint8 n) public {
-        authorize(borrower, address(ecrecoverAuthorizer));
+        vm.prank(borrower);
+        midnight.setIsAuthorized(borrower, address(ecrecoverAuthorizer), true);
         n = uint8(bound(n, 1, 32));
 
         for (uint8 i = 0; i < n; i++) {

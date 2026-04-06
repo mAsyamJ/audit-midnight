@@ -31,7 +31,9 @@ contract SignatureTest is BaseTest {
         Offer memory offer;
         offer.maker = maker;
 
-        authorize(maker, address(ecrecoverRatifier));
+        vm.prank(maker);
+
+        midnight.setIsAuthorized(maker, address(ecrecoverRatifier), true);
         bytes32 result = ecrecoverRatifier.onRatify(offer, root, abi.encode(Signature({v: v, r: r, s: s})));
         assertEq(result, CALLBACK_SUCCESS);
     }

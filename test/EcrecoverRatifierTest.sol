@@ -36,7 +36,9 @@ contract EcrecoverRatifierTest is BaseTest {
         Offer memory offer = makeOffer(lender);
         bytes32 _root = keccak256(abi.encode(offer));
 
-        authorize(lender, borrower);
+        vm.prank(lender);
+
+        midnight.setIsAuthorized(lender, borrower, true);
         bytes memory data = signRoot(_root, borrower);
 
         bytes32 result = ecrecoverRatifier.onRatify(offer, _root, data);
@@ -75,7 +77,9 @@ contract EcrecoverRatifierTest is BaseTest {
         Offer memory offer = makeOffer(lender);
         bytes32 _root = keccak256(abi.encode(offer));
 
-        authorize(lender, borrower);
+        vm.prank(lender);
+
+        midnight.setIsAuthorized(lender, borrower, true);
         bytes memory data = signRoot(_root, borrower);
 
         // Works while authorized.
