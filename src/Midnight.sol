@@ -82,6 +82,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// afterwards (bad debt can no longer be realized).
 ///
 /// GATES
+/// @dev Gates are optional (address(0) = unrestricted).
 /// @dev The entry gate can prevent entry actions (increasing credit or debt) in the obligation.
 /// @dev In particular, it does not prevent the user from exiting the obligation even when the entry gate is reverting.
 /// @dev The liquidator gate can prevent the user from liquidating borrowers in the obligation (and realizing bad debt).
