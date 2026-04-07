@@ -6,6 +6,7 @@ import {Obligation} from "../interfaces/IMidnight.sol";
 
 /// @dev id_ is used to avoid naming conflicts in indexers.
 library EventsLib {
+    // forge-fmt: disable-start
     event Constructor(address indexed owner);
     event SetOwner(address indexed owner);
     event SetFeeSetter(address indexed feeSetter);
@@ -77,4 +78,5 @@ library EventsLib {
     );
     event ClaimContinuousFee(address indexed caller, bytes32 indexed id_, uint256 amount, address indexed receiver);
     event ClaimTradingFee(address indexed caller, address indexed token, uint256 amount, address indexed receiver);
+    // forge-fmt: disable-end
 }
