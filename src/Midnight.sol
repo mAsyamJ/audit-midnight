@@ -101,10 +101,8 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// LIVENESS
 /// @dev If an activated collateral oracle reverts on `price`, `liquidate`, `isHealthy`, `withdrawCollateral`
 /// (unless the borrower has no debt), and `take` whenever the seller still has debt revert.
-/// @dev If `enterGate` reverts or returns false on `canIncreaseCredit`, `take` reverts whenever the buyer's credit
-/// increases.
-/// @dev If `enterGate` reverts or returns false on `canIncreaseDebt`, `take` reverts whenever the seller's debt
-/// increases.
+/// @dev If `enterGate` reverts or returns false on `canIncreaseCredit`, `take` reverts if the buyer's credit increases.
+/// @dev If `enterGate` reverts or returns false on `canIncreaseDebt`, `take` reverts if the seller's debt increases.
 /// @dev If `liquidatorGate` reverts or returns false on `canLiquidate`, `liquidate` reverts.
 /// @dev If a token pulled by Midnight reverts on `transferFrom` despite balances and approvals being right, `take`,
 /// `repay`, `supplyCollateral`, `liquidate`, and `flashLoan` repayment revert when they need to pull that token.
@@ -145,12 +143,8 @@ contract Midnight is IMidnight {
     /// @dev When the claimer is set, the old claimer loses the unclaimed trading and continuous fees.
     mapping(address token => uint256) public claimableTradingFee;
 
-    address public feeClaimer;
-
-    /// @dev Contract owner for administrative functions.
     address public owner;
-
-    /// @dev Address that can set trading fees.
+    address public feeClaimer;
     address public feeSetter;
 
     /// CONSTRUCTOR ///
@@ -266,7 +260,6 @@ contract Midnight is IMidnight {
 
     /// ENTRY-POINTS ///
 
-    /// @dev Returns buyerAssets, sellerAssets, units.
     /// @dev Same function used to buy and sell.
     /// @dev If one wants to match two offers without taking a position, they can batch take them and not have a
     /// position at the end.
@@ -274,6 +267,7 @@ contract Midnight is IMidnight {
     /// @dev All sellerAssets are reachable with the units input, and all buyerAssets are reachable only if
     /// buyerPrice <= WAD.
     /// @dev The seller cannot be liquidated during the callbacks of a take.
+    /// @dev Returns buyerAssets, sellerAssets, units.
     function take(
         uint256 units,
         address taker,
