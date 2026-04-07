@@ -539,7 +539,8 @@ contract Midnight is IMidnight {
         }
 
         require(
-            originalDebt > 0 && (block.timestamp > obligation.maturity || originalDebt > maxDebt),
+            originalDebt > 0 && !liquidationLocked(id, borrower)
+                && (block.timestamp > obligation.maturity || originalDebt > maxDebt),
             "not liquidatable"
         );
 
