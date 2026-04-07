@@ -99,7 +99,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// callback-enabled `take`, `repay`, `liquidate`, and `flashLoan` revert.
 ///
 /// ROLES
-/// @dev The owner can set the owner, fee setter, and fee claimer.
+/// @dev The role setter can set the role setter, fee setter, and fee claimer.
 /// @dev The fee setter can set the default and per-obligation trading fee and continuous fee.
 /// @dev The fee claimer can claim the trading fee and continuous fee.
 /// @dev When the claimer is set, the old claimer loses the unclaimed fees.
@@ -124,15 +124,15 @@ contract Midnight is IMidnight {
     mapping(address loanToken => uint16[7]) public defaultTradingFees;
     mapping(address loanToken => uint32) public defaultContinuousFee;
     mapping(address token => uint256) public claimableTradingFee;
-    address public owner;
+    address public roleSetter;
     address public feeSetter;
     address public feeClaimer;
 
     /// CONSTRUCTOR ///
 
     constructor() {
-        owner = msg.sender;
-        emit EventsLib.Constructor(owner);
+        roleSetter = msg.sender;
+        emit EventsLib.Constructor(roleSetter);
     }
 
     /// MULTICALL ///
@@ -150,20 +150,20 @@ contract Midnight is IMidnight {
 
     /// ADMIN FUNCTIONS ///
 
-    function setOwner(address newOwner) external {
-        require(msg.sender == owner, "only owner");
-        owner = newOwner;
-        emit EventsLib.SetOwner(newOwner);
+    function setRoleSetter(address newRoleSetter) external {
+        require(msg.sender == roleSetter, "only role setter");
+        roleSetter = newRoleSetter;
+        emit EventsLib.SetRoleSetter(newRoleSetter);
     }
 
     function setFeeSetter(address newFeeSetter) external {
-        require(msg.sender == owner, "only owner");
+        require(msg.sender == roleSetter, "only role setter");
         feeSetter = newFeeSetter;
         emit EventsLib.SetFeeSetter(newFeeSetter);
     }
 
     function setFeeClaimer(address newFeeClaimer) external {
-        require(msg.sender == owner, "only owner");
+        require(msg.sender == roleSetter, "only role setter");
         feeClaimer = newFeeClaimer;
         emit EventsLib.SetFeeClaimer(newFeeClaimer);
     }
@@ -494,7 +494,7 @@ contract Midnight is IMidnight {
     }
 
     /// @dev At least one of `seizedAssets` or `repaidUnits` should be equal to zero.
-    /// @dev Accounts are liquidatable if they are unhealthy or if the maturity has passed.
+    /// @dev Accounts with nonzero debt are liquidatable if they are unhealthy or if the maturity has passed.
     /// @dev Before maturity, the liquidation cannot put the borrower back into health (recovery close factor), unless
     /// the liquidation could leave a collateral with a value that would not be enough to repay rcfThreshold units.
     /// @dev Recovery close factor means that debtOf - repaidUnits >= maxDebt - repaidUnits*LIF*LLTV, which is
@@ -537,8 +537,9 @@ contract Midnight is IMidnight {
             );
             bitmap = bitmap.clearBit(i);
         }
+
         require(
-            !liquidationLocked(id, borrower) && (block.timestamp > obligation.maturity || originalDebt > maxDebt),
+            originalDebt > 0 && (block.timestamp > obligation.maturity || originalDebt > maxDebt),
             "not liquidatable"
         );
 
@@ -828,10 +829,10 @@ contract Midnight is IMidnight {
         return UtilsLib.tGet(LIQUIDATION_LOCK_SLOT, id, user);
     }
 
-    /// @dev A borrower is liquidatable if liquidation is not transiently locked, and they are past maturity
-    /// or not healthy.
+    /// @dev A borrower is liquidatable if they have debt, liquidation is not transiently locked, and they are
+    /// past maturity or not healthy.
     function isLiquidatable(Obligation memory obligation, bytes32 id, address borrower) public view returns (bool) {
-        return !liquidationLocked(id, borrower)
+        return position[id][borrower].debt > 0 && !liquidationLocked(id, borrower)
             && (block.timestamp > obligation.maturity || !isHealthy(obligation, id, borrower));
     }
 
