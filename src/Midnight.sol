@@ -181,7 +181,6 @@ contract Midnight is IMidnight {
         emit EventsLib.SetFeeClaimer(newFeeClaimer);
     }
 
-    /// @dev Overrides the fee of a specific obligation.
     function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee) external {
         require(msg.sender == feeSetter, "only fee setter");
         require(index <= 6, "invalid index");
@@ -201,7 +200,6 @@ contract Midnight is IMidnight {
         emit EventsLib.SetObligationTradingFee(id, index, newTradingFee);
     }
 
-    /// @dev Doesn't change the fee of already created obligations.
     function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee) external {
         require(msg.sender == feeSetter, "only fee setter");
         require(index <= 6, "invalid index");
