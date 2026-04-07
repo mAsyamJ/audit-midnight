@@ -43,7 +43,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// collaterals simultaneously.
 ///
 /// TRADING FEES
-/// @dev A default trading fee is set to new obligations. Then, the fee setter can override it.
+/// @dev A default trading fee is set on new obligations. Then, the fee setter can override it.
 /// @dev The trading fee is computed using piecewise linear interpolation between breakpoints.
 /// @dev Trading fee breakpoint indices: 0=0d, 1=1d, 2=7d, 3=30d, 4=90d, 5=180d, 6=360d.
 /// @dev For TTM > 360d, the trading fee is the fee at the 360d breakpoint.
@@ -52,7 +52,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// @dev Max trading fee is defined per index: 50 bps for ttm=360 days, scaled linearly. For post maturity, 0.14 bps.
 ///
 /// CONTINUOUS FEES
-/// @dev A default continuous fee is set to new obligations. Then, the fee setter can override it.
+/// @dev A default continuous fee is set on new obligations. Then, the fee setter can override it.
 /// @dev The fee is tracked per lender via `pendingFee` in each position. If the obligation's continuous fee changes,
 /// the pending fee of existing lenders is not updated (=> their fee is fixed).
 /// @dev Absent bad debt, the face value of a lender's position is `credit - pendingFee`.
@@ -64,7 +64,7 @@ import {EventsLib} from "./libraries/EventsLib.sol";
 /// GROUPS
 /// @dev Groups are useful to have a global offered amount shared across multiple offers ("OCO").
 /// @dev To work as expected, all offers in the same group should have the same max values and loan token.
-/// @dev Only one of `maxSellerAssets`, `maxBuyerAssets`, or `maxUnits` should be nonzero per offer.
+/// @dev Only one of `maxSellerAssets`, `maxBuyerAssets`, or `maxUnits` can be nonzero per offer.
 ///
 /// SESSION
 /// @dev Offers should have the current session to be valid.
