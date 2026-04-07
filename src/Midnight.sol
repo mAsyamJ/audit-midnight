@@ -172,7 +172,7 @@ contract Midnight is IMidnight {
         ObligationState storage _obligationState = obligationState[id];
         require(msg.sender == feeSetter, "only fee setter");
         require(index <= 6, "invalid index");
-        require(newTradingFee <= maxTradingFee(index), "value too high");
+        require(newTradingFee <= maxTradingFee(index), "trading fee too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
         require(_obligationState.created, "obligation not created");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee <= maxTradingFee <= uint16.max * FEE_STEP
@@ -190,7 +190,7 @@ contract Midnight is IMidnight {
     function setDefaultTradingFee(address loanToken, uint256 index, uint256 newTradingFee) external {
         require(msg.sender == feeSetter, "only fee setter");
         require(index <= 6, "invalid index");
-        require(newTradingFee <= maxTradingFee(index), "value too high");
+        require(newTradingFee <= maxTradingFee(index), "trading fee too high");
         require(newTradingFee % FEE_STEP == 0, "fee should be a multiple of FEE_STEP");
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee <= maxTradingFee <= uint16.max * FEE_STEP
         defaultTradingFees[loanToken][index] = uint16(newTradingFee / FEE_STEP);
@@ -200,7 +200,7 @@ contract Midnight is IMidnight {
     function setObligationContinuousFee(bytes32 id, uint256 newContinuousFee) external {
         ObligationState storage _obligationState = obligationState[id];
         require(msg.sender == feeSetter, "only fee setter");
-        require(newContinuousFee <= MAX_CONTINUOUS_FEE, "value too high");
+        require(newContinuousFee <= MAX_CONTINUOUS_FEE, "continuous fee too high");
         require(_obligationState.created, "obligation not created");
         // forge-lint: disable-next-line(unsafe-typecast) as newContinuousFee <= MAX_CONTINUOUS_FEE < type(uint32).max
         _obligationState.continuousFee = uint32(newContinuousFee);
@@ -209,7 +209,7 @@ contract Midnight is IMidnight {
 
     function setDefaultContinuousFee(address loanToken, uint256 newContinuousFee) external {
         require(msg.sender == feeSetter, "only fee setter");
-        require(newContinuousFee <= MAX_CONTINUOUS_FEE, "value too high");
+        require(newContinuousFee <= MAX_CONTINUOUS_FEE, "continuous fee too high");
         // forge-lint: disable-next-line(unsafe-typecast) as newContinuousFee <= MAX_CONTINUOUS_FEE < type(uint32).max
         defaultContinuousFee[loanToken] = uint32(newContinuousFee);
         emit EventsLib.SetDefaultContinuousFee(loanToken, newContinuousFee);
@@ -268,7 +268,7 @@ contract Midnight is IMidnight {
         require(UtilsLib.isLeaf(root, keccak256(abi.encode(offer)), proof), "invalid proof");
         require(offer.session == session[offer.maker], "invalid session");
         require(isAuthorized[offer.maker][offer.ratifier], "ratifier unauthorized");
-        require(IRatifier(offer.ratifier).onRatify(offer, root, ratifierData) == CALLBACK_SUCCESS, "unratified");
+        require(IRatifier(offer.ratifier).onRatify(offer, root, ratifierData) == CALLBACK_SUCCESS, "not ratified");
 
         (
             address buyer,
