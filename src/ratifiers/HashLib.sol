@@ -24,7 +24,7 @@ library HashLib {
     /// OBLIGATION_TYPE, OFFER_TYPE)).
     /// @dev Reverts if height is greater than 20.
     function offerTreeTypeHash(uint256 height) internal pure returns (bytes32) {
-        if (height < 11) {
+        if (height <= 10) {
             if (height == 0) return 0x9a4cffa064818006f9fa53857eafbd9974c971f009276be3fd30481edb617f49;
             if (height == 1) return 0x73e25e0ecda983be4e607052c9c61b1f73c5812c7963412e271ba99e98f38c7c;
             if (height == 2) return 0x9172b36c68635815d03f222ce2193bc103d476c9f2c84dedb041304ae7c22f75;
@@ -114,28 +114,25 @@ library HashLib {
     }
 
     /// @dev Computes the EIP-712 hash struct of an Offer.
-    /// @dev Same as keccak256(abi.encode(OFFER_TYPEHASH, ...));
     function hashOffer(Offer memory offer) internal pure returns (bytes32) {
-        bytes32[15] memory w;
-        w[0] = OFFER_TYPEHASH;
-        w[1] = hashObligation(offer.obligation);
-        w[2] = bytes32(uint256(offer.buy ? 1 : 0));
-        w[3] = bytes32(uint256(uint160(offer.maker)));
-        w[4] = bytes32(offer.start);
-        w[5] = bytes32(offer.expiry);
-        w[6] = bytes32(offer.tick);
-        w[7] = offer.group;
-        w[8] = bytes32(uint256(uint160(offer.callback)));
-        w[9] = keccak256(offer.callbackData);
-        w[10] = bytes32(uint256(uint160(offer.receiverIfMakerIsSeller)));
-        w[11] = bytes32(uint256(uint160(offer.ratifier)));
-        w[12] = bytes32(uint256(offer.reduceOnly ? 1 : 0));
-        w[13] = bytes32(offer.maxUnits);
-        w[14] = bytes32(offer.maxAssets);
-        bytes32 result;
-        assembly ("memory-safe") {
-            result := keccak256(w, 0x1e0)
-        }
-        return result;
+        return keccak256(
+            abi.encode(
+                OFFER_TYPEHASH,
+                hashObligation(offer.obligation),
+                offer.buy,
+                offer.maker,
+                offer.start,
+                offer.expiry,
+                offer.tick,
+                offer.group,
+                offer.callback,
+                keccak256(offer.callbackData),
+                offer.receiverIfMakerIsSeller,
+                offer.ratifier,
+                offer.reduceOnly,
+                offer.maxUnits,
+                offer.maxAssets
+            )
+        );
     }
 }
