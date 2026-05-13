@@ -23,6 +23,7 @@ import {IMidnight, Obligation, Offer, CollateralParams, ObligationState, Positio
 /// - It has no overcollateralization, so unhealthy positions will almost always realize bad debt when liquidated. In
 /// particular, the RCF is "inactive", meaning liquidations can always liquidate everything.
 /// - It has no liquidation incentive, so liquidators repay at exactly the oracle price (plus roundings).
+/// @dev To check if an obligation has been touched, check if tickSpacing(obligationId) > 0.
 ///
 /// MULTI-COLLATERAL OBLIGATIONS
 /// @dev Borrowers can supply/withdraw their collaterals at any time, subject only to an health check on withdrawal. In
@@ -86,6 +87,11 @@ import {IMidnight, Obligation, Offer, CollateralParams, ObligationState, Positio
 /// @dev Midnight can call the callback of offers through a no-op take, even if those offers have consumed==max.
 /// @dev It is possible to give units to a fully consumed assets-based buy offer with price < WAD.
 ///
+/// TICK SPACING
+/// @dev Offers can only be placed at ticks that are multiples of the obligation's spacing.
+/// @dev Newly created obligations start at the global DEFAULT_TICK_SPACING.
+/// @dev The tickSpacingSetter can decrease the spacing to a divisor of the current spacing, unlocking new ticks only.
+///
 /// AUTHORIZATIONS
 /// @dev All functions that change the position, consumed and authorization are accessible to the user and to
 /// any account that has been authorized. Thus, to scope authorizations one should authorize a smart-contract with
@@ -140,10 +146,11 @@ import {IMidnight, Obligation, Offer, CollateralParams, ObligationState, Positio
 /// revert.
 ///
 /// ROLES
-/// @dev The role setter can set the role setter, fee setter, and fee claimer.
+/// @dev The role setter can set the role setter, fee setter, fee claimer, and tick spacing setter.
 /// @dev The fee setter can set the default and per-obligation trading fee and continuous fee.
 /// @dev The fee claimer can claim the trading fee and continuous fee.
 /// @dev When the claimer is set, the old claimer loses the unclaimed fees.
+/// @dev The tick spacing setter can decrease the tick spacing of an obligation.
 ///
 /// MISC
 /// @dev No-ops are allowed.
@@ -177,6 +184,7 @@ contract Midnight is IMidnight {
     address public roleSetter;
     address public feeSetter;
     address public feeClaimer;
+    address public tickSpacingSetter;
 
     /// CONSTRUCTOR ///
 
@@ -219,13 +227,29 @@ contract Midnight is IMidnight {
         emit EventsLib.SetFeeClaimer(newFeeClaimer);
     }
 
+    function setTickSpacingSetter(address newTickSpacingSetter) external {
+        require(msg.sender == roleSetter, OnlyRoleSetter());
+        tickSpacingSetter = newTickSpacingSetter;
+        emit EventsLib.SetTickSpacingSetter(newTickSpacingSetter);
+    }
+
+    /// @dev Refines the tick spacing of an obligation. Can not increase (more ticks become accessible).
+    function setObligationTickSpacing(bytes32 id, uint256 newTickSpacing) external {
+        require(msg.sender == tickSpacingSetter, OnlyTickSpacingSetter());
+        require(obligationState[id].tickSpacing > 0, ObligationNotCreated());
+        require(newTickSpacing > 0 && obligationState[id].tickSpacing % newTickSpacing == 0, InvalidTickSpacing());
+        // forge-lint: disable-next-line(unsafe-typecast) as newTickSpacing <= DEFAULT_TICK_SPACING < type(uint8).max
+        obligationState[id].tickSpacing = uint8(newTickSpacing);
+        emit EventsLib.SetObligationTickSpacing(id, newTickSpacing);
+    }
+
     function setObligationTradingFee(bytes32 id, uint256 index, uint256 newTradingFee) external {
         ObligationState storage _obligationState = obligationState[id];
         require(msg.sender == feeSetter, OnlyFeeSetter());
         require(index <= 6, InvalidFeeIndex());
         require(newTradingFee <= maxTradingFee(index), TradingFeeTooHigh());
         require(newTradingFee % CBP == 0, FeeNotMultipleOfFeeCbp());
-        require(_obligationState.created, ObligationNotCreated());
+        require(_obligationState.tickSpacing > 0, ObligationNotCreated());
         // forge-lint: disable-next-item(unsafe-typecast) as newTradingFee <= maxTradingFee <= uint16.max * CBP
         uint16 newTradingFeeCbp = uint16(newTradingFee / CBP);
         if (index == 0) _obligationState.tradingFeeCbp0 = newTradingFeeCbp;
@@ -252,7 +276,7 @@ contract Midnight is IMidnight {
         ObligationState storage _obligationState = obligationState[id];
         require(msg.sender == feeSetter, OnlyFeeSetter());
         require(newContinuousFee <= MAX_CONTINUOUS_FEE, ContinuousFeeTooHigh());
-        require(_obligationState.created, ObligationNotCreated());
+        require(_obligationState.tickSpacing > 0, ObligationNotCreated());
         // forge-lint: disable-next-line(unsafe-typecast) as newContinuousFee <= MAX_CONTINUOUS_FEE < type(uint32).max
         _obligationState.continuousFee = uint32(newContinuousFee);
         emit EventsLib.SetObligationContinuousFee(id, newContinuousFee);
@@ -277,7 +301,7 @@ contract Midnight is IMidnight {
         bytes32 id = toId(obligation);
         ObligationState storage _obligationState = obligationState[id];
         require(msg.sender == feeClaimer, OnlyFeeClaimer());
-        require(_obligationState.created, ObligationNotCreated());
+        require(_obligationState.tickSpacing > 0, ObligationNotCreated());
 
         _obligationState.continuousFeeCredit -= UtilsLib.toUint128(amount);
         _obligationState.totalUnits -= UtilsLib.toUint128(amount);
@@ -317,6 +341,8 @@ contract Midnight is IMidnight {
         require(offer.maker != taker, SelfTake());
         require(isAuthorized[offer.maker][offer.ratifier], RatifierUnauthorized());
         require(IRatifier(offer.ratifier).isRatified(offer, ratifierData) == CALLBACK_SUCCESS, RatifierFail());
+
+        require(offer.tick % _obligationState.tickSpacing == 0, TickNotAccessible());
 
         (address buyer, address seller) = offer.buy ? (offer.maker, taker) : (taker, offer.maker);
 
@@ -699,7 +725,7 @@ contract Midnight is IMidnight {
     /// @dev Returns the obligation id and creates the obligation if it doesn't exist yet.
     function touchObligation(Obligation memory obligation) public returns (bytes32) {
         bytes32 id = toId(obligation);
-        if (!obligationState[id].created) {
+        if (obligationState[id].tickSpacing == 0) {
             require(obligation.maturity <= block.timestamp + 100 * 365 days, MaturityTooFar());
             require(obligation.collateralParams.length > 0, NoCollateralParams());
             require(obligation.collateralParams.length <= MAX_COLLATERALS, TooManyCollateralParams());
@@ -718,7 +744,7 @@ contract Midnight is IMidnight {
             }
 
             ObligationState storage _obligationState = obligationState[id];
-            _obligationState.created = true;
+            _obligationState.tickSpacing = DEFAULT_TICK_SPACING;
             uint16[7] memory _defaultTradingFeeCbp = defaultTradingFeeCbp[obligation.loanToken];
             _obligationState.tradingFeeCbp0 = _defaultTradingFeeCbp[0];
             _obligationState.tradingFeeCbp1 = _defaultTradingFeeCbp[1];
@@ -767,7 +793,7 @@ contract Midnight is IMidnight {
     /// @dev Returns the new credit, new pending fee, and accrued fee after having updated the position.
     function updatePosition(Obligation memory obligation, address user) external returns (uint128, uint128, uint128) {
         bytes32 id = toId(obligation);
-        require(obligationState[id].created, ObligationNotCreated());
+        require(obligationState[id].tickSpacing > 0, ObligationNotCreated());
         return _updatePosition(obligation, id, user);
     }
 
@@ -820,7 +846,7 @@ contract Midnight is IMidnight {
     /// @dev Reverts if the id is not a valid id of a touched obligation.
     /// @dev Returns the obligation corresponding to the given id.
     function toObligation(bytes32 id) external view returns (Obligation memory) {
-        require(obligationState[id].created, ObligationNotCreated());
+        require(obligationState[id].tickSpacing > 0, ObligationNotCreated());
         address create2Address = address(uint160(uint256(id)));
         return abi.decode(create2Address.code, (Obligation));
     }
@@ -841,8 +867,8 @@ contract Midnight is IMidnight {
         return obligationState[id].lossFactor;
     }
 
-    function obligationCreated(bytes32 id) external view returns (bool) {
-        return obligationState[id].created;
+    function tickSpacing(bytes32 id) external view returns (uint8) {
+        return obligationState[id].tickSpacing;
     }
 
     function withdrawable(bytes32 id) external view returns (uint256) {
@@ -907,7 +933,7 @@ contract Midnight is IMidnight {
     /// @dev Returns the trading fee using piecewise linear interpolation between breakpoints.
     function tradingFee(bytes32 id, uint256 timeToMaturity) public view returns (uint256) {
         ObligationState storage _obligationState = obligationState[id];
-        require(_obligationState.created, ObligationNotCreated());
+        require(_obligationState.tickSpacing > 0, ObligationNotCreated());
 
         if (timeToMaturity >= 360 days) return _obligationState.tradingFeeCbp6 * CBP;
 

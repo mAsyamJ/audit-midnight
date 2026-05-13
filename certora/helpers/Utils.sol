@@ -2,8 +2,7 @@
 // Copyright (c) 2025 Morpho Association
 pragma solidity ^0.8.0;
 
-import {Offer} from "../../src/interfaces/IMidnight.sol";
-import {Obligation} from "../../src/interfaces/IMidnight.sol";
+import {Offer, Obligation} from "../../src/interfaces/IMidnight.sol";
 import {UtilsLib} from "../../src/libraries/UtilsLib.sol";
 import {
     CALLBACK_SUCCESS,

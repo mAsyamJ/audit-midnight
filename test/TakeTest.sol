@@ -7,8 +7,8 @@ import {IEcrecoverRatifier, Signature} from "../src/ratifiers/interfaces/IEcreco
 import {Midnight} from "../src/Midnight.sol";
 import {WAD, CALLBACK_SUCCESS} from "../src/libraries/ConstantsLib.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
-import {HashLib} from "../src/ratifiers/libraries/HashLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
+import {HashLib} from "../src/ratifiers/libraries/HashLib.sol";
 import {IBuyCallback, ISellCallback} from "../src/interfaces/ICallbacks.sol";
 import {IRatifier} from "../src/interfaces/IRatifier.sol";
 import {IdLib} from "../src/libraries/IdLib.sol";
@@ -54,7 +54,8 @@ contract TakeTest is BaseTest {
         obligation.collateralParams = sortCollateralParams(obligation.collateralParams);
         obligation.rcfThreshold = 0;
 
-        id = toId(obligation);
+        id = midnight.touchObligation(obligation);
+        midnight.setObligationTickSpacing(id, 1);
 
         lenderOffer.buy = true;
         lenderOffer.maker = lender;
@@ -139,7 +140,7 @@ contract TakeTest is BaseTest {
 
     function testBuy2(uint256 units, uint256 tick, uint256 otherLenderUnits) public {
         units = bound(units, 0, maxAssets);
-        tick = bound(tick, 0, 600);
+        tick = bound(tick, 0, MAX_TICK);
         uint256 price = TickLib.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         uint256 buyerAssets = units.mulDivDown(price, WAD);
@@ -163,7 +164,7 @@ contract TakeTest is BaseTest {
 
     function testSell2(uint256 units, uint256 tick, uint256 otherLenderUnits) public {
         units = bound(units, 0, maxAssets);
-        tick = bound(tick, 0, 600);
+        tick = bound(tick, 0, MAX_TICK);
         uint256 price = TickLib.tickToPrice(tick);
         vm.assume(price > 0.01 ether);
         uint256 buyerAssets = units.mulDivDown(price, WAD);
@@ -209,7 +210,7 @@ contract TakeTest is BaseTest {
 
     function testBuy3(uint256 units, uint256 tick, uint256 existingUnits) public {
         units = bound(units, 0, maxAssets);
-        tick = bound(tick, 0, 600);
+        tick = bound(tick, 0, MAX_TICK);
         existingUnits = bound(existingUnits, units, max(units, maxAssets));
         setupOtherUsers(obligation, existingUnits);
         uint256 otherBorrowerDebt = midnight.debtOf(id, otherBorrower);
@@ -229,7 +230,7 @@ contract TakeTest is BaseTest {
 
     function testSell3(uint256 units, uint256 tick, uint256 existingUnits) public {
         units = bound(units, 0, maxAssets);
-        tick = bound(tick, 0, 600);
+        tick = bound(tick, 0, MAX_TICK);
         existingUnits = bound(existingUnits, units, max(units, maxAssets));
         setupOtherUsers(obligation, existingUnits);
         uint256 otherBorrowerDebt = midnight.debtOf(id, otherBorrower);
@@ -614,8 +615,8 @@ contract TakeTest is BaseTest {
     // address(this) makes an arbitrage for 2 crossed offers.
     function testMatch(uint256 units, uint256 tick1, uint256 tick2) public {
         units = bound(units, 1, maxAssets);
-        tick1 = bound(tick1, 600, MAX_TICK);
-        tick2 = bound(tick2, 600, MAX_TICK);
+        tick1 = bound(tick1, MAX_TICK / 4, MAX_TICK);
+        tick2 = bound(tick2, MAX_TICK / 4, MAX_TICK);
         uint256 price1 = TickLib.tickToPrice(tick1);
         uint256 price2 = TickLib.tickToPrice(tick2);
         vm.assume(price1 > price2);
@@ -640,8 +641,8 @@ contract TakeTest is BaseTest {
     // address(this) makes an arbitrage for 2 crossed offers.
     function testMatchInverse(uint256 units, uint256 tick1, uint256 tick2) public {
         units = bound(units, 1, maxAssets);
-        tick1 = bound(tick1, 600, MAX_TICK);
-        tick2 = bound(tick2, 600, MAX_TICK);
+        tick1 = bound(tick1, MAX_TICK / 4, MAX_TICK);
+        tick2 = bound(tick2, MAX_TICK / 4, MAX_TICK);
         uint256 price1 = TickLib.tickToPrice(tick1);
         uint256 price2 = TickLib.tickToPrice(tick2);
         vm.assume(price2 > price1);
@@ -862,7 +863,7 @@ contract TakeTest is BaseTest {
 
         lenderOffer.maxUnits = 0;
         lenderOffer.maxAssets = 1;
-        lenderOffer.tick = MAX_TICK - 1; // offerPrice < WAD
+        lenderOffer.tick = MAX_TICK - 16; // offerPrice < WAD
 
         // Fully consume the offer before the take.
         vm.prank(lender);

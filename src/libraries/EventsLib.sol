@@ -10,6 +10,8 @@ library EventsLib {
     event Constructor(address indexed roleSetter, uint256 initialChainId);
     event SetRoleSetter(address indexed roleSetter);
     event SetFeeSetter(address indexed feeSetter);
+    event SetTickSpacingSetter(address indexed tickSpacingSetter);
+    event SetObligationTickSpacing(bytes32 indexed id_, uint256 newTickSpacing);
     event SetObligationTradingFee(bytes32 indexed id_, uint256 indexed index, uint256 newTradingFee);
     event SetDefaultTradingFee(address indexed loanToken, uint256 indexed index, uint256 newTradingFee);
     event SetFeeClaimer(address indexed feeClaimer);

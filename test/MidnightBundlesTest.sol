@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Obligation, Offer, CollateralParams} from "../src/interfaces/IMidnight.sol";
 import {UtilsLib} from "../src/libraries/UtilsLib.sol";
 import {TickLib, MAX_TICK} from "../src/libraries/TickLib.sol";
-import {WAD, ORACLE_PRICE_SCALE} from "../src/libraries/ConstantsLib.sol";
+import {WAD, ORACLE_PRICE_SCALE, DEFAULT_TICK_SPACING} from "../src/libraries/ConstantsLib.sol";
 import {ERC20} from "./erc20s/ERC20.sol";
 import {ERC20Permit} from "./erc20s/ERC20Permit.sol";
 import {Oracle} from "./helpers/Oracle.sol";
@@ -484,25 +484,27 @@ contract MidnightBundlesTest is BaseTest {
         offers[0].maxUnits = offerUnits0;
         offers[1].maxUnits = offerUnits1;
 
-        uint256 price = TickLib.tickToPrice(MAX_TICK);
-        midnight.touchObligation(obligation);
-        uint256 _tradingFee = midnight.tradingFee(id, obligation.maturity - block.timestamp);
-        uint256 units = targetSellerAssets.mulDivUp(WAD, price - _tradingFee);
-        uint256 fromOffer0 = UtilsLib.min(units, offerUnits0);
-
-        // Extra collateral headroom for the potential extra unit of debt.
-        collateralize(obligation, borrower, units + 1);
+        uint256 fromOffer0;
+        uint256 neededFromOffer1;
+        {
+            uint256 price = TickLib.tickToPrice(MAX_TICK);
+            midnight.touchObligation(obligation);
+            uint256 sellerPrice = price - midnight.tradingFee(id, obligation.maturity - block.timestamp);
+            uint256 units = targetSellerAssets.mulDivUp(WAD, sellerPrice);
+            fromOffer0 = UtilsLib.min(units, offerUnits0);
+            // Extra collateral headroom for the potential extra unit of debt.
+            collateralize(obligation, borrower, units + 1);
+            // Mirror the bundler's exact fill logic to derive units needed from offer1.
+            // When offer0 fills everything, filledSellerAssets0 >= targetSellerAssets, zeroFloorSub → 0, so
+            // neededFromOffer1 = 0.
+            uint256 filledSellerAssets0 = fromOffer0.mulDivDown(sellerPrice, WAD);
+            neededFromOffer1 = targetSellerAssets.zeroFloorSub(filledSellerAssets0).mulDivUp(WAD, sellerPrice);
+        }
 
         Take[] memory takes = new Take[](2);
         takes[0] = Take({offer: offers[0], units: offerUnits0, ratifierData: merkleRatifierData([offers[0]])});
         takes[1] = Take({offer: offers[1], units: offerUnits1, ratifierData: merkleRatifierData([offers[1]])});
 
-        // Mirror the bundler's exact fill logic to derive units needed from offer1.
-        // When offer0 fills everything, filledSellerAssets0 >= targetSellerAssets, zeroFloorSub → 0, so
-        // neededFromOffer1 = 0.
-        uint256 sellerPrice = price - _tradingFee;
-        uint256 filledSellerAssets0 = fromOffer0.mulDivDown(sellerPrice, WAD);
-        uint256 neededFromOffer1 = targetSellerAssets.zeroFloorSub(filledSellerAssets0).mulDivUp(WAD, sellerPrice);
         if (offerUnits1 >= neededFromOffer1) {
             vm.prank(borrower);
             midnightBundles.supplyCollateralAndSellWithAssetsTarget(
@@ -1198,7 +1200,7 @@ contract MidnightBundlesTest is BaseTest {
     // Average price.
 
     function testBuyUnitsTargetAveragePriceExceeded(uint256 tick) public {
-        tick = bound(tick, 1, MAX_TICK);
+        tick = bound(tick, 1, MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
         uint256 units = 100e18;
 
         offers[0].buy = false;
@@ -1233,7 +1235,7 @@ contract MidnightBundlesTest is BaseTest {
     }
 
     function testSellUnitsTargetAveragePriceTooLow(uint256 tick) public {
-        tick = bound(tick, 1, MAX_TICK);
+        tick = bound(tick, 1, MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
         uint256 units = 100e18;
 
         offers[0].maxUnits = units;
@@ -1265,7 +1267,7 @@ contract MidnightBundlesTest is BaseTest {
     }
 
     function testBuyBuyerAssetsTargetAveragePriceExceeded(uint256 tick) public {
-        tick = bound(tick, 1, MAX_TICK);
+        tick = bound(tick, 1, MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
         uint256 units = 100e18;
 
         offers[0].buy = false;
@@ -1300,7 +1302,7 @@ contract MidnightBundlesTest is BaseTest {
     }
 
     function testSellSellerAssetsTargetAveragePriceTooLow(uint256 tick) public {
-        tick = bound(tick, 1, MAX_TICK);
+        tick = bound(tick, 1, MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
         uint256 units = 100e18;
 
         offers[0].maxUnits = units;
