@@ -331,12 +331,12 @@ contract Midnight is IMidnight {
     /// @dev Returns buyerAssets and sellerAssets.
     function take(
         Offer memory offer,
+        bytes memory ratifierData,
         uint256 units,
         address taker,
         address receiverIfTakerIsSeller,
         address takerCallback,
-        bytes memory takerCallbackData,
-        bytes memory ratifierData
+        bytes memory takerCallbackData
     ) external returns (uint256, uint256) {
         require(taker == msg.sender || isAuthorized[taker][msg.sender], TakerUnauthorized());
         bytes32 id = touchMarket(offer.market);
@@ -419,20 +419,20 @@ contract Midnight is IMidnight {
         emit EventsLib.Take(
             msg.sender,
             id,
-            offer.maker,
+            units,
             taker,
+            offer.maker,
             offer.buy,
+            offer.group,
             buyerAssets,
             sellerAssets,
-            units,
-            payer,
-            receiver,
-            offer.group,
             newConsumed,
             buyerPendingFeeIncrease,
             sellerPendingFeeDecrease,
             buyerCreditIncrease,
-            sellerCreditDecrease
+            sellerCreditDecrease,
+            receiver,
+            payer
         );
 
         bool wasLocked = UtilsLib.tExchange(LIQUIDATION_LOCK_SLOT, id, seller, true);
@@ -682,11 +682,11 @@ contract Midnight is IMidnight {
             repaidUnits,
             borrower,
             healthyPath,
+            receiver,
+            payer,
             badDebt,
             _marketState.lossFactor,
-            _marketState.continuousFeeCredit,
-            payer,
-            receiver
+            _marketState.continuousFeeCredit
         );
 
         SafeTransferLib.safeTransfer(market.collateralParams[collateralIndex].token, receiver, seizedAssets);
@@ -695,16 +695,16 @@ contract Midnight is IMidnight {
             require(
                 ILiquidateCallback(callback)
                     .onLiquidate(
+                        msg.sender,
                         id,
                         market,
                         collateralIndex,
                         seizedAssets,
                         repaidUnits,
-                        badDebt,
-                        msg.sender,
                         borrower,
                         receiver,
-                        data
+                        data,
+                        badDebt
                     ) == CALLBACK_SUCCESS,
                 WrongLiquidateCallbackReturnValue()
             );
@@ -720,14 +720,14 @@ contract Midnight is IMidnight {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], Unauthorized());
         require(amount >= consumed[onBehalf][group], AlreadyConsumed());
         consumed[onBehalf][group] = amount;
-        emit EventsLib.SetConsumed(msg.sender, onBehalf, group, amount);
+        emit EventsLib.SetConsumed(msg.sender, group, amount, onBehalf);
     }
 
     /// @dev See AUTHORIZATIONS section above.
     function setIsAuthorized(address authorized, bool newIsAuthorized, address onBehalf) external {
         require(onBehalf == msg.sender || isAuthorized[onBehalf][msg.sender], Unauthorized());
         isAuthorized[onBehalf][authorized] = newIsAuthorized;
-        emit EventsLib.SetIsAuthorized(msg.sender, onBehalf, authorized, newIsAuthorized);
+        emit EventsLib.SetIsAuthorized(msg.sender, authorized, newIsAuthorized, onBehalf);
     }
 
     function flashLoan(address[] calldata tokens, uint256[] calldata assets, address callback, bytes calldata data)
@@ -739,7 +739,7 @@ contract Midnight is IMidnight {
             SafeTransferLib.safeTransfer(tokens[i], callback, assets[i]);
         }
         require(
-            IFlashLoanCallback(callback).onFlashLoan(tokens, assets, msg.sender, data) == CALLBACK_SUCCESS,
+            IFlashLoanCallback(callback).onFlashLoan(msg.sender, tokens, assets, data) == CALLBACK_SUCCESS,
             WrongFlashLoanCallbackReturnValue()
         );
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -781,7 +781,7 @@ contract Midnight is IMidnight {
             _marketState.continuousFee = defaultContinuousFee[market.loanToken];
             IdLib.storeInCode(market, INITIAL_CHAIN_ID);
 
-            emit EventsLib.MarketCreated(id, market);
+            emit EventsLib.MarketCreated(market, id);
         }
         return id;
     }
