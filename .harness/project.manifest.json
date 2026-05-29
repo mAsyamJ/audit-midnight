@@ -1,0 +1,47 @@
+{
+  "schema": "agent-harness.project.v1",
+  "project": {
+    "name": "midnight-audit",
+    "type": "solidity-security-research",
+    "root": ".",
+    "description": "Security research and formal verification workspace for Morpho Midnight (Foundry + Certora)."
+  },
+  "harness": {
+    "mode": "embedded",
+    "harnessRootEnv": "AGENT_HARNESS_HOME",
+    "defaultHarnessRoot": "../../.."
+  },
+  "kanban": {
+    "board": "midnight-audit",
+    "workspace": "dir:${projectRoot}"
+  },
+  "paths": {
+    "product": ["src", "test", "certora", "audits", "research"],
+    "docs": ["certora", "audits", "test", "research"],
+    "scripts": [],
+    "tasks": ".harness/tasks",
+    "state": ".harness/state"
+  },
+  "commands": {
+    "build": "forge build --force",
+    "test": "forge test",
+    "smoke": "forge build --force",
+    "verify": "forge build --force && forge test"
+  },
+  "agents": {
+    "enabled": ["orchestrator", "security", "qa", "docs-curator"]
+  },
+  "skills": {
+    "enabled": [
+      "systematic-debugging",
+      "tdd",
+      "hermes-kiro-runtime"
+    ]
+  },
+  "rules": {
+    "noSecrets": true,
+    "requireTaskFile": true,
+    "requireVerification": true,
+    "archiveBeforeDelete": true
+  }
+}

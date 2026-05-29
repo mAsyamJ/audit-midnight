@@ -1,0 +1,45 @@
+'forge clean' running (wd: /home/asyam/dev/Project/agent-harness/projects/security-researcher/midnight-audit)
+'forge config --json' running
+'forge build --build-info --skip ./test/** ./script/** --force' running (wd: /home/asyam/dev/Project/agent-harness/projects/security-researcher/midnight-audit)
+INFO:Printers:
+Compiled with Foundry
+Total number of contracts in source files: 30
+Source lines of code (SLOC) in source files: 1755
+Number of  assembly lines: 0
+Number of optimization issues: 0
+Number of informational issues: 33
+Number of low issues: 57
+Number of medium issues: 26
+Number of high issues: 1
+
++---------------------+-------------+------+------------+--------------+--------------------+
+| Name                | # functions | ERCS | ERC20 info | Complex code | Features           |
++---------------------+-------------+------+------------+--------------+--------------------+
+| Midnight            | 101         |      |            | Yes          | Delegatecall       |
+|                     |             |      |            |              | Assembly           |
+| IBuyCallback        | 1           |      |            | No           |                    |
+| ISellCallback       | 1           |      |            | No           |                    |
+| ILiquidateCallback  | 1           |      |            | No           |                    |
+| IRepayCallback      | 1           |      |            | No           |                    |
+| IFlashLoanCallback  | 1           |      |            | No           |                    |
+| IERC20              | 5           |      |            | No           |                    |
+| IEnterGate          | 2           |      |            | No           |                    |
+| ILiquidatorGate     | 1           |      |            | No           |                    |
+| IOracle             | 1           |      |            | No           |                    |
+| EventsLib           | 0           |      |            | No           |                    |
+| IdLib               | 3           |      |            | No           | Assembly           |
+| SafeTransferLib     | 2           |      |            | No           | Assembly           |
+| TickLib             | 4           |      |            | No           |                    |
+| UtilsLib            | 12          |      |            | No           | Assembly           |
+| ConsumableUnitsLib  | 1           |      |            | No           |                    |
+| EcrecoverAuthorizer | 5           |      |            | No           | Ecrecover          |
+| MidnightBundles     | 18          |      |            | No           | Tokens interaction |
+|                     |             |      |            |              | Assembly           |
+| TakeAmountsLib      | 2           |      |            | No           |                    |
+| IERC20Permit        | 1           |      |            | No           |                    |
+| IPermit2            | 1           |      |            | No           |                    |
+| EcrecoverRatifier   | 7           |      |            | No           | Ecrecover          |
+| SetterRatifier      | 7           |      |            | No           |                    |
+| HashLib             | 6           |      |            | No           | Assembly           |
++---------------------+-------------+------+------------+--------------+--------------------+
+INFO:Slither:. analyzed (30 contracts)
