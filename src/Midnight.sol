@@ -388,6 +388,7 @@ contract Midnight is IMidnight {
             ? UtilsLib.toUint128(sellerPos.pendingFee.mulDivUp(sellerCreditDecrease, sellerPos.credit))
             : 0;
 
+        require(block.timestamp <= offer.market.maturity || sellerDebtIncrease == 0, CannotIncreaseDebtPostMaturity());
         require(
             !offer.reduceOnly || (offer.buy ? buyerCreditIncrease == 0 : sellerDebtIncrease == 0),
             MakerCreditOrDebtIncreased()
@@ -472,11 +473,7 @@ contract Midnight is IMidnight {
             );
         }
         if (!wasLocked) UtilsLib.tExchange(LIQUIDATION_LOCK_SLOT, id, seller, false);
-        require(
-            position[id][seller].debt == 0 || liquidationLocked(id, seller)
-                || (block.timestamp <= offer.market.maturity && isHealthy(offer.market, id, seller)),
-            SellerIsLiquidatable()
-        );
+        require(liquidationLocked(id, seller) || isHealthy(offer.market, id, seller), SellerIsLiquidatable());
 
         return (buyerAssets, sellerAssets);
     }
