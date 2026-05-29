@@ -1,0 +1,130 @@
+{
+  "nodes": [
+    "Midnight",
+    "Market",
+    "Offer",
+    "Position",
+    "MarketState",
+    "Ratifier",
+    "Gate",
+    "Oracle",
+    "Callback",
+    "MidnightBundles",
+    "LoanToken",
+    "CollateralToken",
+    "Liquidator",
+    "FeeRoles",
+    "CertoraSpecs",
+    "Tests"
+  ],
+  "edges": [
+    {
+      "from": "Midnight.touchMarket",
+      "relation": "creates_if_absent",
+      "to": "MarketState"
+    },
+    {
+      "from": "Market",
+      "relation": "identified_by",
+      "to": "toId(Market, INITIAL_CHAIN_ID)"
+    },
+    {
+      "from": "Offer",
+      "relation": "embeds",
+      "to": "Market"
+    },
+    {
+      "from": "Offer",
+      "relation": "constrained_by",
+      "to": "maxUnits_or_maxAssets"
+    },
+    {
+      "from": "Offer",
+      "relation": "authenticated_by",
+      "to": "Ratifier.isRatified"
+    },
+    {
+      "from": "EcrecoverRatifier",
+      "relation": "validates",
+      "to": "EIP712Signature_and_MerkleProof"
+    },
+    {
+      "from": "SetterRatifier",
+      "relation": "validates",
+      "to": "onchainRootFlag_and_MerkleProof"
+    },
+    {
+      "from": "take",
+      "relation": "mutates",
+      "to": "consumed[maker][group]"
+    },
+    {
+      "from": "take",
+      "relation": "mutates",
+      "to": "position[id][buyer]"
+    },
+    {
+      "from": "take",
+      "relation": "mutates",
+      "to": "position[id][seller]"
+    },
+    {
+      "from": "take",
+      "relation": "calls_external",
+      "to": "buyerCallback"
+    },
+    {
+      "from": "take",
+      "relation": "calls_external",
+      "to": "sellerCallback"
+    },
+    {
+      "from": "withdrawCollateral",
+      "relation": "requires",
+      "to": "isHealthy"
+    },
+    {
+      "from": "isHealthy",
+      "relation": "reads",
+      "to": "Oracle.price"
+    },
+    {
+      "from": "liquidate",
+      "relation": "reads",
+      "to": "activatedCollateralOracles"
+    },
+    {
+      "from": "liquidate",
+      "relation": "mutates",
+      "to": "badDebt_lossFactor_totalUnits_withdrawable"
+    },
+    {
+      "from": "MidnightBundles",
+      "relation": "depends_on",
+      "to": "MidnightAuthorization"
+    },
+    {
+      "from": "MidnightBundles",
+      "relation": "catches_and_skips",
+      "to": "failedTake"
+    },
+    {
+      "from": "flashLoan",
+      "relation": "calls_external",
+      "to": "callback"
+    },
+    {
+      "from": "feeSetter",
+      "relation": "mutates",
+      "to": "settlementFee_continuousFee"
+    }
+  ],
+  "priority_hypotheses": [
+    "take callback state-before-transfer verification",
+    "liquidation zero-input bad-debt accounting",
+    "oracle liveness and collateral activation",
+    "assets/units cap rounding and settlement fee changes",
+    "bundle catch-and-skip target fill/referral fee behavior",
+    "authorization and ratifier root scope"
+  ]
+}

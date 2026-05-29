@@ -86,3 +86,12 @@ Spend some time on P2 and P3 issues too.
 
 Try to be as concise as possible in your output.
 When relevant, include in your comment directly the fix you would apply (as a suggestion markdown block).
+
+
+<claude-mem-context>
+# Memory Context
+
+# [midnight-audit] recent context, 2026-05-30 2:24am GMT+7
+
+No previous sessions found.
+</claude-mem-context>
