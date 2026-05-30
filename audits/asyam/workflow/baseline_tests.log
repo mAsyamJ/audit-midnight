@@ -1,0 +1,637 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/asyam/invariant/Invariant_BundleNoCrossCallBalanceLeak.t.sol:InvariantBundleNoCrossCallBalanceLeakTest
+[PASS] testInvariant_BundlerLoanBalanceZeroAfterBuyBundle() (gas: 493248)
+[PASS] testInvariant_BundlerLoanBalanceZeroAfterSellBundle() (gas: 469130)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 5.43ms (1.94ms CPU time)
+
+Ran 1 test for test/FrontendSignatureTest.sol:FrontendSignatureTest
+[PASS] testFrontendSignatureVerification() (gas: 38159)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 10.15ms (2.02ms CPU time)
+
+Ran 1 test for test/asyam/invariant/Invariant_ConsumedCaps.t.sol:InvariantConsumedCapsTest
+[PASS] testInvariant_ConsumedMonotonicAndWithinCap() (gas: 469474)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 17.84ms (2.14ms CPU time)
+
+Ran 3 tests for test/MulticallTest.sol:MulticallTest
+[PASS] testMulticallEmpty() (gas: 6866)
+[PASS] testMulticallFailing() (gas: 25427)
+[PASS] testMulticallSuccess() (gas: 36643)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 6.10ms (718.27µs CPU time)
+
+Ran 5 tests for test/MaxAmountsTest.sol:MaxAmountsTest
+[PASS] testMaxAmountIsUint128Max() (gas: 448)
+[PASS] testSupplyCollateralAboveMaxAmountReverts() (gas: 325034)
+[PASS] testSupplyCollateralMaxAmount() (gas: 384292)
+[PASS] testTakeAboveMaxAmountReverts() (gas: 616492)
+[PASS] testTakeMaxAmount() (gas: 695572)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 28.85ms (25.72ms CPU time)
+
+Ran 3 tests for test/asyam/poc/PoC_DeepValidationQueues.t.sol:PoCDeepValidationQueuesTest
+[PASS] testPoC_BuyUnitsReferralBudgetBoundaryRevertsAtomically() (gas: 781789)
+[PASS] testPoC_ReduceOnlyBuyCannotCrossDebtIntoOneWeiCredit() (gas: 882320)
+[PASS] testPoC_SameTokenRepayCallbackKeepsLenderClaimFunded() (gas: 938324)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 39.79ms (16.42ms CPU time)
+
+Ran 2 tests for test/asyam/invariant/Invariant_LiquidationHealth.t.sol:InvariantLiquidationHealthTest
+[PASS] testInvariant_HealthyBorrowerLiquidationReverts() (gas: 431988)
+[PASS] testInvariant_UnhealthyBorrowerCanBeLiquidated() (gas: 661783)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 42.11ms (32.07ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol:PoCOfferConsumedCapRoundingTest
+[PASS] testPoC_GroupedMaxAssetsCapNotExceededAcrossTwoOffers() (gas: 423975)
+[PASS] testPoC_GroupedMaxUnitsCapNotExceeded() (gas: 435686)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 13.12ms (3.09ms CPU time)
+
+Ran 1 test for test/asyamFindings/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
+[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22556)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.26ms (167.94µs CPU time)
+
+Ran 1 test for test/asyam/invariant/Invariant_MarketAccounting.t.sol:InvariantMarketAccountingTest
+[PASS] testInvariant_TotalUnitsCoversWithdrawableAfterTakeRepay() (gas: 470511)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 19.47ms (1.33ms CPU time)
+
+Ran 1 test for test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 319497)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.21ms (234.96µs CPU time)
+
+Ran 1 test for test/asyam/poc/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
+[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22615)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 8.93ms (128.15µs CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
+[PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 107840)
+[PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 42712)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 5.46ms (2.54ms CPU time)
+
+Ran 2 tests for test/asyamFindings/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
+[PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 143406)
+Logs:
+  
+  ==============================================================
+  PoC 2: EcrecoverAuthorizer accepts high-s malleated signature
+  ==============================================================
+  [1] Allowing EcrecoverAuthorizer to manage borrower authorization
+      borrower / authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      ecrecoverAuthorizer: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+      Midnight says authorizer is authorized: true
+  [2] Building Authorization struct
+      authorization.authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      authorization.authorized: 0xfe6F73da54CC24711cA1224AfA2814C9b630eD09
+      authorization.isAuthorized: true
+      authorization.nonce: 0
+      authorization.deadline: 86401
+      current block.timestamp: 1
+  [3] Computing EIP-712 struct hash
+  0xf3430e9190ed8aeca966e54b0ff910ddb7b0b7bd83dae9634c29cd28998543d3
+  [4] Computing EIP-712 domain separator
+      chainid: 31337
+      verifying contract: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+  0xabbf8451b4874b035baec90f10a3026bb60623e5ba5ee5a62ef42d549ee1a290
+  [5] Computing final digest
+  0x38190774115cfac003e0ae5c084f46061466b33f507be334b242c0b316adc786
+  [6] Creating canonical low-s signature from borrower private key
+      original.v: 27
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0x3e35f9c6dc88bd106eb3900d65aba21cc8336b75ed19174736156ea957b46f8a
+      original.s uint: 28138763402730516531293648934097593259886728748158788890074755960446007930762
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [7] Malleating authorization signature
+      malleated.v: 28
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0xc1ca0639237742ef914c6ff29a545de1f27b7170c22f88f489bcefe37881d1b7
+      malleated.s uint: 87653325834585678892277336074590314592950835530916115492530407181072153563575
+  [8] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [9] State before submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): false
+      authorizer nonce before: 0
+  [10] Calling EcrecoverAuthorizer.setIsAuthorized with high-s signature
+  [11] State after submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): true
+      authorizer nonce after: 1
+      expected nonce after: 1
+  [12] SUCCESS: Authorizer accepted a high-s malleated signature
+  ==============================================================
+  
+
+[PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 71955)
+Logs:
+  
+  ============================================================
+  PoC 1: EcrecoverRatifier accepts high-s malleated signature
+  ============================================================
+  [1] Creating signed offer
+      lender / maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.buy: true
+      offer.maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.ratifier: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+      offer.maxUnits: 1
+      offer.start: 1
+      offer.expiry: 86401
+      market.loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      market.maturity: 2592001
+      collateral token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      collateral oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+      collateral lltv: 915000000000000000
+      collateral maxLif: 1000000000000000000
+  [2] Hashing offer into ratifier root
+  0xebc986c3f15b3848e6e7503d5d6ef2f379aeb41dc3d73eacad90a01ab1fcbc08
+  [3] Creating canonical low-s signature from lender private key
+      original.v: 27
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0x287449b9327793d94002ea56d06876c69ee275e326f33a6b4398474d09f16bbc
+      original.s uint: 18297977023233203178790776205861945222158762035903146081925200542704012979132
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [4] Malleating signature
+      Formula: s' = secp256k1n - s
+      Formula: v' = 27 <-> 28
+      malleated.v: 28
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0xd78bb646cd886c26bffd15a92f9789381bcc6703885565d07c3a173fc644d585
+      malleated.s uint: 97494112214082992244780208802825962630678802243171758300679962598814148515205
+  [5] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [6] Encoding ratifierData with malleated signature
+      proof length: 0
+      ratifierData length: 224
+  [7] Calling EcrecoverRatifier.isRatified from Midnight address
+  [8] Ratifier result
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+      expected CALLBACK_SUCCESS:
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+  [9] SUCCESS: Ratifier accepted a high-s malleated signature
+  ============================================================
+  
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 24.56ms (11.26ms CPU time)
+
+Ran 1 test for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184201)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 13.41ms (361.24µs CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol:PoCTakeCallbackReentrancyTest
+[PASS] testPoC_DoubleTakeSameGroupRevertsAfterPartialFill() (gas: 430402)
+[PASS] testPoC_NestedTakeDuringBuyCallbackDoesNotCorruptConsumedOrProfitAttacker() (gas: 2760642)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 23.62ms (3.24ms CPU time)
+
+Ran 15 tests for test/UtilsLibTest.sol:UtilsLibTest
+[PASS] testAtMostOneNonZero(uint256,uint256) (runs: 256, μ: 1038, ~: 922)
+[PASS] testFuzzCountBits(uint128) (runs: 256, μ: 4678, ~: 4082)
+[PASS] testMin(uint256,uint256) (runs: 256, μ: 930, ~: 912)
+[PASS] testMulDivDown(uint256,uint256,uint256) (runs: 256, μ: 1627, ~: 1465)
+[PASS] testMulDivDownDivisionByZero(uint256,uint256) (runs: 256, μ: 5493, ~: 5388)
+[PASS] testMulDivDownOverflow(uint256,uint256,uint256) (runs: 256, μ: 5238, ~: 5377)
+[PASS] testMulDivUp(uint256,uint256,uint256) (runs: 256, μ: 1923, ~: 1793)
+[PASS] testMulDivUpDivisionByZero(uint256,uint256) (runs: 256, μ: 4680, ~: 4697)
+[PASS] testMulDivUpOverflow(uint256,uint256,uint256) (runs: 256, μ: 5871, ~: 6003)
+[PASS] testRcfBound() (gas: 11399)
+[PASS] testToUint128Overflow(uint256) (runs: 256, μ: 3594, ~: 3674)
+[PASS] testWExp() (gas: 44345)
+[PASS] testWExpIncreasingAtTicks() (gas: 2788183)
+[PASS] testWExpNonDecreasing() (gas: 1716309)
+[PASS] testZeroFloorSub(uint256,uint256) (runs: 256, μ: 963, ~: 858)
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 166.19ms (288.33ms CPU time)
+
+Ran 12 tests for test/SafeTransferLibTest.sol:SafeTransferLibTest
+[PASS] testSafeTransferFrom(address,address,uint256) (runs: 256, μ: 11177, ~: 11177)
+[PASS] testSafeTransferFromNoBoolean(address,address,uint256) (runs: 256, μ: 10825, ~: 10825)
+[PASS] testSafeTransferFromNoCode() (gas: 4699)
+[PASS] testSafeTransferFromReturnedFalse() (gas: 10804)
+[PASS] testSafeTransferFromReverted() (gas: 10642)
+[PASS] testSafeTransferFromRevertedNoReason() (gas: 10386)
+[PASS] testSafeTransferNoBoolean(address,uint256) (runs: 256, μ: 10989, ~: 10989)
+[PASS] testSafeTransferNoCode() (gas: 4980)
+[PASS] testSafeTransferNormal(address,uint256) (runs: 256, μ: 11363, ~: 11363)
+[PASS] testSafeTransferReturnedFalse() (gas: 10432)
+[PASS] testSafeTransferReverted() (gas: 10361)
+[PASS] testSafeTransferRevertedNoReason() (gas: 10040)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 140.78ms (219.78ms CPU time)
+
+Ran 6 tests for test/SetterRatifierTest.sol:SetterRatifierTest
+[PASS] testIsRatifiedAuthorizedSetterCanRatifyOnBehalf() (gas: 90608)
+[PASS] testIsRatifiedNotMidnight() (gas: 52169)
+[PASS] testIsRatifiedUsesLeafIndex() (gas: 74703)
+[PASS] testSetIsRootRatifiedMaker() (gas: 36839)
+[PASS] testSetIsRootRatifiedUnauthorizedOnBehalf() (gas: 19416)
+[PASS] testTakeAuthorizedSetterCanRatifyOnBehalf() (gas: 318092)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 8.69ms (1.56ms CPU time)
+
+Ran 6 tests for test/helpers/ERC20Test.sol:ERC20Test
+[PASS] testApprove(address,uint256) (runs: 256, μ: 32579, ~: 32579)
+[PASS] testTransfer(address,uint256) (runs: 256, μ: 189557, ~: 189553)
+[PASS] testTransferFrom(address,address,uint256) (runs: 256, μ: 210222, ~: 210209)
+[PASS] testTransferFromInsufficientAllowance(address,address,uint256) (runs: 256, μ: 172196, ~: 172181)
+[PASS] testTransferFromInsufficientBalance(address,address,uint256) (runs: 256, μ: 35406, ~: 35406)
+[PASS] testTransferInsufficientBalance(address,uint256) (runs: 256, μ: 11835, ~: 11835)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 713.66ms (1.18s CPU time)
+
+Ran 10 tests for test/HashLibTest.sol:HashLibTest
+[PASS] testCollateralParamsTypeHash() (gas: 458)
+[PASS] testHashMarketMatchesReference((address,(address,uint256,uint256,address)[],uint256,uint256,address,address)) (runs: 256, μ: 239498, ~: 243653)
+[PASS] testIsLeaf2Leaves(bytes32,bytes32) (runs: 256, μ: 1616, ~: 1632)
+[PASS] testIsLeaf4Leaves(bytes32,bytes32,bytes32,bytes32) (runs: 256, μ: 3219, ~: 3219)
+[PASS] testIsLeafRevertsWhenLeafIndexOutOfRange(bytes32,bytes32,bytes32) (runs: 256, μ: 3478, ~: 3478)
+[PASS] testIsLeafSingle(bytes32) (runs: 256, μ: 807, ~: 864)
+[PASS] testMarketTypeHash() (gas: 1212)
+[PASS] testOfferTreeTypeHashInvalidHeight(uint256) (runs: 256, μ: 3832, ~: 3824)
+[PASS] testOfferTreeTypeHashes() (gas: 116250)
+[PASS] testOfferTypeHash() (gas: 1821)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 761.22ms (845.85ms CPU time)
+
+Ran 14 tests for test/AuthorizationTest.sol:AuthorizationTest
+[PASS] testRepayAuthorization(address) (runs: 256, μ: 948142, ~: 948128)
+[PASS] testSetAuthorization() (gas: 33539)
+[PASS] testSetConsumedAuthorization(address,address) (runs: 256, μ: 69560, ~: 69560)
+[PASS] testSetIsAuthorizedAuthorization(address,address,address) (runs: 256, μ: 69025, ~: 69282)
+[PASS] testSupplyCollateralUnauthorized() (gas: 419924)
+[PASS] testTakeAuthorized() (gas: 722580)
+[PASS] testTakeSelf() (gas: 700190)
+[PASS] testTakeUnauthorized() (gas: 568203)
+[PASS] testWithdrawAuthorized() (gas: 956476)
+[PASS] testWithdrawCollateralAuthorized() (gas: 438806)
+[PASS] testWithdrawCollateralSelf() (gas: 414325)
+[PASS] testWithdrawCollateralUnauthorized() (gas: 394340)
+[PASS] testWithdrawSelf() (gas: 932208)
+[PASS] testWithdrawUnauthorized() (gas: 905301)
+Suite result: ok. 14 passed; 0 failed; 0 skipped; finished in 867.22ms (1.01s CPU time)
+
+Ran 9 tests for test/asyamFindings/Validation_LiveQueues.t.sol:ValidationLiveQueuesTest
+[PASS] testFuzzValidation_BuyUnitsReferralFeeBudgetBoundary(uint96,uint64) (runs: 256, μ: 1028151, ~: 1028204)
+[PASS] testValidation_BuyBundleTemporaryBalanceCannotBeStolenBySellerCallback() (gas: 1103702)
+[PASS] testValidation_ExtremeReferralExactFillLeavesNoBundlerResidual() (gas: 804792)
+[PASS] testValidation_NestedSellBundleCannotSpendOuterAccumulatedProceeds() (gas: 2452440)
+[PASS] testValidation_NestedTakeDuringBuyCallbackDoesNotBypassSharedCap() (gas: 1918263)
+[PASS] testValidation_ReduceOnlyBuyOfferCannotIncreaseMakerCreditByOneWei() (gas: 1226428)
+[PASS] testValidation_SameLoanAndCollateralTokenLeverageLoopCanFullyUnwind() (gas: 1134568)
+[PASS] testValidation_SameLoanAndCollateralTokenLiquidationCanRepayFromSeizedCollateral() (gas: 994399)
+[PASS] testValidation_SameLoanAndCollateralTokenRepayFromCollateralIsSolvent() (gas: 1145718)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 909.68ms (914.48ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol:PoCBundleTemporaryBalanceReentrancyTest
+[PASS] testPoC_BundlerBalanceNotStealableViaMaliciousBuyCallback() (gas: 1025617)
+[PASS] testPoC_BundlerDoesNotRetainLoanTokensAfterSellBundle() (gas: 469334)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.07ms (3.18ms CPU time)
+
+Ran 2 tests for test/FlashloanTest.sol:FlashLoanTest
+[PASS] testFlashLoan(uint256,uint256,uint256,bytes,address) (runs: 256, μ: 840133, ~: 836498)
+[PASS] testFlashLoanNotReimbursed(uint256,uint256,uint256,bytes) (runs: 256, μ: 840845, ~: 834903)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 1.21s (1.77s CPU time)
+
+Ran 3 tests for test/IdLibTest.sol:IdLibTest
+[PASS] testToIdIsInjectiveInChainId((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),uint256,uint256,address) (runs: 256, μ: 234480, ~: 213099)
+[PASS] testToIdIsInjectiveInMarket((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),(address,(address,uint256,uint256,address)[],uint256,uint256,address,address),uint256,address) (runs: 256, μ: 437758, ~: 402516)
+[PASS] testToIdIsInjectiveInMidnight((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),uint256,address,address) (runs: 256, μ: 219812, ~: 212307)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 1.25s (2.12s CPU time)
+
+Ran 25 tests for test/SettersTest.sol:SettersTest
+[PASS] testInitialRoleSetter() (gas: 8007)
+[PASS] testMaxSettlementFeeConstants() (gas: 3262)
+[PASS] testSetContinuousFeeOnlyFeeSetter(address) (runs: 256, μ: 174690, ~: 174690)
+[PASS] testSetContinuousFeeSuccess(uint256,uint256) (runs: 256, μ: 199535, ~: 199825)
+[PASS] testSetContinuousFeeTooHigh(uint256) (runs: 256, μ: 173862, ~: 173749)
+[PASS] testSetDefaultSettlementFeeInvalidIndex(address) (runs: 256, μ: 11210, ~: 11210)
+[PASS] testSetDefaultSettlementFeeNotMultipleOfFeeCbp(address,uint256,uint256) (runs: 256, μ: 13379, ~: 13417)
+[PASS] testSetDefaultSettlementFeeOnlyFeeSetter(address,address) (runs: 256, μ: 12744, ~: 12744)
+[PASS] testSetDefaultSettlementFeeSuccess(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 240377, ~: 241152)
+[PASS] testSetDefaultSettlementFeeValidation(address,uint256,uint256) (runs: 256, μ: 12902, ~: 12961)
+[PASS] testSetFeeClaimerOnlyRoleSetter(address) (runs: 256, μ: 14358, ~: 14358)
+[PASS] testSetFeeClaimerSuccess(address) (runs: 256, μ: 33739, ~: 33739)
+[PASS] testSetFeeSetterOnlyRoleSetter(address) (runs: 256, μ: 14776, ~: 14776)
+[PASS] testSetFeeSetterSuccess(address) (runs: 256, μ: 16805, ~: 16805)
+[PASS] testSetMarketContinuousFeeMarketNotCreated(bytes32,uint256) (runs: 256, μ: 14166, ~: 14282)
+[PASS] testSetMarketSettlementFeeMarketNotCreated(bytes32) (runs: 256, μ: 14498, ~: 14498)
+[PASS] testSetMarketSettlementFeeValueTooHigh(bytes32,uint256,uint256) (runs: 256, μ: 12963, ~: 13004)
+[PASS] testSetRoleSetterOnlyRoleSetter(address) (runs: 256, μ: 14691, ~: 14691)
+[PASS] testSetRoleSetterSuccess(address) (runs: 256, μ: 14436, ~: 14436)
+[PASS] testSetSettlementFeeInvalidIndex(bytes32) (runs: 256, μ: 11451, ~: 11451)
+[PASS] testSetSettlementFeeNotMultipleOfFeeCbp(bytes32,uint256,uint256) (runs: 256, μ: 13552, ~: 13592)
+[PASS] testSetSettlementFeeOnlyFeeSetter(address,bytes32) (runs: 256, μ: 12927, ~: 12927)
+[PASS] testSetSettlementFeeSuccess(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 221347, ~: 221503)
+[PASS] testSettlementFeeLinearInterpolation(uint256,uint256,uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 229611, ~: 229611)
+[PASS] testSettlementFeeRevertsWhenNotCreated() (gas: 11638)
+Suite result: ok. 25 passed; 0 failed; 0 skipped; finished in 1.22s (1.22s CPU time)
+
+Ran 8 tests for test/SetIsAuthorizedWithSigTest.sol:EcrecoverAuthorizerTest
+[PASS] testAuthorizationTypeHash() (gas: 321)
+[PASS] testEcrecoverAuthorizer() (gas: 108086)
+[PASS] testEcrecoverAuthorizerExpired() (gas: 21676)
+[PASS] testEcrecoverAuthorizerInvalidNonce() (gas: 41675)
+[PASS] testEcrecoverAuthorizerInvalidSignature() (gas: 61248)
+[PASS] testEcrecoverAuthorizerNonce(uint8) (runs: 256, μ: 340911, ~: 274059)
+[PASS] testEcrecoverAuthorizerPermissionless() (gas: 111410)
+[PASS] testEip712DomainTypeHash() (gas: 638)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 2.74s (2.74s CPU time)
+
+Ran 10 tests for test/SettlementFeeTest.sol:SettlementFeeTest
+[PASS] testBuyUnits(uint256,uint256,uint256) (runs: 256, μ: 728669, ~: 714149)
+[PASS] testClaimSettlementFee(uint256,uint256,uint256) (runs: 256, μ: 731044, ~: 741782)
+[PASS] testClaimSettlementFeeExcessReverts() (gas: 710284)
+[PASS] testClaimSettlementFeeOnlyFeeClaimer(address) (runs: 256, μ: 16426, ~: 16426)
+[PASS] testDefaultSettlementFee(uint256,uint256,uint256) (runs: 256, μ: 710509, ~: 688935)
+[PASS] testEarlySettlementFee(uint256,uint256,uint256,uint256) (runs: 256, μ: 773658, ~: 746143)
+[PASS] testPostMaturitySettlementFee(uint256,uint256,uint256,uint256) (runs: 256, μ: 655721, ~: 664596)
+[PASS] testSellUnits(uint256,uint256,uint256) (runs: 256, μ: 711826, ~: 706037)
+[PASS] testSettlementFeesAccumulate() (gas: 799588)
+[PASS] testSevenDayTtmSettlementFee(uint256,uint256,uint256,uint256) (runs: 256, μ: 790344, ~: 815867)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 3.36s (5.13s CPU time)
+
+Ran 10 tests for test/TickGatingTest.sol:TickGatingTest
+[PASS] testCoarserTicksStillValidAfterRefinement(uint256) (runs: 256, μ: 842900, ~: 850901)
+[PASS] testDefaultSpacingApplied() (gas: 10864)
+[PASS] testRefineMakesPreviouslyInaccessibleTickValid() (gas: 613325)
+[PASS] testSetMarketTickSpacingInvalid() (gas: 38012)
+[PASS] testSetMarketTickSpacingOnlyTickSpacingSetter() (gas: 16505)
+[PASS] testSetMarketTickSpacingRequiresCreated() (gas: 14204)
+[PASS] testSetTickSpacingSetterOnlyOwner() (gas: 14951)
+[PASS] testTakeRevertsAtInaccessibleTick() (gas: 462605)
+[PASS] testTakeRevertsAtSpacing2InaccessibleTick() (gas: 471445)
+[PASS] testTakeSucceedsAtAccessibleTick() (gas: 595831)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 798.53ms (795.61ms CPU time)
+
+Ran 12 tests for test/TickLibTest.sol:TickLibTest
+[PASS] testGasBound(uint256) (runs: 256, μ: 733, ~: 843)
+[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6434, ~: 5988)
+[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 846, ~: 829)
+[PASS] testPriceToTick(uint256) (runs: 256, μ: 7434, ~: 6918)
+[PASS] testPriceToTickConsistency() (gas: 40984488)
+[PASS] testPriceToTickGreaterThanOne(uint256) (runs: 256, μ: 3516, ~: 3420)
+[PASS] testReturnJumps() (gas: 10467188)
+[PASS] testTickMonotonicity() (gas: 5308398)
+[PASS] testTickToPriceAccuracy() (gas: 74092696)
+Logs:
+  Max absolute error (wad): 139189311428672
+  Avg absolute error (wad): 4204436004250
+  Max relative error (wad): 1000000000000000000
+  Avg relative error (wad): 19175197825882233
+
+[PASS] testTickToPriceMinMax() (gas: 2420)
+[PASS] testTickToPriceOutOfRange(uint256) (runs: 256, μ: 3810, ~: 3758)
+[PASS] testWExpOffsetProperty() (gas: 1395)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 1.00s (1.00s CPU time)
+
+Ran 6 tests for test/TakeAmountsTest.sol:TakeAmountsTest
+[PASS] testBuyerAssetsToUnitsBuyerIsBorrower(uint256,uint256,uint256,uint256) (runs: 256, μ: 902144, ~: 906305)
+[PASS] testBuyerAssetsToUnitsBuyerIsLender(uint256,uint256,uint256,uint256) (runs: 256, μ: 682567, ~: 690061)
+[PASS] testSellerAssetsToUnitsBuyerIsBorrower(uint256,uint256,uint256,uint256) (runs: 256, μ: 901707, ~: 906089)
+[PASS] testSellerAssetsToUnitsBuyerIsLender(uint256,uint256,uint256,uint256) (runs: 256, μ: 684566, ~: 690145)
+[PASS] testSnappedBuyerAssetsBuyerIsBorrower(uint256,uint256,uint256) (runs: 256, μ: 890093, ~: 894800)
+[PASS] testSnappedBuyerAssetsBuyerIsLender(uint256,uint256,uint256) (runs: 256, μ: 671691, ~: 676973)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 5.16s (6.61s CPU time)
+
+Ran 16 tests for test/ContinuousFeeTest.sol:ContinuousFeeTest
+[PASS] testAccrualAfterSlashReducesPendingFee(uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 1580949, ~: 1580969)
+[PASS] testAccrualPostMaturity(uint256,uint256,uint256,uint256) (runs: 256, μ: 805275, ~: 805312)
+[PASS] testAccrualPreMaturity(uint256,uint256,uint256,uint256) (runs: 256, μ: 799780, ~: 811479)
+[PASS] testClaimContinuousFee(uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 982910, ~: 982964)
+[PASS] testClaimContinuousFeeExcessReverts(uint256,uint256,uint256,uint256) (runs: 256, μ: 766247, ~: 766284)
+[PASS] testClaimContinuousFeeOnlyFeeClaimer(address) (runs: 256, μ: 38809, ~: 38809)
+[PASS] testClaimContinuousFeeRevertsIfMarketNotCreated() (gas: 40404)
+[PASS] testExitViaLenderTake(uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 1031843, ~: 1040322)
+[PASS] testLastAccrualZeroForFreshPosition() (gas: 711306)
+[PASS] testMultipleAccrualsSumCorrectly(uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 798508, ~: 799782)
+[PASS] testSingleLend(uint256,uint256,uint256) (runs: 256, μ: 732934, ~: 733236)
+[PASS] testTwoLendersDifferentRates(uint256,uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 1147918, ~: 1148219)
+[PASS] testUpdatePositionReturnsUpdatedValues(uint256,uint256,uint256,uint256,bool) (runs: 256, μ: 1147093, ~: 767967)
+[PASS] testUpdatePositionRevertsIfMarketNotCreated() (gas: 37964)
+[PASS] testUpdatePositionViewCorrect(uint256,uint256,uint256,uint256,bool) (runs: 256, μ: 1152672, ~: 764056)
+[PASS] testWithdrawReducesPendingFee(uint256,uint256,uint256,uint256,uint256) (runs: 256, μ: 973704, ~: 973742)
+Suite result: ok. 16 passed; 0 failed; 0 skipped; finished in 10.68s (16.70s CPU time)
+
+Ran 13 tests for test/GateTest.sol:GateTest
+[PASS] testDifferentGatesProduceDifferentIds() (gas: 28121)
+[PASS] testEnterGateAllowsTakeWhenBorrowerHadDebtBefore(uint256) (runs: 256, μ: 677653, ~: 677565)
+[PASS] testEnterGateAllowsTakeWhenLenderHadCreditBefore(uint256) (runs: 256, μ: 726199, ~: 726107)
+[PASS] testEnterGateAllowsWhitelistedUsers(uint256) (runs: 256, μ: 665134, ~: 665050)
+[PASS] testEnterGateBlocksNonWhitelistedBuyer(uint256) (runs: 256, μ: 539966, ~: 539869)
+[PASS] testEnterGateBlocksNonWhitelistedSeller(uint256) (runs: 256, μ: 541111, ~: 541025)
+[PASS] testLiquidatorGateOnBadDebt(uint256,bool) (runs: 256, μ: 692463, ~: 672531)
+[PASS] testLiquidatorGateOnLiquidation(uint256,bool) (runs: 256, μ: 845266, ~: 794901)
+[PASS] testNoEnterGateCheckWhenBorrowerIsExitingBorrower(uint256) (runs: 256, μ: 943865, ~: 943816)
+[PASS] testNoGateCheckOnRepay(uint256) (runs: 256, μ: 824191, ~: 824145)
+[PASS] testNoGateCheckOnWithdraw(uint256) (runs: 256, μ: 841246, ~: 841195)
+[PASS] testNoGateCheckWhenBothExit(uint256) (runs: 256, μ: 955369, ~: 955323)
+[PASS] testNoGateMeansUnrestricted(uint256) (runs: 256, μ: 570948, ~: 570858)
+Suite result: ok. 13 passed; 0 failed; 0 skipped; finished in 11.91s (18.25s CPU time)
+
+Ran 11 tests for test/EcrecoverRatifierIntegrationTest.sol:EcrecoverRatifierIntegrationTest
+[PASS] testOfferAuthorization(uint256,address,uint256) (runs: 256, μ: 357056, ~: 357047)
+[PASS] testOfferAuthorizationAuthorizedSigner(uint256,address,uint256) (runs: 256, μ: 428056, ~: 428044)
+[PASS] testTakeFourLeaves(uint256,uint256,uint256,uint256) (runs: 256, μ: 1373411, ~: 1381472)
+[PASS] testTakeInvalidProof2LeavesWrongLeafHash(((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),bool,address,uint256,uint256,uint256,bytes32,address,bytes,address,address,bool,uint256,uint256),bytes32[]) (runs: 256, μ: 518999, ~: 512830)
+[PASS] testTakeInvalidProof2LeavesWrongLeafIndex(((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),bool,address,uint256,uint256,uint256,bytes32,address,bytes,address,address,bool,uint256,uint256)) (runs: 256, μ: 489194, ~: 471243)
+[PASS] testTakeInvalidProofOneLeaf(bytes32[]) (runs: 256, μ: 283616, ~: 283586)
+[PASS] testTakeInvalidRoot(bytes32) (runs: 256, μ: 278133, ~: 278133)
+[PASS] testTakeInvalidSignature() (gas: 275312)
+[PASS] testTakeNotRatified() (gas: 259085)
+[PASS] testTakeOfferValidSignature(uint256,address) (runs: 256, μ: 375322, ~: 375315)
+[PASS] testTakeTwoLeaves(uint256,((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),bool,address,uint256,uint256,uint256,bytes32,address,bytes,address,address,bool,uint256,uint256)) (runs: 256, μ: 997560, ~: 992091)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 11.91s (26.41s CPU time)
+
+Ran 38 tests for test/LiquidationTest.sol:LiquidationTest
+[PASS] testBadDebtPriceDownGivesBadDebt(uint256) (runs: 256, μ: 742279, ~: 742192)
+[PASS] testBadDebtPriceDownIsMaximal(uint256) (runs: 256, μ: 741729, ~: 741653)
+[PASS] testCannotRepayMoreThanDebt(uint256,uint256,uint256) (runs: 256, μ: 766179, ~: 766293)
+[PASS] testCannotSeizeMoreThanCollateral(uint256,uint256,uint256) (runs: 256, μ: 749980, ~: 749997)
+[PASS] testFullBadDebtWithdrawCollateral(uint256) (runs: 256, μ: 829530, ~: 829449)
+[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+Logs:
+  Gas 1st seizure (cold): 162556
+  Gas 2nd seizure (warm): 60880
+
+[PASS] testLiquidateCallback(uint256,uint256,uint256,uint256,bytes,address) (runs: 256, μ: 1266898, ~: 1285604)
+[PASS] testLiquidateCollateralInput(uint256,uint256,uint256) (runs: 256, μ: 820974, ~: 821649)
+[PASS] testLiquidateEmitsLossFactorAndContinuousFeeCredit(uint256) (runs: 256, μ: 823780, ~: 823840)
+[PASS] testLiquidateFullyRepayOrFullySeizeWhenRcfDeactivated(uint256,uint256,uint256) (runs: 256, μ: 732496, ~: 732444)
+[PASS] testLiquidateHealthyPostMaturity(uint256,uint256) (runs: 256, μ: 756570, ~: 756543)
+[PASS] testLiquidateHealthyPreMaturity(uint256,uint256) (runs: 256, μ: 742510, ~: 742499)
+[PASS] testLiquidateInactiveCollateralIndex(uint256) (runs: 256, μ: 798027, ~: 797936)
+[PASS] testLiquidateInconsistentInput(uint256) (runs: 256, μ: 736687, ~: 736621)
+[PASS] testLiquidateInvalidCollateralIndex() (gas: 742550)
+[PASS] testLiquidateNoDebtReverts() (gas: 228607)
+[PASS] testLiquidateNormalModeRequiresUnhealthy(uint256,uint256) (runs: 256, μ: 743555, ~: 743537)
+[PASS] testLiquidatePostMaturityFullLIF(uint256,uint256,uint256,uint256) (runs: 256, μ: 817692, ~: 819886)
+[PASS] testLiquidatePostMaturityModeBeforeMaturity(uint256,uint256) (runs: 256, μ: 777620, ~: 777786)
+[PASS] testLiquidatePostMaturityPartialLIF(uint256,uint256,uint256,uint256) (runs: 256, μ: 816913, ~: 819526)
+[PASS] testLiquidatePreMaturityLltvWad(uint256) (runs: 256, μ: 822735, ~: 822660)
+[PASS] testLiquidateUnhealthyPostMaturity(uint256,uint256) (runs: 256, μ: 758164, ~: 758278)
+[PASS] testLiquidateUnhealthyPreMaturity(uint256,uint256) (runs: 256, μ: 757644, ~: 757815)
+[PASS] testLiquidateUnitsInput(uint256,uint256,uint256) (runs: 256, μ: 817109, ~: 820473)
+[PASS] testLiquidateWithBadDebtRepaidInput(uint256,uint256,uint256) (runs: 256, μ: 819195, ~: 843969)
+[PASS] testLiquidateWithBadDebtSeizeMax(uint256,uint256) (runs: 256, μ: 822591, ~: 822616)
+[PASS] testLiquidateWithBadDebtSeizedInput(uint256,uint256,uint256) (runs: 256, μ: 841671, ~: 842513)
+[PASS] testMaxRepaid(uint256,uint256,uint256) (runs: 256, μ: 828386, ~: 829240)
+[PASS] testMaxRepaidMeansRecovery(uint256,uint256) (runs: 256, μ: 821256, ~: 821204)
+[PASS] testRcfThresholdAllowsFullLiquidation(uint256,uint256,uint256) (runs: 256, μ: 836024, ~: 836029)
+[PASS] testRcfThresholdEnforcesRecoveryCloseFactor(uint256,uint256,uint256) (runs: 256, μ: 763348, ~: 763800)
+[PASS] testRealizeOnlyBadDebt(uint256,uint256) (runs: 256, μ: 785629, ~: 785657)
+[PASS] testRecoveryCloseFactorAppliesPostMaturityWhenUnhealthy(uint256,uint256,uint256) (runs: 256, μ: 759870, ~: 759866)
+[PASS] testRecoveryCloseFactorMultipleCollaterals(uint256) (runs: 256, μ: 1019233, ~: 1019126)
+[PASS] testSlashAlreadySynced(uint256) (runs: 256, μ: 790575, ~: 790499)
+[PASS] testSlashNoBadDebt(uint256) (runs: 256, μ: 745502, ~: 745426)
+[PASS] testSlashNoCredit(uint256) (runs: 256, μ: 799281, ~: 799199)
+[PASS] testSlashNonFull(uint256) (runs: 256, μ: 778044, ~: 777955)
+Suite result: ok. 38 passed; 0 failed; 0 skipped; finished in 17.58s (46.62s CPU time)
+
+Ran 33 tests for test/MidnightBundlesTest.sol:MidnightBundlesTest
+[PASS] testBuyBuyerAssetsTarget(uint256,uint256,uint256) (runs: 256, μ: 791834, ~: 755649)
+[PASS] testBuyBuyerAssetsTargetAveragePriceExceeded(uint256) (runs: 256, μ: 640084, ~: 640047)
+[PASS] testBuyBuyerAssetsTargetInconsistentMarket() (gas: 588744)
+[PASS] testBuyBuyerAssetsTargetPartiallyConsumed() (gas: 834326)
+[PASS] testBuyBuyerAssetsTargetPermit() (gas: 676264)
+[PASS] testBuyBuyerAssetsTargetPermit2() (gas: 682672)
+[PASS] testBuyBuyerAssetsTargetWithCollateralWithdrawals(uint256) (runs: 256, μ: 866137, ~: 874154)
+[PASS] testBuyBuyerAssetsTargetWithReferralFee(uint256,uint256) (runs: 256, μ: 661703, ~: 668493)
+[PASS] testBuyUnitsTargetAveragePriceExceeded(uint256) (runs: 256, μ: 629564, ~: 629550)
+[PASS] testBuyUnitsTargetInconsistentMarket() (gas: 575470)
+[PASS] testBuyUnitsTargetPartiallyConsumed() (gas: 830282)
+[PASS] testBuyUnitsTargetPermit2() (gas: 681587)
+[PASS] testBuyUnitsTargetWithCollateralWithdrawals(uint256) (runs: 256, μ: 882129, ~: 873265)
+[PASS] testBuyUnitsTargetWithReferralFee(uint256,uint256) (runs: 256, μ: 659284, ~: 665820)
+[PASS] testPctExceeded() (gas: 150901)
+[PASS] testRepay(uint256,uint256,uint256) (runs: 256, μ: 723182, ~: 726589)
+[PASS] testRepayWithReferralFee(uint256,uint256,uint256) (runs: 256, μ: 848988, ~: 858506)
+[PASS] testRepayWithReferralFeeFullDebtInversion(uint256,uint256) (runs: 256, μ: 854171, ~: 858524)
+[PASS] testSellSellerAssetsTarget(uint256,uint256,uint256) (runs: 256, μ: 718719, ~: 691317)
+[PASS] testSellSellerAssetsTargetAveragePriceTooLow(uint256) (runs: 256, μ: 582177, ~: 582143)
+[PASS] testSellSellerAssetsTargetInconsistentMarket() (gas: 466962)
+[PASS] testSellSellerAssetsTargetPartiallyConsumed() (gas: 774869)
+[PASS] testSellSellerAssetsTargetPermit2() (gas: 819032)
+[PASS] testSellSellerAssetsTargetWithCollateralSupplies(uint256) (runs: 256, μ: 929008, ~: 1044168)
+[PASS] testSellSellerAssetsTargetWithReferralFee(uint256,uint256) (runs: 256, μ: 623245, ~: 629429)
+[PASS] testSellUnitsTarget(uint256,uint256,uint256) (runs: 256, μ: 701762, ~: 676042)
+[PASS] testSellUnitsTargetAveragePriceTooLow(uint256) (runs: 256, μ: 578644, ~: 578644)
+[PASS] testSellUnitsTargetInconsistentMarket() (gas: 462720)
+[PASS] testSellUnitsTargetPartiallyConsumed() (gas: 753969)
+[PASS] testSellUnitsTargetPermit2() (gas: 640683)
+[PASS] testSellUnitsTargetWithCollateralSupplies(uint256) (runs: 256, μ: 745242, ~: 864554)
+[PASS] testSellUnitsTargetWithReferralFee(uint256,uint256) (runs: 256, μ: 622735, ~: 628657)
+[PASS] testUnauthorized() (gas: 89105)
+Suite result: ok. 33 passed; 0 failed; 0 skipped; finished in 17.62s (20.87s CPU time)
+
+Ran 37 tests for test/OtherFunctionsTest.sol:OtherFunctionsTest
+[PASS] testBelowExactMaxCollaterals(uint256) (runs: 256, μ: 26593776, ~: 25755097)
+[PASS] testCollateralBitmapClearedOnFullLiquidation(uint256) (runs: 256, μ: 10434366, ~: 10434387)
+[PASS] testCollateralBitmapClearedOnFullWithdraw(uint256) (runs: 256, μ: 9885489, ~: 9885508)
+[PASS] testCollateralBitmapCountBitsAfterMultipleSupplies(uint256) (runs: 256, μ: 8729074, ~: 8723506)
+[PASS] testCollateralBitmapCtzSingleCollateral(uint256) (runs: 256, μ: 7418776, ~: 7418794)
+[PASS] testCollateralsNotSorted() (gas: 24974)
+[PASS] testExactMaxCollaterals() (gas: 60242529)
+[PASS] testInvalidLif(uint256) (runs: 256, μ: 24378, ~: 24378)
+[PASS] testLltvNotAllowedAboveWad(uint256) (runs: 256, μ: 23667, ~: 23579)
+[PASS] testLltvNotAllowedBelowWad() (gas: 22870)
+[PASS] testMarketStateAfterTake() (gas: 762278)
+[PASS] testMarketStateGetter((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),uint256) (runs: 256, μ: 5835582, ~: 7662747)
+[PASS] testMaturityTooFar(uint256) (runs: 256, μ: 38298, ~: 38183)
+[PASS] testMaxCollaterals(uint256) (runs: 256, μ: 324801741, ~: 307421526)
+[PASS] testMaxCollateralsPerBorrower() (gas: 10487080)
+[PASS] testMidnightRevertsOnCallbacks(address,bytes) (runs: 256, μ: 20659, ~: 20650)
+[PASS] testRepay(uint256,uint256) (runs: 256, μ: 947951, ~: 949887)
+[PASS] testRepayCallback(uint256,uint256,bytes,address) (runs: 256, μ: 1964794, ~: 1962367)
+[PASS] testSetConsumed(address,bytes32,uint256) (runs: 256, μ: 36293, ~: 36915)
+[PASS] testSetConsumedDecreasingReverts(address,bytes32,uint256,uint256) (runs: 256, μ: 38387, ~: 38448)
+[PASS] testSetConsumedIncreasing(address,bytes32,uint256,uint256) (runs: 256, μ: 44618, ~: 44545)
+[PASS] testSstore2CodeStartsWithStop((address,(address,uint256,uint256,address)[],uint256,uint256,address,address)) (runs: 256, μ: 5553685, ~: 7336795)
+[PASS] testSupplyCollateralDoesNotCallOracle(uint256) (runs: 256, μ: 477489, ~: 478126)
+[PASS] testToId((address,(address,uint256,uint256,address)[],uint256,uint256,address,address)) (runs: 256, μ: 2811858, ~: 3866153)
+[PASS] testToIdStableAcrossHardfork((address,(address,uint256,uint256,address)[],uint256,uint256,address,address),(address,(address,uint256,uint256,address)[],uint256,uint256,address,address),uint64) (runs: 256, μ: 11378063, ~: 11544243)
+[PASS] testToMarket((address,(address,uint256,uint256,address)[],uint256,uint256,address,address)) (runs: 256, μ: 5565167, ~: 7721167)
+[PASS] testToMarketRevertsIfNotCreated(bytes32) (runs: 256, μ: 14924, ~: 14924)
+[PASS] testTouchMarket((address,(address,uint256,uint256,address)[],uint256,uint256,address,address)) (runs: 256, μ: 5531240, ~: 7367530)
+[PASS] testValidLifCursor025() (gas: 168468)
+[PASS] testValidLifCursor05() (gas: 169137)
+[PASS] testWithdraw(uint256,uint256) (runs: 256, μ: 990929, ~: 990948)
+[PASS] testWithdrawCollateralToReceiver(uint256,uint256) (runs: 256, μ: 450128, ~: 450793)
+[PASS] testWithdrawCollateralToZeroDoesNotCallOracle(uint256) (runs: 256, μ: 488394, ~: 488773)
+[PASS] testWithdrawCollateralWithBorrowHealthy(uint256,uint256,uint256) (runs: 256, μ: 950043, ~: 951858)
+[PASS] testWithdrawCollateralWithBorrowUnhealthy(uint256,uint256,uint256) (runs: 256, μ: 928392, ~: 928402)
+[PASS] testWithdrawToReceiver(uint256,uint256) (runs: 256, μ: 988924, ~: 988942)
+[PASS] testZeroCollaterals() (gas: 16769)
+Suite result: ok. 37 passed; 0 failed; 0 skipped; finished in 113.18s (176.29s CPU time)
+
+Ran 64 tests for test/TakeTest.sol:TakeTest
+[PASS] testBugBuyMaxAssetsBypass() (gas: 655611)
+[PASS] testBuy1(uint256,uint256) (runs: 256, μ: 649228, ~: 649226)
+[PASS] testBuy1PostMaturity() (gas: 566748)
+[PASS] testBuy2(uint256,uint256,uint256) (runs: 256, μ: 926532, ~: 928091)
+[PASS] testBuy2PostMaturity() (gas: 933969)
+[PASS] testBuy3(uint256,uint256,uint256) (runs: 256, μ: 1105111, ~: 1106979)
+[PASS] testBuy3PostMaturity() (gas: 1060351)
+[PASS] testBuy4(uint256,uint256,uint256) (runs: 256, μ: 879422, ~: 879868)
+[PASS] testBuy4PostMaturity() (gas: 885751)
+[PASS] testBuyBuyerCallback(uint256,uint32,bytes) (runs: 256, μ: 1637077, ~: 1639270)
+[PASS] testBuyBuyerCallbackRevertsOnInvalidReturn(uint256) (runs: 256, μ: 741341, ~: 741261)
+[PASS] testBuyConsumed(uint256,uint256,uint256,uint256) (runs: 256, μ: 698120, ~: 697931)
+[PASS] testBuyGroup(uint256,uint256) (runs: 256, μ: 1031861, ~: 1034238)
+[PASS] testBuyPastMaturity(uint256) (runs: 256, μ: 567420, ~: 567485)
+[PASS] testBuySellerCallback(uint256,uint32,bytes) (runs: 256, μ: 2363792, ~: 2351950)
+[PASS] testBuyUnhealthy(uint256,uint256,uint256) (runs: 256, μ: 637368, ~: 640890)
+[PASS] testCrossBottomUp(uint256,uint256) (runs: 256, μ: 1144149, ~: 1144191)
+[PASS] testCrossTopDown(uint256,uint256) (runs: 256, μ: 1149812, ~: 1149855)
+[PASS] testMatch(uint256,uint256,uint256) (runs: 256, μ: 969147, ~: 969752)
+[PASS] testMatchInverse(uint256,uint256,uint256) (runs: 256, μ: 1120506, ~: 1120678)
+[PASS] testMaxAssetsBuyerExact() (gas: 651928)
+[PASS] testMaxAssetsBuyerPass(uint256) (runs: 256, μ: 652883, ~: 652797)
+[PASS] testMaxAssetsBuyerRevert() (gas: 549704)
+[PASS] testMaxAssetsSellerExact() (gas: 652043)
+[PASS] testMaxAssetsSellerPass(uint256) (runs: 256, μ: 653869, ~: 653805)
+[PASS] testMaxAssetsSellerRevert() (gas: 549134)
+[PASS] testMaxAssetsZeroMeansNoLimitForBuyer(uint256) (runs: 256, μ: 635118, ~: 635032)
+[PASS] testMaxAssetsZeroMeansNoLimitForSeller(uint256) (runs: 256, μ: 635277, ~: 635204)
+[PASS] testMultipleMaxRevert() (gas: 522036)
+[PASS] testOrderByAuthorized(address,address) (runs: 256, μ: 159199, ~: 159199)
+[PASS] testOrderByTaker(address) (runs: 256, μ: 130033, ~: 130033)
+[PASS] testOrderNotAuthorized(address,address) (runs: 256, μ: 74825, ~: 74825)
+[PASS] testPriceZeroNoSettlementFeeSell() (gas: 469221)
+[PASS] testPriceZeroWithSettlementFeeBuy() (gas: 370447)
+[PASS] testPriceZeroWithSettlementFeeSell() (gas: 674759)
+[PASS] testReduceOnlyBuyRevert(uint256,uint256) (runs: 256, μ: 705464, ~: 705508)
+[PASS] testReduceOnlyBuySuccess(uint256,uint256) (runs: 256, μ: 1110443, ~: 1110460)
+[PASS] testReduceOnlySellRevert(uint256,uint256) (runs: 256, μ: 710225, ~: 710268)
+[PASS] testReduceOnlySellSuccess(uint256,uint256) (runs: 256, μ: 929496, ~: 929497)
+[PASS] testSell1(uint256,uint256) (runs: 256, μ: 647590, ~: 648147)
+[PASS] testSell1PostMaturity() (gas: 566861)
+[PASS] testSell2(uint256,uint256,uint256) (runs: 256, μ: 929293, ~: 930490)
+[PASS] testSell2PostMaturity() (gas: 935451)
+[PASS] testSell3(uint256,uint256,uint256) (runs: 256, μ: 949610, ~: 952716)
+[PASS] testSell3PostMaturity() (gas: 1060182)
+[PASS] testSell4(uint256,uint256,uint256) (runs: 256, μ: 726571, ~: 727378)
+[PASS] testSell4PostMaturity() (gas: 886212)
+[PASS] testSellBuyerCallback(uint256,uint32,bytes) (runs: 256, μ: 1707309, ~: 1687441)
+[PASS] testSellConsumed(uint256,uint256,uint256,uint256) (runs: 256, μ: 696825, ~: 696713)
+[PASS] testSellGroup(uint256,uint256) (runs: 256, μ: 1032545, ~: 1034987)
+[PASS] testSellNestedTakeLiquidateRevertsWhileLiquidationLocked() (gas: 2431188)
+[PASS] testSellPastMaturity(uint256) (runs: 256, μ: 567434, ~: 567500)
+[PASS] testSellSellerCallback(uint256,uint32,bytes) (runs: 256, μ: 2265101, ~: 2263884)
+[PASS] testSellSellerCallbackLiquidateRevertsWhileLiquidationLocked() (gas: 1277628)
+[PASS] testSellSellerCallbackRevertsOnInvalidReturn(uint256) (runs: 256, μ: 776357, ~: 776276)
+[PASS] testSellUnhealthy(uint256,uint256,uint256) (runs: 256, μ: 636250, ~: 641099)
+[PASS] testTakeBuyerAndSellerSame(uint256) (runs: 256, μ: 103886, ~: 103795)
+[PASS] testTakeByRatificationDifferentFromMaker(address,address,uint256) (runs: 256, μ: 421632, ~: 421638)
+[PASS] testTakeByRatificationSameAsMaker(uint256,address) (runs: 256, μ: 420433, ~: 420433)
+[PASS] testTakeOfferExpired(uint256) (runs: 256, μ: 79950, ~: 80075)
+[PASS] testTakeOfferNotStarted(uint256) (runs: 256, μ: 79791, ~: 79785)
+[PASS] testTakeOfferRatified(address,address) (runs: 256, μ: 418627, ~: 418627)
+[PASS] testTakeRatificationFailed(address,address,uint256) (runs: 256, μ: 374534, ~: 374527)
+[PASS] testTakeWithAddressZero(uint256) (runs: 256, μ: 306300, ~: 306229)
+Suite result: ok. 64 passed; 0 failed; 0 skipped; finished in 113.12s (37.04s CPU time)
+
+Ran 13 tests for test/EcrecoverRatifierTest.sol:EcrecoverRatifierTest
+[PASS] testCancelRootAuthorizedOnBehalf() (gas: 86774)
+[PASS] testCancelRootMaker() (gas: 56187)
+[PASS] testCancelRootUnauthorizedOnBehalf() (gas: 19929)
+[PASS] testDomainSeparator() (gas: 6146)
+[PASS] testIsRatifiedAuthorizedSigns() (gas: 65728)
+[PASS] testIsRatifiedInvalidSignature() (gas: 32952)
+[PASS] testIsRatifiedMakerSigns() (gas: 32560)
+[PASS] testIsRatifiedNotMidnight() (gas: 21414)
+[PASS] testIsRatifiedRevokeAuthorizationInvalidates() (gas: 64542)
+[PASS] testIsRatifiedUnauthorizedSigner() (gas: 38515)
+[PASS] testIsRatifiedValidSignature(uint256) (runs: 256, μ: 57390, ~: 57385)
+[PASS] testIsRatifiedWorksForUnorderedTree() (gas: 36067)
+[PASS] testIsRatifiedWrongRoot() (gas: 24642)
+Suite result: ok. 13 passed; 0 failed; 0 skipped; finished in 113.33s (113.33s CPU time)
+
+Ran 40 test suites in 113.35s (429.92s CPU time): 405 tests passed, 0 failed, 0 skipped (405 total tests)

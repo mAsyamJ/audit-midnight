@@ -1,0 +1,29 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 319497)
+Traces:
+  [319497] PoCSolvencySpecMarketIdAliasingTest::testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets()
+    ├─ [148101] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [76893] → new <unknown>@0x354542A516f528A1f9ba3103199885A2b4e82DCD
+    │   │   └─ ← [Return] 384 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd)
+    │   └─ ← [Return] 0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd
+    ├─ [144101] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0x03A6a84cD762D9707A21605b548aaaB891562aAb })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [76893] → new <unknown>@0x8B634b5B94cC11e7c9CC032Da26a88Beb5612812
+    │   │   └─ ← [Return] 384 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0x03A6a84cD762D9707A21605b548aaaB891562aAb })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812)
+    │   └─ ← [Return] 0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812
+    ├─ [1385] Midnight::tickSpacing(0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [1385] Midnight::tickSpacing(0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [575] Midnight::INITIAL_CHAIN_ID() [staticcall]
+    │   └─ ← [Return] 31337 [3.133e4]
+    ├─ [575] Midnight::INITIAL_CHAIN_ID() [staticcall]
+    │   └─ ← [Return] 31337 [3.133e4]
+    └─ ← [Return]
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 3.18ms (347.89µs CPU time)
+
+Ran 1 test suite in 14.57ms (3.18ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

@@ -21,8 +21,8 @@ Hashlock material is treated as AI-generated hypothesis input only. None of the 
 | Hashlock item | Current validation | Status |
 |---|---|---|
 | High-01 malicious/ERC777 token reentrancy | Core and periphery comments inherit exact/non-reentrant token assumptions. Only useful if the competition treats token hooks as in scope or the path uses normal callbacks rather than malicious token behavior. | Park unless non-token callback path exists |
-| High-02 accumulated loan-token balance cross-function reentrancy | Current bundles temporarily hold tokens. Need PoC proving a real reentry path and lasting theft/misdirection, not just transient balance visibility. | Live queue |
-| Medium-01 referral fee underflow in buy units | Solidity 0.8 underflow reverts; tests cover `PctExceeded` and referral fee flows. Need boundary proof for current code. | Weak |
+| High-02 accumulated loan-token balance cross-function reentrancy | Audit probes confirm transient balance visibility, but fixed-amount transfers prevent extraction. A nested sell bundle also preserves outer first-leg proceeds parked in the router. Malicious token-hook behavior remains outside the standard-token assumption. | Disproven under stated assumptions |
+| Medium-01 referral fee underflow in buy units | `maxBuyerAssets` is intentionally the total buyer budget. `requiredBudget - 1` reverts atomically during referral payment; exact `requiredBudget` succeeds without router residual. | Invalid |
 | Medium-02 inverse math precision mismatch | Same family as Blackthorn L-6/L-7 and current tests. | Duplicate-risk |
 | Medium-03 referral fee reduces actual debt repayment | Existing bundle comments define fee and units repaid as `assets - fee`; tests include full debt inversion. | Likely intended |
 | Medium-04 `ConsumableUnitsLib` zero when both caps zero | Core empty-offer behavior is covered by Certora/Foundry; zero caps likely represent an empty offer. | Weak |

@@ -1,5 +1,43 @@
 # Baseline Log
 
+Date: 2026-05-30 (continuation refresh)
+
+## Raw logs
+
+- `audits/asyam/workflow/baseline_build.log` — forge build, exit 0
+- `audits/asyam/workflow/baseline_tests.log` — forge test -vvv, 405 passed, 0 failed
+- `audits/asyam/workflow/audit_harness_tests.log` — `test/asyam`, 19 passed, 0 failed
+- `audits/asyam/workflow/finding_validation_tests.log` — `test/asyamFindings`, 13 passed, 0 failed
+- `audits/asyam/workflow/invariant_tests.log` — audit invariant subset, 6 passed, 0 failed
+- `audits/asyam/workflow/formal_gap_exploratory.log` — C-36 exploratory PoC, 1 passed, 0 failed
+- `audits/asyam/workflow/formal_gap_validation.log` — C-36 promoted validation, 1 passed, 0 failed
+
+## Continuation refresh (2026-05-30)
+
+```bash
+forge build 2>&1 | tee audits/asyam/workflow/baseline_build.log
+forge test -vvv 2>&1 | tee audits/asyam/workflow/baseline_tests.log
+```
+
+Result: build success; **405 tests passed**, 0 failed, 0 skipped (40 suites).
+
+Priority queue ownership refresh:
+
+```text
+forge test --match-path 'test/asyam/**/*.sol' -vvv
+19 tests passed, 0 failed, 0 skipped
+
+forge test --match-path 'test/asyamFindings/*.sol' -vvv
+13 tests passed, 0 failed, 0 skipped
+
+forge test --match-path 'test/asyam/invariant/*.sol' -vvvv
+6 tests passed, 0 failed, 0 skipped
+```
+
+Protocol-authored tests remain unchanged. Exploratory attack probes live under `test/asyam`; promoted validation regressions live under `test/asyamFindings`.
+
+---
+
 Date: 2026-05-30
 
 ## Commands
@@ -51,10 +89,10 @@ forge test --match-path 'test/asyamFindings/*.sol' -vvv
 Result:
 
 ```text
-Ran 2 test suites: 3 tests passed, 0 failed, 0 skipped (3 total tests)
+Ran 3 test suites: 8 tests passed, 0 failed, 0 skipped (8 total tests)
 ```
 
-Full suite after adding `test/asyamFindings` PoCs:
+Full suite after adding `test/asyamFindings` PoCs and live-queue validation:
 
 ```text
 forge test -vvv
@@ -63,7 +101,7 @@ forge test -vvv
 Result:
 
 ```text
-Ran 27 test suites in 74.56s (375.04s CPU time): 376 tests passed, 0 failed, 0 skipped (376 total tests)
+Ran 37 test suites in 70.05s (219.57s CPU time): 396 tests passed, 0 failed, 0 skipped (396 total tests)
 ```
 
 ## Build Blocker Status

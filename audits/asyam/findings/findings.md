@@ -1,16 +1,32 @@
 # Validated Findings
 
+**Agent role:** [../.AGENTROLE.md](../.AGENTROLE.md)
+
+Validated finding index only — not a candidate backlog.
+
 Date: 2026-05-30
 
 ## PoC Validation
 
 Last validated: 2026-05-30
 
+### Legacy path (`test/asyamFindings/`)
+
 ```bash
 forge test --match-path 'test/asyamFindings/*.sol' -vvv
 ```
 
-Result: 3/3 tests passed (2 signature malleability, 1 role setter bricking).
+Result: **13/13 tests passed**.
+
+### Audit harness (`test/asyam/`)
+
+```bash
+forge test --match-path 'test/asyam/**/*.sol' -vvv
+```
+
+Result: **19/19 tests passed** (exploratory PoCs + invariants).
+
+See [../workflow/POC_RESULTS.md](../workflow/POC_RESULTS.md) and [../candidates/CANDIDATES.md](../candidates/CANDIDATES.md).
 
 ## Cantina Submissions
 
@@ -18,8 +34,22 @@ Result: 3/3 tests passed (2 signature malleability, 1 role setter bricking).
 |---|---|---|---|---|
 | L-01 | [cantina-L01-signature-malleability.md](cantina-L01-signature-malleability.md) | Medium | Low | Low |
 | P3-01 | [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md) | Low | Low | Low |
+| P3-02 | [cantina-P3-02-solvency-spec-market-id-aliasing.md](cantina-P3-02-solvency-spec-market-id-aliasing.md) | Medium | Low | Informational / P3 |
 
 Competition: [Cantina Midnight overview](https://cantina.xyz/code/4679e0fa-85f7-4ea5-8827-ee6c70bdee6b/overview)
+
+### Priority queue PoC outcomes (2026-05-30)
+
+No new H/M findings. Priority candidates tested and closed:
+
+| Candidate | Result | PoC |
+|---|---|---|
+| C-26 bundler temp balance theft | disproven | `test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol` |
+| C-14 take callback reentrancy | disproven | `test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol` |
+| C-05 grouped cap overfill | duplicate | `test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol` |
+| C-12 reduce-only rounding | disproven | exploratory probe + promoted regression |
+| C-29 referral exact-fill boundary | invalid total-budget hypothesis | exploratory probe + promoted fuzz regression |
+| C-31 same loan/collateral token | scoped disproval under standard-token assumptions | exploratory probe + promoted repay/leverage/liquidation regressions |
 
 ---
 
@@ -83,3 +113,42 @@ Reject `address(0)` in `setRoleSetter`, or use a two-step ownership transfer pat
 ### Cantina submission
 
 Full report: [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md)
+
+## P3-02: `Solvency.spec` aliases production-distinct market IDs
+
+### Summary
+
+The solvency CVL summary derives market IDs from only loan token, maturity, chain ID, and Midnight address. Production IDs include the complete encoded market configuration. Distinct supported markets can therefore collapse into one modeled ID.
+
+### Impact
+
+This is a formal-assurance gap, not a demonstrated production fund-loss exploit. Valid multi-market traces can be pruned by contradictory collateral-token assumptions or collapsed into one modeled accounting bucket, so the current proof does not establish its advertised breadth.
+
+### Proof
+
+Validation test:
+
+```text
+test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol
+```
+
+The PoC creates two supported production markets with the same loan token and maturity but different collateral tokens. Production IDs differ and both markets are created; the reduced CVL summary tuple aliases them.
+
+### Recommendation
+
+Key `CVL_toId` by the complete encoded market configuration. The existing `certora/helpers/Utils.sol::hashMarket` helper can provide the full market hash.
+
+### Cantina submission
+
+Full report: [cantina-P3-02-solvency-spec-market-id-aliasing.md](cantina-P3-02-solvency-spec-market-id-aliasing.md)
+
+---
+
+## Agent maintenance
+
+When a finding is proven or disproven:
+
+1. Update this file
+2. Update [../workflow/POC_RESULTS.md](../workflow/POC_RESULTS.md)
+3. Update [../candidates/CANDIDATES.md](../candidates/CANDIDATES.md) status
+4. Refresh current snapshot in [../.AGENTROLE.md](../.AGENTROLE.md)

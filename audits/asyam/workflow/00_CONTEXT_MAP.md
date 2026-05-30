@@ -1,5 +1,8 @@
 # 00 Context Map
 
+> Agent operating manual: [../.AGENTROLE.md](../.AGENTROLE.md)
+> Validated findings: [../findings/findings.md](../findings/findings.md)
+
 Date: 2026-05-30
 
 ## Scope
@@ -124,3 +127,5 @@ Important modeling limits from `certora/README.md` and specs:
 - Oracle prices are often summarized as constant or ghost values, with explicit assumptions in division/liquidation specs.
 
 These limits make the highest-value remaining queues cross-contract and composition-heavy: callbacks, periphery, gate/oracle liveness, signed authorization scope, and exact helper/core math.
+
+The detailed CVL review and the proven `Solvency.spec` market-ID summary mismatch are recorded in [06_FORMAL_MODEL_GAP_REVIEW.md](06_FORMAL_MODEL_GAP_REVIEW.md).

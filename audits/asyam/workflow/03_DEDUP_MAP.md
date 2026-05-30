@@ -89,3 +89,4 @@ Hashlock reports are not dedup proof of audited issues, but they are hypothesis 
 4. Permit2/ERC2612 context misuse with real third-party impact.
 5. Event/state reconstruction gaps worth P3 reporting.
 6. Same-asset loan/collateral behavior if it breaks an invariant rather than reflecting market choice.
+7. CVL model summaries that collapse production-distinct states or silently prune supported compositions.

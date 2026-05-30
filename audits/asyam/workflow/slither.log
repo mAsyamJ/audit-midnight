@@ -1,0 +1,202 @@
+'forge clean' running (wd: /home/asyam/dev/Project/agent-harness/projects/security-researcher/midnight-audit)
+'forge config --json' running
+'forge build --build-info --skip ./test/** ./script/** --force' running (wd: /home/asyam/dev/Project/agent-harness/projects/security-researcher/midnight-audit)
+INFO:Detectors:
+Detector: arbitrary-send-erc20
+Midnight.flashLoan(address[],uint256[],address,bytes) (src/Midnight.sol#737-752) uses arbitrary from in transferFrom: SafeTransferLib.safeTransferFrom(tokens[i_scope_0],callback,address(this),assets[i_scope_0]) (src/Midnight.sol#750)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+INFO:Detectors:
+Detector: incorrect-equality
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes) (src/Midnight.sol#581-720) uses a dangerous strict equality:
+	- newCollateral == 0 && seizedAssets > 0 (src/Midnight.sol#672)
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes) (src/Midnight.sol#581-720) uses a dangerous strict equality:
+	- require(bool,error)(ILiquidateCallback(callback).onLiquidate(msg.sender,id,market,collateralIndex,seizedAssets,repaidUnits,borrower,receiver,data,badDebt) == CALLBACK_SUCCESS,revert WrongLiquidateCallbackReturnValue()()) (src/Midnight.sol#699-714)
+Midnight.take(Offer,bytes,uint256,address,address,address,bytes) (src/Midnight.sol#337-479) uses a dangerous strict equality:
+	- require(bool,error)(IBuyCallback(buyerCallback).onBuy(id,offer.market,buyerAssets,units,buyerPendingFeeIncrease,buyer,buyerCallbackData) == CALLBACK_SUCCESS,revert WrongBuyCallbackReturnValue()()) (src/Midnight.sol#447-452)
+Midnight.take(Offer,bytes,uint256,address,address,address,bytes) (src/Midnight.sol#337-479) uses a dangerous strict equality:
+	- require(bool,error)(ISellCallback(sellerCallback).onSell(id,offer.market,sellerAssets,units,sellerPendingFeeDecrease,seller,receiver,sellerCallbackData) == CALLBACK_SUCCESS,revert WrongSellCallbackReturnValue()()) (src/Midnight.sol#460-473)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: uninitialized-local
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address).filledUnits (src/periphery/MidnightBundles.sol#69) is a local variable never initialized
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address).filledUnits (src/periphery/MidnightBundles.sol#203) is a local variable never initialized
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address).filledSellerAssets (src/periphery/MidnightBundles.sol#143) is a local variable never initialized
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address).filledBuyerAssets (src/periphery/MidnightBundles.sol#204) is a local variable never initialized
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes).liquidatedCollatPrice (src/Midnight.sol#603) is a local variable never initialized
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address).filledSellerAssets (src/periphery/MidnightBundles.sol#281) is a local variable never initialized
+Midnight.touchMarket(Market).previousCollateralToken (src/Midnight.sol#761) is a local variable never initialized
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address).filledUnits (src/periphery/MidnightBundles.sol#142) is a local variable never initialized
+Midnight.isHealthy(Market,bytes32,address).maxDebt (src/Midnight.sol#947) is a local variable never initialized
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes).maxDebt (src/Midnight.sol#602) is a local variable never initialized
+Midnight.withdraw(Market,uint256,address,address).pendingFeeDecrease (src/Midnight.sol#488) is a local variable never initialized
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address).filledUnits (src/periphery/MidnightBundles.sol#280) is a local variable never initialized
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address).filledBuyerAssets (src/periphery/MidnightBundles.sol#70) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+INFO:Detectors:
+Detector: unused-return
+Midnight.take(Offer,bytes,uint256,address,address,address,bytes) (src/Midnight.sol#337-479) ignores return value by UtilsLib.tExchange(LIQUIDATION_LOCK_SLOT,id,seller,false) (src/Midnight.sol#475)
+Midnight.touchMarket(Market) (src/Midnight.sol#755-791) ignores return value by IdLib.storeInCode(market,INITIAL_CHAIN_ID) (src/Midnight.sol#786)
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#49-105) ignores return value by (resBuyerAssets) = IMidnight(MIDNIGHT).take(takes[i].offer,takes[i].ratifierData,unitsToTake,taker,address(0),address(0),) (src/periphery/MidnightBundles.sol#79-85)
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#117-169) ignores return value by (resSellerAssets) = IMidnight(MIDNIGHT).take(takes[i_scope_0].offer,takes[i_scope_0].ratifierData,unitsToTake,taker,address(this),address(0),) (src/periphery/MidnightBundles.sol#152-160)
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#180-240) ignores return value by (resBuyerAssets) = IMidnight(MIDNIGHT).take(takes[i].offer,takes[i].ratifierData,unitsToTake,taker,address(0),address(0),) (src/periphery/MidnightBundles.sol#215-221)
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#252-308) ignores return value by (resSellerAssets) = IMidnight(MIDNIGHT).take(takes[i_scope_0].offer,takes[i_scope_0].ratifierData,unitsToTake,taker,address(this),address(0),) (src/periphery/MidnightBundles.sol#292-300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+INFO:Detectors:
+Detector: shadowing-local
+IMidnight.position(bytes32,address).pendingFee (src/interfaces/IMidnight.sol#120) shadows:
+	- IMidnight.pendingFee(bytes32,address) (src/interfaces/IMidnight.sol#179) (function)
+IMidnight.position(bytes32,address).lastLossFactor (src/interfaces/IMidnight.sol#120) shadows:
+	- IMidnight.lastLossFactor(bytes32,address) (src/interfaces/IMidnight.sol#165) (function)
+IMidnight.position(bytes32,address).lastAccrual (src/interfaces/IMidnight.sol#120) shadows:
+	- IMidnight.lastAccrual(bytes32,address) (src/interfaces/IMidnight.sol#180) (function)
+IMidnight.position(bytes32,address).collateralBitmap (src/interfaces/IMidnight.sol#120) shadows:
+	- IMidnight.collateralBitmap(bytes32,address) (src/interfaces/IMidnight.sol#166) (function)
+IMidnight.marketState(bytes32).totalUnits (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.totalUnits(bytes32) (src/interfaces/IMidnight.sol#172) (function)
+IMidnight.marketState(bytes32).lossFactor (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.lossFactor(bytes32) (src/interfaces/IMidnight.sol#173) (function)
+IMidnight.marketState(bytes32).withdrawable (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.withdrawable(bytes32) (src/interfaces/IMidnight.sol#175) (function)
+IMidnight.marketState(bytes32).continuousFeeCredit (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.continuousFeeCredit(bytes32) (src/interfaces/IMidnight.sol#178) (function)
+IMidnight.marketState(bytes32).continuousFee (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.continuousFee(bytes32) (src/interfaces/IMidnight.sol#177) (function)
+IMidnight.marketState(bytes32).tickSpacing (src/interfaces/IMidnight.sol#121) shadows:
+	- IMidnight.tickSpacing(bytes32) (src/interfaces/IMidnight.sol#174) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+INFO:Detectors:
+Detector: missing-zero-check
+Midnight.setRoleSetter(address).newRoleSetter (src/Midnight.sol#224) lacks a zero-check on :
+		- roleSetter = newRoleSetter (src/Midnight.sol#226)
+Midnight.setFeeSetter(address).newFeeSetter (src/Midnight.sol#230) lacks a zero-check on :
+		- feeSetter = newFeeSetter (src/Midnight.sol#232)
+Midnight.setFeeClaimer(address).newFeeClaimer (src/Midnight.sol#236) lacks a zero-check on :
+		- feeClaimer = newFeeClaimer (src/Midnight.sol#238)
+Midnight.setTickSpacingSetter(address).newTickSpacingSetter (src/Midnight.sol#242) lacks a zero-check on :
+		- tickSpacingSetter = newTickSpacingSetter (src/Midnight.sol#244)
+EcrecoverAuthorizer.constructor(address)._midnight (src/periphery/EcrecoverAuthorizer.sol#20) lacks a zero-check on :
+		- MIDNIGHT = _midnight (src/periphery/EcrecoverAuthorizer.sol#21)
+MidnightBundles.constructor(address)._midnight (src/periphery/MidnightBundles.sol#33) lacks a zero-check on :
+		- MIDNIGHT = _midnight (src/periphery/MidnightBundles.sol#34)
+EcrecoverRatifier.constructor(address)._midnight (src/ratifiers/EcrecoverRatifier.sol#23) lacks a zero-check on :
+		- MIDNIGHT = _midnight (src/ratifiers/EcrecoverRatifier.sol#24)
+SetterRatifier.constructor(address)._midnight (src/ratifiers/SetterRatifier.sol#20) lacks a zero-check on :
+		- MIDNIGHT = _midnight (src/ratifiers/SetterRatifier.sol#21)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+INFO:Detectors:
+Detector: calls-loop
+Midnight.multicall(bytes[]) (src/Midnight.sol#211-220) has external calls inside a loop: (success,returnData) = address(this).delegatecall(calls[i]) (src/Midnight.sol#213)
+Midnight.isHealthy(Market,bytes32,address) (src/Midnight.sol#944-960) has external calls inside a loop: price = IOracle(collateralParam.oracle).price() (src/Midnight.sol#953)
+	Calls stack containing the loop:
+		Midnight.take(Offer,bytes,uint256,address,address,address,bytes)
+Midnight.isHealthy(Market,bytes32,address) (src/Midnight.sol#944-960) has external calls inside a loop: price = IOracle(collateralParam.oracle).price() (src/Midnight.sol#953)
+	Calls stack containing the loop:
+		Midnight.withdrawCollateral(Market,uint256,uint256,address,address)
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes) (src/Midnight.sol#581-720) has external calls inside a loop: price = IOracle(_collateralParam.oracle).price() (src/Midnight.sol#610)
+Midnight.isHealthy(Market,bytes32,address) (src/Midnight.sol#944-960) has external calls inside a loop: price = IOracle(collateralParam.oracle).price() (src/Midnight.sol#953)
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#49-105) has external calls inside a loop: require(bool,error)(IMidnight(MIDNIGHT).toId(takes[i].offer.market) == id,revert InconsistentMarket()()) (src/periphery/MidnightBundles.sol#73)
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#49-105) has external calls inside a loop: (resBuyerAssets) = IMidnight(MIDNIGHT).take(takes[i].offer,takes[i].ratifierData,unitsToTake,taker,address(0),address(0),) (src/periphery/MidnightBundles.sol#79-85)
+MidnightBundles.buyWithUnitsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#49-105) has external calls inside a loop: IMidnight(MIDNIGHT).withdrawCollateral(market,collateralWithdrawals[i_scope_0].collateralIndex,collateralWithdrawals[i_scope_0].assets,taker,collateralReceiver) (src/periphery/MidnightBundles.sol#92-99)
+MidnightBundles.pullToken(address,address,uint256,TokenPermit) (src/periphery/MidnightBundles.sol#378-398) has external calls inside a loop: IERC20Permit(token).permit(from,address(this),amount,deadline,v,r,s) (src/periphery/MidnightBundles.sol#383)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.pullToken(address,address,uint256,TokenPermit) (src/periphery/MidnightBundles.sol#378-398) has external calls inside a loop: IPermit2(PERMIT2).permitTransferFrom(IPermit2.PermitTransferFrom(IPermit2.TokenPermissions(token,amount),nonce,deadline_scope_0),IPermit2.SignatureTransferDetails(address(this),amount),from,signature) (src/periphery/MidnightBundles.sol#388-394)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.forceApproveMax(address,address) (src/periphery/MidnightBundles.sol#371-375) has external calls inside a loop: IERC20(token).allowance(address(this),spender) >= type()(uint96).max / 2 (src/periphery/MidnightBundles.sol#372)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.safeApprove(address,address,uint256) (src/periphery/MidnightBundles.sol#358-366) has external calls inside a loop: (success,returndata) = token.call(abi.encodeCall(IERC20.approve,(spender,value))) (src/periphery/MidnightBundles.sol#359)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+		MidnightBundles.forceApproveMax(address,address)
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#117-169) has external calls inside a loop: IMidnight(MIDNIGHT).supplyCollateral(market,collateralSupplies[i].collateralIndex,collateralSupplies[i].assets,taker) (src/periphery/MidnightBundles.sol#138-139)
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#117-169) has external calls inside a loop: require(bool,error)(IMidnight(MIDNIGHT).toId(takes[i_scope_0].offer.market) == id,revert InconsistentMarket()()) (src/periphery/MidnightBundles.sol#146)
+MidnightBundles.supplyCollateralAndSellWithUnitsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#117-169) has external calls inside a loop: (resSellerAssets) = IMidnight(MIDNIGHT).take(takes[i_scope_0].offer,takes[i_scope_0].ratifierData,unitsToTake,taker,address(this),address(0),) (src/periphery/MidnightBundles.sol#152-160)
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#180-240) has external calls inside a loop: require(bool,error)(IMidnight(MIDNIGHT).toId(takes[i].offer.market) == id,revert InconsistentMarket()()) (src/periphery/MidnightBundles.sol#207)
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#180-240) has external calls inside a loop: (resBuyerAssets) = IMidnight(MIDNIGHT).take(takes[i].offer,takes[i].ratifierData,unitsToTake,taker,address(0),address(0),) (src/periphery/MidnightBundles.sol#215-221)
+MidnightBundles.buyWithAssetsTargetAndWithdrawCollateral(uint256,uint256,address,TokenPermit,Take[],CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#180-240) has external calls inside a loop: IMidnight(MIDNIGHT).withdrawCollateral(market,collateralWithdrawals[i_scope_0].collateralIndex,collateralWithdrawals[i_scope_0].assets,taker,collateralReceiver) (src/periphery/MidnightBundles.sol#229-236)
+MidnightBundles.pullToken(address,address,uint256,TokenPermit) (src/periphery/MidnightBundles.sol#378-398) has external calls inside a loop: IERC20Permit(token).permit(from,address(this),amount,deadline,v,r,s) (src/periphery/MidnightBundles.sol#383)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.pullToken(address,address,uint256,TokenPermit) (src/periphery/MidnightBundles.sol#378-398) has external calls inside a loop: IPermit2(PERMIT2).permitTransferFrom(IPermit2.PermitTransferFrom(IPermit2.TokenPermissions(token,amount),nonce,deadline_scope_0),IPermit2.SignatureTransferDetails(address(this),amount),from,signature) (src/periphery/MidnightBundles.sol#388-394)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.forceApproveMax(address,address) (src/periphery/MidnightBundles.sol#371-375) has external calls inside a loop: IERC20(token).allowance(address(this),spender) >= type()(uint96).max / 2 (src/periphery/MidnightBundles.sol#372)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+MidnightBundles.safeApprove(address,address,uint256) (src/periphery/MidnightBundles.sol#358-366) has external calls inside a loop: (success,returndata) = token.call(abi.encodeCall(IERC20.approve,(spender,value))) (src/periphery/MidnightBundles.sol#359)
+	Calls stack containing the loop:
+		MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address)
+		MidnightBundles.forceApproveMax(address,address)
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#252-308) has external calls inside a loop: IMidnight(MIDNIGHT).supplyCollateral(market,collateralSupplies[i].collateralIndex,collateralSupplies[i].assets,taker) (src/periphery/MidnightBundles.sol#273-274)
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#252-308) has external calls inside a loop: require(bool,error)(IMidnight(MIDNIGHT).toId(takes[i_scope_0].offer.market) == id,revert InconsistentMarket()()) (src/periphery/MidnightBundles.sol#284)
+MidnightBundles.supplyCollateralAndSellWithAssetsTarget(uint256,uint256,address,address,CollateralSupply[],Take[],uint256,address) (src/periphery/MidnightBundles.sol#252-308) has external calls inside a loop: (resSellerAssets) = IMidnight(MIDNIGHT).take(takes[i_scope_0].offer,takes[i_scope_0].ratifierData,unitsToTake,taker,address(this),address(0),) (src/periphery/MidnightBundles.sol#292-300)
+MidnightBundles.repayAndWithdrawCollateral(Market,uint256,address,TokenPermit,CollateralWithdrawal[],address,uint256,address) (src/periphery/MidnightBundles.sol#315-348) has external calls inside a loop: IMidnight(MIDNIGHT).withdrawCollateral(market,collateralWithdrawals[i].collateralIndex,collateralWithdrawals[i].assets,onBehalf,collateralReceiver) (src/periphery/MidnightBundles.sol#337-344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+INFO:Detectors:
+Detector: timestamp
+Midnight.setMarketTickSpacing(bytes32,uint256) (src/Midnight.sol#249-256) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(marketState[id].tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#251)
+	- require(bool,error)(newTickSpacing > 0 && marketState[id].tickSpacing % newTickSpacing == 0,revert InvalidTickSpacing()()) (src/Midnight.sol#252)
+Midnight.setMarketSettlementFee(bytes32,uint256,uint256) (src/Midnight.sol#258-275) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(_marketState.tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#264)
+Midnight.setMarketContinuousFee(bytes32,uint256) (src/Midnight.sol#287-295) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(_marketState.tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#291)
+Midnight.claimContinuousFee(Market,uint256,address) (src/Midnight.sol#312-325) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(_marketState.tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#316)
+Midnight.take(Offer,bytes,uint256,address,address,address,bytes) (src/Midnight.sol#337-479) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(_marketState.lossFactor < type()(uint128).max,revert MarketLossFactorMaxedOut()()) (src/Midnight.sol#349)
+	- require(bool,error)(offer.tick % _marketState.tickSpacing == 0,revert TickNotAccessible()()) (src/Midnight.sol#351)
+	- require(bool,error)(block.timestamp >= offer.start,revert OfferNotStarted()()) (src/Midnight.sol#352)
+	- require(bool,error)(block.timestamp <= offer.expiry,revert OfferExpired()()) (src/Midnight.sol#353)
+	- require(bool,error)(newConsumed <= offer.maxAssets,revert ConsumedAssets()()) (src/Midnight.sol#369)
+	- require(bool,error)(newConsumed <= offer.maxUnits,revert ConsumedUnits()()) (src/Midnight.sol#372)
+	- hasCredit(id,buyer) || units > buyerPos.debt (src/Midnight.sol#379)
+	- require(bool,error)(block.timestamp <= offer.market.maturity || sellerDebtIncrease == 0,revert CannotIncreaseDebtPostMaturity()()) (src/Midnight.sol#391)
+	- require(bool,error)(IBuyCallback(buyerCallback).onBuy(id,offer.market,buyerAssets,units,buyerPendingFeeIncrease,buyer,buyerCallbackData) == CALLBACK_SUCCESS,revert WrongBuyCallbackReturnValue()()) (src/Midnight.sol#447-452)
+	- require(bool,error)(ISellCallback(sellerCallback).onSell(id,offer.market,sellerAssets,units,sellerPendingFeeDecrease,seller,receiver,sellerCallbackData) == CALLBACK_SUCCESS,revert WrongSellCallbackReturnValue()()) (src/Midnight.sol#460-473)
+Midnight.liquidate(Market,uint256,uint256,uint256,address,bool,address,address,bytes) (src/Midnight.sol#581-720) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(UtilsLib.atMostOneNonZero(repaidUnits,seizedAssets),revert InconsistentInput()()) (src/Midnight.sol#595)
+	- require(bool,error)(_position.debt > 0,revert NotBorrower()()) (src/Midnight.sol#596)
+	- repaidUnits > 0 || seizedAssets > 0 (src/Midnight.sol#643)
+	- seizedAssets > 0 (src/Midnight.sol#649)
+	- require(bool,error)(repaidUnits <= maxRepaid || _position.collateral[collateralIndex].mulDivDown(liquidatedCollatPrice,ORACLE_PRICE_SCALE).mulDivDown(WAD,lif).zeroFloorSub(maxRepaid) < market.rcfThreshold,revert RecoveryCloseFactorConditionsViolated()()) (src/Midnight.sol#662-667)
+	- newCollateral == 0 && seizedAssets > 0 (src/Midnight.sol#672)
+	- require(bool,error)(ILiquidateCallback(callback).onLiquidate(msg.sender,id,market,collateralIndex,seizedAssets,repaidUnits,borrower,receiver,data,badDebt) == CALLBACK_SUCCESS,revert WrongLiquidateCallbackReturnValue()()) (src/Midnight.sol#699-714)
+	- require(bool,error)(! liquidationLocked(id,borrower) && block.timestamp > market.maturity,revert NotLiquidatable()()) (src/Midnight.sol#620-624)
+Midnight.touchMarket(Market) (src/Midnight.sol#755-791) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(market.maturity <= block.timestamp + 100 * 31536000,revert MaturityTooFar()()) (src/Midnight.sol#758)
+Midnight.updatePosition(Market,address) (src/Midnight.sol#823-827) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(marketState[id].tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#825)
+Midnight.hasCredit(bytes32,address) (src/Midnight.sol#853-855) uses timestamp for comparisons
+	Dangerous comparisons:
+	- position[id][user].credit > 0 (src/Midnight.sol#854)
+Midnight.toMarket(bytes32) (src/Midnight.sol#877-881) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(marketState[id].tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#878)
+Midnight.settlementFee(bytes32,uint256) (src/Midnight.sol#963-980) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(_marketState.tickSpacing > 0,revert MarketNotCreated()()) (src/Midnight.sol#965)
+	- timeToMaturity >= 31104000 (src/Midnight.sol#967)
+	- timeToMaturity < 86400 (src/Midnight.sol#970-976)
+	- timeToMaturity < 604800 (src/Midnight.sol#970-976)
+	- timeToMaturity < 2592000 (src/Midnight.sol#970-976)
+	- timeToMaturity < 7776000 (src/Midnight.sol#970-976)
+	- timeToMaturity < 15552000 (src/Midnight.sol#970-976)
+EcrecoverAuthorizer.setIsAuthorized(Authorization,Signature) (src/periphery/EcrecoverAuthorizer.sol#24-48) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(block.timestamp <= authorization.deadline,revert Expired()()) (src/periphery/EcrecoverAuthorizer.sol#25)
+TakeAmountsLib.buyerAssetsToUnits(address,bytes32,Offer,uint256) (src/periphery/TakeAmountsLib.sol#17-30) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,error)(buyerPrice <= WAD,TickLib.PriceGreaterThanOne()) (src/periphery/TakeAmountsLib.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Slither:. analyzed (30 contracts with 80 detectors), 81 result(s) found
