@@ -5,12 +5,12 @@ Date: 2026-05-30 (continuation refresh)
 ## Raw logs
 
 - `audits/asyam/workflow/baseline_build.log` — forge build, exit 0
-- `audits/asyam/workflow/baseline_tests.log` — forge test -vvv, 405 passed, 0 failed
-- `audits/asyam/workflow/audit_harness_tests.log` — `test/asyam`, 19 passed, 0 failed
-- `audits/asyam/workflow/finding_validation_tests.log` — `test/asyamFindings`, 13 passed, 0 failed
+- `audits/asyam/workflow/baseline_tests.log` — forge test -vvv, 407 passed, 0 failed
+- `audits/asyam/workflow/audit_harness_tests.log` — `test/asyam`, 20 passed, 0 failed
+- `audits/asyam/workflow/finding_validation_tests.log` — `test/asyamFindings`, 14 passed, 0 failed
 - `audits/asyam/workflow/invariant_tests.log` — audit invariant subset, 6 passed, 0 failed
-- `audits/asyam/workflow/formal_gap_exploratory.log` — C-36 exploratory PoC, 1 passed, 0 failed
-- `audits/asyam/workflow/formal_gap_validation.log` — C-36 promoted validation, 1 passed, 0 failed
+- `audits/asyam/workflow/formal_gap_exploratory.log` — C-36 exploratory PoCs, 2 passed, 0 failed
+- `audits/asyam/workflow/formal_gap_validation.log` — C-36 promoted validations, 2 passed, 0 failed
 
 ## Continuation refresh (2026-05-30)
 
@@ -19,16 +19,16 @@ forge build 2>&1 | tee audits/asyam/workflow/baseline_build.log
 forge test -vvv 2>&1 | tee audits/asyam/workflow/baseline_tests.log
 ```
 
-Result: build success; **405 tests passed**, 0 failed, 0 skipped (40 suites).
+Result: build success; **407 tests passed**, 0 failed, 0 skipped (40 suites).
 
 Priority queue ownership refresh:
 
 ```text
 forge test --match-path 'test/asyam/**/*.sol' -vvv
-19 tests passed, 0 failed, 0 skipped
+20 tests passed, 0 failed, 0 skipped
 
 forge test --match-path 'test/asyamFindings/*.sol' -vvv
-13 tests passed, 0 failed, 0 skipped
+14 tests passed, 0 failed, 0 skipped
 
 forge test --match-path 'test/asyam/invariant/*.sol' -vvvv
 6 tests passed, 0 failed, 0 skipped

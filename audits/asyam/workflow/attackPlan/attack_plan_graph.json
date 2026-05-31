@@ -1,0 +1,61 @@
+{
+  "protocol": "Morpho Midnight",
+  "version": "2026-05-30",
+  "baseline": {
+    "date": "2026-05-30",
+    "forge_build": "ok",
+    "forge_test_total": 407,
+    "forge_test_asyam_harness": 56,
+    "forge_test_asyam_findings": 14
+  },
+  "contracts": [
+    {"id": "Midnight", "path": "src/Midnight.sol", "priority": "P0"},
+    {"id": "MidnightBundles", "path": "src/periphery/MidnightBundles.sol", "priority": "P0"},
+    {"id": "EcrecoverRatifier", "path": "src/ratifiers/EcrecoverRatifier.sol", "priority": "P1"},
+    {"id": "SetterRatifier", "path": "src/ratifiers/SetterRatifier.sol", "priority": "P1"},
+    {"id": "TakeAmountsLib", "path": "src/periphery/TakeAmountsLib.sol", "priority": "P1"},
+    {"id": "ConsumableUnitsLib", "path": "src/periphery/ConsumableUnitsLib.sol", "priority": "P1"}
+  ],
+  "functions": [
+    {"id": "FN-take", "contract": "Midnight", "name": "take", "priority": "P0", "attack_surface_ids": ["AS-048"], "poc_queue_ids": ["AP-001"]},
+    {"id": "FN-liquidate", "contract": "Midnight", "name": "liquidate", "priority": "P0", "poc_queue_ids": ["AP-004", "AP-005", "AP-006"]},
+    {"id": "FN-repay", "contract": "Midnight", "name": "repay", "priority": "P0", "poc_queue_ids": ["AP-021"]},
+    {"id": "FN-withdraw", "contract": "Midnight", "name": "withdraw", "priority": "P0", "poc_queue_ids": ["AP-009"]},
+    {"id": "FN-flashLoan", "contract": "Midnight", "name": "flashLoan", "priority": "P0", "poc_queue_ids": ["AP-019"]},
+    {"id": "FN-bundle-buy-units", "contract": "MidnightBundles", "name": "buyWithUnitsTargetAndWithdrawCollateral", "priority": "P0", "poc_queue_ids": ["AP-014", "AP-023"]}
+  ],
+  "multi_contract_vectors": [
+    {"id": "MC-01", "title": "nested_bundle_sell_callback", "status": "closed_disproven", "poc_queue_ids": ["AP-014"]},
+    {"id": "MC-02", "title": "take_callback_reenter", "status": "closed_disproven", "poc_queue_ids": ["AP-001"]},
+    {"id": "MC-03", "title": "repay_callback_reenter", "status": "closed_duplicate_risk", "poc_queue_ids": ["AP-021"]},
+    {"id": "MC-04", "title": "flash_loan_compose", "status": "closed_disproven", "poc_queue_ids": ["AP-019"]},
+    {"id": "MC-05", "title": "canceled_root_fill", "status": "open", "poc_queue_ids": ["AP-011"]}
+  ],
+  "economic_failure_modes": [
+    {"id": "EFM-001", "name": "over_withdrawal", "invariant_ids": ["AP-INV-001"], "poc_queue_ids": ["AP-009"]},
+    {"id": "EFM-002", "name": "router_balance_leakage", "invariant_ids": ["AP-INV-011"], "poc_queue_ids": ["AP-014"]},
+    {"id": "EFM-003", "name": "healthy_liquidation", "invariant_ids": ["AP-INV-007"], "poc_queue_ids": ["AP-004"]}
+  ],
+  "poc_queue": [
+    {"id": "AP-001", "status": "closed_disproven", "severity_if_proven": "High", "test_file": "test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol"},
+    {"id": "AP-014", "status": "closed_disproven", "severity_if_proven": "High", "test_file": "test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol"},
+    {"id": "AP-019", "status": "closed_disproven", "severity_if_proven": "High", "test_file": "test/asyam/poc/PoC_FlashLoanReentrancy.t.sol"},
+    {"id": "AP-005", "status": "closed_disproven", "severity_if_proven": "High", "test_file": "test/asyam/poc/PoC_LiquidationOverSeize.t.sol"},
+    {"id": "AP-006", "status": "closed_disproven", "severity_if_proven": "Medium", "test_file": "test/asyam/poc/PoC_PostMaturityLiquidation.t.sol"},
+    {"id": "AP-011", "status": "closed_disproven", "severity_if_proven": "Medium", "test_file": "test/asyam/poc/PoC_CanceledRootReuse.t.sol"},
+    {"id": "AP-022", "status": "closed_proven_formal", "severity_if_proven": "Informational", "test_file": "test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol"}
+  ],
+  "invariant_targets": [
+    {"id": "AP-INV-001", "statement": "totalUnits equals debt plus withdrawable", "poc_queue_ids": ["AP-019"]},
+    {"id": "AP-INV-011", "statement": "bundle uses computed amounts not balance sweep", "poc_queue_ids": ["AP-014"]}
+  ],
+  "disproofs": [
+    {"attack_class": "bundler_balance_theft", "verdict": "disproven", "evidence": "PoC_BundleTemporaryBalanceReentrancy.t.sol"},
+    {"attack_class": "take_callback_profit", "verdict": "disproven", "evidence": "PoC_TakeCallbackReentrancy.t.sol"},
+    {"attack_class": "referral_underflow", "verdict": "invalid", "evidence": "PoC_DeepValidationQueues.t.sol"},
+    {"attack_class": "flash_loan_callback_reentrancy", "verdict": "disproven", "evidence": "PoC_FlashLoanReentrancy.t.sol"},
+    {"attack_class": "liquidation_over_seize", "verdict": "disproven", "evidence": "PoC_LiquidationOverSeize.t.sol"},
+    {"attack_class": "canceled_root_reuse", "verdict": "disproven", "evidence": "PoC_CanceledRootReuse.t.sol"},
+    {"attack_class": "liquidate_callback_reentrancy", "verdict": "disproven", "evidence": "PoC_LiquidateCallbackReentrancy.t.sol"}
+  ]
+}

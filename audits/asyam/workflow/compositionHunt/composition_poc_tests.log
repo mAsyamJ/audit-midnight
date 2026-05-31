@@ -1,0 +1,62 @@
+Compiling 2 files with Solc 0.8.34
+Solc 0.8.34 finished in 18.35s
+Compiler run successful!
+
+Ran 1 test for test/asyam/poc/composition/PoC_Comp_ExactTargetCanceledRoot.sol:PoCCompExactTargetCanceledRootTest
+[PASS] testComp_ExactAssetsFallbackAfterCanceledRootLeavesNoResidual() (gas: 618578)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 5.96ms (1.83ms CPU time)
+
+Ran 1 test for test/asyam/poc/composition/PoC_Comp_CallbackRatifierRoot.sol:PoCCompCallbackRatifierRootTest
+[PASS] testComp_CallbackRatifiesNestedRootButSharedConsumedCapStillBinds() (gas: 2786546)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.43ms (2.21ms CPU time)
+
+Ran 1 test for test/asyam/poc/composition/PoC_Comp_MultiCollateralOracleGate.sol:PoCCompMultiCollateralOracleGateTest
+[PASS] testComp_ActivatedOracleRevertBlocksUnwindUntilOracleAndGateRecover() (gas: 1218424)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 6.60ms (2.55ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_FeeChangeRouteQuote.sol:PoCCompFeeChangeRouteQuoteTest
+[PASS] testComp_AllStaleFeeRouteRevertsAndRollsBack() (gas: 366540)
+[PASS] testComp_FeeUpdateSkipsStaleLegAndSettlesFallbackAtCurrentFee() (gas: 736755)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.30ms (3.32ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_LossFactorWithdrawableFee.sol:PoCCompLossFactorWithdrawableFeeTest
+[PASS] testComp_ClaimThenWithdrawAfterSlashRemainsBacked() (gas: 786465)
+[PASS] testComp_WithdrawThenClaimAfterSlashRemainsBacked() (gas: 783870)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.25ms (3.01ms CPU time)
+
+Ran 3 tests for test/asyam/poc/composition/PoC_Comp_MaturityLiquidationFlash.sol:PoCCompMaturityLiquidationFlashTest
+[PASS] testComp_LiquidationPrecreditCannotConsumeUnauthorizedLenderClaim() (gas: 1698776)
+[PASS] testComp_LiquidationPrecreditCannotExternalizeAuthorizedLenderClaimBeforePull() (gas: 1739285)
+[PASS] testComp_SameTokenFlashLiquidationProfitIsOnlyLiquidationIncentive() (gas: 1802482)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 7.56ms (5.04ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_CrossMarketSharedToken.sol:PoCCompCrossMarketSharedTokenTest
+[PASS] testComp_MarketACreditCannotWithdrawFromProductionDistinctMarketB() (gas: 691051)
+[PASS] testComp_NestedWithdrawalRollsOnlyBackedClaimAcrossSharedTokenMarkets() (gas: 2382053)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.04ms (3.68ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_DelegatePermit2Route.sol:PoCCompDelegatePermit2RouteTest
+[PASS] testComp_DelegatedTakerRouteChargesCallerPermitAndPaysReferralExactly() (gas: 744679)
+[PASS] testComp_VictimPermitCannotBeUsedByDifferentDelegatedCaller() (gas: 544507)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.59ms (4.34ms CPU time)
+
+Ran 1 test for test/asyam/poc/composition/PoC_Comp_ReduceOnlyBundleRoute.sol:PoCCompReduceOnlyBundleRouteTest
+[PASS] testComp_RouteSkipsReduceOnlyLegThatWouldCrossCreditIntoDebt() (gas: 1013936)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.94ms (3.39ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_RatifierPeripheryConsumed.sol:PoCCompRatifierPeripheryConsumedTest
+[PASS] testComp_CanceledRootSkipsAndValidSameGroupFallbackRespectsCap() (gas: 581631)
+[PASS] testComp_DirectFillThenCanceledRootFallbackCannotExceedSharedCap() (gas: 645150)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.36ms (6.97ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_PostMaturityBadDebtWithdraw.sol:PoCCompPostMaturityBadDebtWithdrawTest
+[PASS] testComp_PostMaturityBadDebtBeforeRepayWithdrawalOrderOtherLenderFirst() (gas: 1242896)
+[PASS] testComp_RepayBeforePostMaturityBadDebtWithdrawalOrderLenderFirst() (gas: 1242876)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.66ms (6.27ms CPU time)
+
+Ran 2 tests for test/asyam/poc/composition/PoC_Comp_DustDriftToNonDustLoss.sol:PoCCompDustDriftToNonDustLossTest
+[PASS] testComp_FragmentedLendersSocialLossDustIsLinearAndNotExtractable() (gas: 11920529)
+[PASS] testComp_SingleLenderSocialLossLeavesAtMostOneWeiDust() (gas: 1162519)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 25.57ms (26.28ms CPU time)
+
+Ran 12 test suites in 28.19ms (107.27ms CPU time): 21 tests passed, 0 failed, 0 skipped (21 total tests)

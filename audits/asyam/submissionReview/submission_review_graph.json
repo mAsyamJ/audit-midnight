@@ -1,0 +1,101 @@
+{
+  "protocol": "Morpho Midnight",
+  "purpose": "final Low/Gas/Informational submission readiness review after no H/M/C validated",
+  "submit_ready": [
+    {
+      "id": "L-01",
+      "severity": "Low",
+      "packet": "audits/asyam/findings/cantina-L01-signature-malleability.md"
+    },
+    {
+      "id": "P3-02",
+      "severity": "Informational",
+      "packet": "audits/asyam/findings/cantina-P3-02-solvency-spec-market-id-aliasing.md"
+    }
+  ],
+  "hold": [
+    {
+      "id": "P3-01",
+      "reason": "admin-only operational footgun; manual scope judgment required"
+    },
+    {
+      "id": "L-02",
+      "reason": "liquidation-specific gas grief overlaps acknowledged front-run transaction invalidation class"
+    }
+  ],
+  "do_not_submit": [
+    {
+      "id": "L-03",
+      "reason": "intended RCF policy branch; adaptive liquidation succeeds"
+    },
+    {
+      "id": "HPH-POC-003",
+      "reason": "self-liquidation callback composition remains fully charged"
+    },
+    {
+      "id": "AUTH-RESTORE",
+      "reason": "accepted user-signed authorization semantics"
+    },
+    {
+      "id": "AP-001..AP-026",
+      "reason": "closed attack-plan queue"
+    },
+    {
+      "id": "COMP-001..COMP-030",
+      "reason": "closed composition queue"
+    },
+    {
+      "id": "BB-POC-001..BB-POC-020",
+      "reason": "closed or hypothesis-only blackbox queue"
+    },
+    {
+      "id": "PT-POC-001..PT-POC-025",
+      "reason": "unvalidated pattern-transplant backlog"
+    },
+    {
+      "id": "HPH-POC-004..HPH-POC-025",
+      "reason": "unvalidated historical-pattern backlog"
+    }
+  ],
+  "duplicate_risk": [
+    {
+      "id": "L-02",
+      "source": "Spearbit take() front-run revert class"
+    },
+    {
+      "id": "L-03",
+      "source": "Spearbit RCF appendix and generic liquidation quote front-running"
+    }
+  ],
+  "proof_commands": [
+    "forge test --match-path test/asyamFindings/PoC_SignatureMalleability.t.sol -vvv",
+    "forge test --match-path test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol -vvvv",
+    "forge test --match-path test/asyamFindings/PoC_RoleSetterBricking.t.sol -vvv",
+    "forge test --match-path test/asyam/poc/historical/PoC_Hist_TinyRepayLiquidationGrief.t.sol -vvvv",
+    "forge test --match-path test/asyam/poc/historical/PoC_Hist_RcfTopUpLiquidationGrief.t.sol -vvvv"
+  ],
+  "test_results": [
+    {
+      "command": "forge build",
+      "result": "passed"
+    },
+    {
+      "command": "forge test -vvv",
+      "result": "485 passed, 0 failed, 0 skipped"
+    },
+    {
+      "command": "forge test --match-path 'test/asyam/poc/**/*.sol' -vvvv",
+      "result": "91 passed, 0 failed, 0 skipped"
+    }
+  ],
+  "severity_rationale": [
+    {
+      "id": "L-01",
+      "rationale": "canonicality break without replay-based fund loss"
+    },
+    {
+      "id": "P3-02",
+      "rationale": "formal assurance gap without runtime exploit"
+    }
+  ]
+}

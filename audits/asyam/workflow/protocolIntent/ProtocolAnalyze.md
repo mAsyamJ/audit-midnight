@@ -1,1 +1,0 @@
-Analyze protocol economic model, intentions, how it works

@@ -4,18 +4,24 @@
 
 | Field | Value |
 |---|---|
-| **Finding Title** | `Solvency.spec` aliases distinct production markets and can prune valid multi-market traces |
+| **Finding Title** | CVL market-ID summaries alias distinct production markets and can prune valid traces |
 | **Likelihood** | Medium |
 | **Impact** | Low |
 | **Severity** | Informational / P3 formal-assurance gap |
 | **PoC location** | `test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol` |
 | **PoC type** | Local Foundry model-mismatch validation (no fork required) |
+| **Submission status** | Recommended for manual submission as Informational only |
 
 ---
 
 ## Summary
 
-The `Solvency.spec` summary for `IdLib.toId` derives a modeled market ID from only `loanToken`, `maturity`, `chainId`, and the Midnight address. Production `IdLib.toId` derives the ID from the entire `Market` configuration. As a result, the CVL model aliases valid production markets that share a loan token and maturity but differ in collateral configuration, gates, or recovery-close-factor threshold.
+Two CVL summaries for `IdLib.toId` do not preserve the complete production market identity:
+
+- `Solvency.spec` derives a modeled ID from only `loanToken`, `maturity`, `chainId`, and the Midnight address.
+- `NoDivisionByZero.spec` identifies a global market by comparing only the first three collateral entries even though production supports up to 128.
+
+Production `IdLib.toId` derives the ID from the entire `Market` configuration. The incomplete summaries can therefore alias valid production-distinct markets and prune or collapse supported traces.
 
 ## Finding Description
 
@@ -55,17 +61,46 @@ For two valid production markets with the same `loanToken` and `maturity` but di
 
 The same modeled-ID alias also collapses accounting buckets if the omitted fields differ without producing contradictory token requirements, such as differing gates or `rcfThreshold`.
 
+`NoDivisionByZero.spec` has a sibling identity-summary gap. Its global-market predicate compares the array length but inspects only collateral entries `0`, `1`, and `2`:
+
+```cvl
+function equalsGlobalMarket(Midnight.Market market) returns (bool) {
+    return market.loanToken == globalMarketLoanToken
+        && market.collateralParams.length == globalMarketCollateralLength
+        && collateralMatches(market, 0)
+        && collateralMatches(market, 1)
+        && collateralMatches(market, 2)
+        && market.maturity == globalMarketMaturity
+        && market.rcfThreshold == globalMarketRcfThreshold
+        && market.enterGate == globalMarketEnterGate
+        && market.liquidatorGate == globalMarketLiquidatorGate;
+}
+```
+
+The relevant rules do not constrain `globalMarketCollateralLength <= 3`. Two valid four-collateral markets with equal entries `0..2` but different entry `3` satisfy the same model predicate while production computes distinct IDs.
+
 ## Impact Explanation
 
 **Impact: Low / formal-assurance gap**
 
-This does not demonstrate a production insolvency exploit. It means the current CVL proof does not establish its advertised solvency invariant across all supported multi-market configurations. A future accounting regression that manifests only across aliased market configurations could remain undetected by this proof.
+This does not demonstrate a production insolvency exploit. It means the current CVL proofs do not establish their advertised properties across all supported market configurations. A future regression that manifests only across aliased configurations could remain undetected.
+
+### Why this is not High or Medium
+
+Production `IdLib.toId` remains distinct across the tested market
+configurations. The PoC demonstrates an assurance-layer blind spot, not a
+runtime exploit or present user-fund loss.
+
+### Why this is still useful
+
+Fixing the summaries restores the advertised breadth of the formal model and
+reduces the chance that future multi-market regressions are silently pruned.
 
 ## Likelihood Explanation
 
 **Likelihood: Medium**
 
-The protocol intentionally supports multiple markets with the same loan token and maturity. Changing collateral configuration, gates, or `rcfThreshold` is sufficient to produce a distinct production market while preserving the reduced CVL key.
+The protocol intentionally supports multiple markets with the same loan token and maturity and permits up to 128 collateral entries. Changing collateral configuration, gates, or `rcfThreshold` is sufficient to produce a distinct production market while preserving an incomplete CVL identity.
 
 ## Proof of Concept
 
@@ -75,17 +110,16 @@ Run:
 forge test --match-path test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol -vvvv
 ```
 
-The test creates two valid markets with the same loan token and maturity but different collateral tokens. It then proves:
+The tests prove two model mismatches:
 
-- `Midnight.toId` returns different production IDs.
-- both production markets are created successfully.
-- a deterministic stand-in for the CVL ghost-hash input tuple returns the same key for both markets.
+- Two valid single-collateral markets have distinct production IDs but the same `Solvency.spec` reduced tuple.
+- Two valid four-collateral markets differing only at collateral index `3` have distinct production IDs but satisfy the same `NoDivisionByZero.spec` global-market predicate.
 
 The stand-in does not need to reproduce the ghost hash implementation. An uninterpreted function must return the same result for identical arguments.
 
 ## Recommendation
 
-Key the solvency summary by the full encoded market configuration. The existing `certora/helpers/Utils.sol` already exposes `hashMarket`:
+Key both summaries by the full encoded market configuration. The existing `certora/helpers/Utils.sol` already exposes `hashMarket`:
 
 ```cvl
 using Utils as Utils;
@@ -103,4 +137,4 @@ function CVL_toId(Midnight.Market market, uint256 chainId, address midnight) ret
 }
 ```
 
-Add `certora/helpers/Utils.sol` to `certora/confs/Solvency.conf` and rerun the solvency proof with sanity checks.
+Add `certora/helpers/Utils.sol` to the affected configurations, replace prefix-only equality with full market identity, and rerun the proofs with sanity checks.

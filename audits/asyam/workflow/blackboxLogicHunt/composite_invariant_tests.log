@@ -1,0 +1,7 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/asyam/invariant/composite/Invariant_CrossMarketAggregateAccounting.t.sol:InvariantCrossMarketAggregateAccountingTest
+[PASS] testFuzz_Invariant_AllExitOrderingsRemainAggregateBacked(uint256) (runs: 256, μ: 1510363, ~: 1510370)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 451.82ms (448.45ms CPU time)
+
+Ran 1 test suite in 457.04ms (451.82ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

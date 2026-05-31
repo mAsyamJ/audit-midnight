@@ -1,9 +1,32 @@
 No files changed, compilation skipped
 
-Ran 1 test for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
-[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184201)
+Ran 2 tests for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testPoC_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral() (gas: 497854)
 Traces:
-  [184201] PoCSolvencySpecMarketIdAliasingTest::testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets()
+  [497854] PoCSolvencySpecMarketIdAliasingTest::testPoC_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral()
+    ├─ [0] VM::getBlockTimestamp() [staticcall]
+    │   └─ ← [Return] 1
+    ├─ [0] VM::getBlockTimestamp() [staticcall]
+    │   └─ ← [Return] 1
+    ├─ [233986] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001004, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 101, rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [153766] → new <unknown>@0xca43e06702C01EF5E5FC99c4095AC031cEE0E690
+    │   │   └─ ← [Return] 768 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001004, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 101, rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0xdad354eca1fe1c30e9868f66ca43e06702c01ef5e5fc99c4095ac031cee0e690)
+    │   └─ ← [Return] 0xdad354eca1fe1c30e9868f66ca43e06702c01ef5e5fc99c4095ac031cee0e690
+    ├─ [229986] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001005, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 101, rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [153766] → new <unknown>@0xD61313AbaeE6B118966eEaed457Fc0cb3087D346
+    │   │   └─ ← [Return] 768 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001005, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 101, rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0x2ef4c64427f094fd5b2ab2b8d61313abaee6b118966eeaed457fc0cb3087d346)
+    │   └─ ← [Return] 0x2ef4c64427f094fd5b2ab2b8d61313abaee6b118966eeaed457fc0cb3087d346
+    ├─ [1385] Midnight::tickSpacing(0xdad354eca1fe1c30e9868f66ca43e06702c01ef5e5fc99c4095ac031cee0e690) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [1385] Midnight::tickSpacing(0x2ef4c64427f094fd5b2ab2b8d61313abaee6b118966eeaed457fc0cb3087d346) [staticcall]
+    │   └─ ← [Return] 4
+    └─ ← [Return]
+
+[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184389)
+Traces:
+  [184389] PoCSolvencySpecMarketIdAliasingTest::testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets()
     ├─ [0] VM::getBlockTimestamp() [staticcall]
     │   └─ ← [Return] 1
     ├─ [0] VM::getBlockTimestamp() [staticcall]
@@ -25,6 +48,6 @@ Traces:
     │   └─ ← [Return] 31337 [3.133e4]
     └─ ← [Return]
 
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 3.88ms (299.89µs CPU time)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 6.41ms (1.18ms CPU time)
 
-Ran 1 test suite in 13.68ms (3.88ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
+Ran 1 test suite in 20.67ms (6.41ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)

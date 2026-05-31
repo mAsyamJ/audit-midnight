@@ -1,0 +1,2618 @@
+{
+  "protocol": "Morpho Midnight",
+  "purpose": "historical vulnerability pattern transplantation into local authorized audit scope",
+  "datasets": [
+    {
+      "name": "Solodit",
+      "url_or_path": "https://solodit.cyfrin.io/",
+      "classification": "audit-report finding database",
+      "safe_use": "Search historical report mechanisms; never treat search results as proof."
+    },
+    {
+      "name": "Code4rena reports",
+      "url_or_path": "https://code4rena.com/reports",
+      "classification": "audit-report finding database",
+      "safe_use": "Mine public contest report root causes and mitigations."
+    },
+    {
+      "name": "Sherlock public audits",
+      "url_or_path": "https://docs.sherlock.xyz/audits/protocols",
+      "classification": "audit-report index",
+      "safe_use": "Use public report repositories when available."
+    },
+    {
+      "name": "Cantina competitions",
+      "url_or_path": "https://cantina.xyz/competitions",
+      "classification": "public competition index",
+      "safe_use": "Use public competition material only."
+    },
+    {
+      "name": "Immunefi blog",
+      "url_or_path": "https://immunefi.com/blog/",
+      "classification": "postmortem source",
+      "safe_use": "Extract economic exploit mechanisms from published incident analyses."
+    },
+    {
+      "name": "DeFiHackLabs",
+      "url_or_path": "https://github.com/SunWeb3Sec/DeFiHackLabs",
+      "classification": "exploit PoC source",
+      "safe_use": "Translate Foundry reproduction patterns into local-only tests."
+    },
+    {
+      "name": "SWC Registry",
+      "url_or_path": "https://swcregistry.io/",
+      "classification": "legacy vulnerability taxonomy",
+      "safe_use": "Use as terminology only; the registry notes that it is no longer actively maintained."
+    },
+    {
+      "name": "SmartBugs",
+      "url_or_path": "https://github.com/smartbugs/smartbugs",
+      "classification": "analysis benchmark framework",
+      "safe_use": "Use weakness classes as static-analysis prompts."
+    },
+    {
+      "name": "SmartBugs Curated",
+      "url_or_path": "https://github.com/smartbugs/smartbugs-curated",
+      "classification": "labelled benchmark dataset",
+      "safe_use": "Use annotated examples as pattern prompts."
+    },
+    {
+      "name": "DAppSCAN",
+      "url_or_path": "https://github.com/InPlusLab/DAppSCAN",
+      "classification": "academic labelled dataset",
+      "safe_use": "Use project-level weakness labels as hypothesis seeds."
+    },
+    {
+      "name": "AutoMESC",
+      "url_or_path": "https://arxiv.org/abs/2308.10227",
+      "classification": "academic vulnerability-fix dataset",
+      "safe_use": "Use paper metadata and accessible samples; do not assume dataset availability."
+    },
+    {
+      "name": "ScrawlD",
+      "url_or_path": "https://github.com/sujeetc/ScrawlD",
+      "classification": "academic labelled dataset",
+      "safe_use": "Use labels as prompts for contract-specific reasoning."
+    },
+    {
+      "name": "ReEVMBench",
+      "url_or_path": "https://arxiv.org/abs/2505.18753",
+      "classification": "audit-agent benchmark",
+      "safe_use": "Use benchmark categories as coverage prompts."
+    },
+    {
+      "name": "Trail of Bits Building Secure Contracts",
+      "url_or_path": "https://github.com/crytic/building-secure-contracts",
+      "classification": "checklist and methodology",
+      "safe_use": "Use audit methodology and invariant design guidance."
+    },
+    {
+      "name": "Local Cyfrin-derived skills",
+      "url_or_path": "../../../.agents/skills/",
+      "classification": "local checklist and methodology",
+      "safe_use": "Apply the lending, oracle, signature, precision, and access-control checklists."
+    },
+    {
+      "name": "Local Slither output",
+      "url_or_path": "../../slither.log",
+      "classification": "static-analysis hypothesis source",
+      "safe_use": "Use warnings as cues only; require source reasoning and a local PoC."
+    }
+  ],
+  "external_bug_taxonomy": [
+    {
+      "category": "Access control / authorization",
+      "bug_shape": "A capability reaches a caller or call context broader than the intended authority.",
+      "midnight_surfaces": "setIsAuthorized, role setters, ratifiers"
+    },
+    {
+      "category": "Signature / permit / replay / intent mismatch",
+      "bug_shape": "A valid signature authorizes a materially different economic effect.",
+      "midnight_surfaces": "EcrecoverAuthorizer, EcrecoverRatifier, HashLib, Permit2, ERC2612"
+    },
+    {
+      "category": "Accounting / shares / units / debt / credit",
+      "bug_shape": "Equivalent value is represented by fields that drift under ordering.",
+      "midnight_surfaces": "marketState, position, totalUnits, withdrawable"
+    },
+    {
+      "category": "Rounding / precision / dust escalation",
+      "bug_shape": "Small error crosses a later material decision threshold.",
+      "midnight_surfaces": "TakeAmountsLib, ConsumableUnitsLib, TickLib, fee math"
+    },
+    {
+      "category": "Oracle / price / stale data / manipulation",
+      "bug_shape": "Price trust or liveness assumptions leak across a consent boundary.",
+      "midnight_surfaces": "IOracle, liquidate, health checks"
+    },
+    {
+      "category": "Liquidation / bad debt / solvency",
+      "bug_shape": "Liquidation ordering realizes loss before recoverability is exhausted.",
+      "midnight_surfaces": "liquidate, lossFactor, badDebt"
+    },
+    {
+      "category": "Callback / reentrancy / cross-function state",
+      "bug_shape": "External control observes or consumes intermediate state.",
+      "midnight_surfaces": "take, liquidate, flashLoan, ICallbacks"
+    },
+    {
+      "category": "Router / aggregator / periphery / multicall",
+      "bug_shape": "A route is locally valid but violates end-user aggregate intent.",
+      "midnight_surfaces": "MidnightBundles, Midnight.multicall"
+    },
+    {
+      "category": "Flash loan / temporary liquidity",
+      "bug_shape": "Temporary balances satisfy a check or settle twice.",
+      "midnight_surfaces": "flashLoan, callbacks, shared token custody"
+    },
+    {
+      "category": "Token integration / nonstandard ERC20",
+      "bug_shape": "Token behavior violates integration assumptions.",
+      "midnight_surfaces": "SafeTransferLib and all transfers"
+    },
+    {
+      "category": "Fee / reward / claim accounting",
+      "bug_shape": "A claim changes economic context before all positions settle.",
+      "midnight_surfaces": "claimContinuousFee, claimSettlementFee, _updatePosition"
+    },
+    {
+      "category": "Market lifecycle / maturity / epoch boundary",
+      "bug_shape": "The same position receives inconsistent rules at a lifecycle edge.",
+      "midnight_surfaces": "maturity checks, take, repay, liquidate"
+    },
+    {
+      "category": "Cross-market / cross-pool contamination",
+      "bug_shape": "Per-market accounting fails when custody or authorization spans markets.",
+      "midnight_surfaces": "market IDs, shared tokens, periphery"
+    },
+    {
+      "category": "Denial-of-service that turns into value loss",
+      "bug_shape": "A liveness fault blocks a time-sensitive protective action.",
+      "midnight_surfaces": "ratifier, gate, oracle, callback, route loops"
+    },
+    {
+      "category": "State desynchronization",
+      "bug_shape": "Two fields representing one economic state update at different times.",
+      "midnight_surfaces": "position, marketState, bitmap, consumed"
+    },
+    {
+      "category": "Invariant/spec mismatch",
+      "bug_shape": "A proof models fewer paths or identities than runtime code.",
+      "midnight_surfaces": "certora specs and external summaries"
+    },
+    {
+      "category": "Business-logic contradiction",
+      "bug_shape": "Code enforces a weaker promise than protocol intent.",
+      "midnight_surfaces": "bundles, offers, fee and liquidation paths"
+    },
+    {
+      "category": "Governance/admin/configuration boundary",
+      "bug_shape": "A privileged parameter change invalidates user assumptions.",
+      "midnight_surfaces": "role setters, fee setter, market creator"
+    },
+    {
+      "category": "Griefing that escalates to economic harm",
+      "bug_shape": "A cheap adversarial action forces another actor into a loss-making path.",
+      "midnight_surfaces": "ratifiers, roots, route builders, oracle/gate"
+    },
+    {
+      "category": "Formal verification blindspots",
+      "bug_shape": "Summaries, preserved blocks, filters, or vacuity exclude a runtime composition.",
+      "midnight_surfaces": "certora/**"
+    }
+  ],
+  "historical_patterns": [
+    {
+      "id": "PATTERN-001",
+      "title": "lazy borrower index update before withdrawal",
+      "group": "lending market accounting",
+      "source": "Solodit",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-002",
+      "title": "first depositor or empty-market conversion discontinuity",
+      "group": "lending market accounting",
+      "source": "Code4rena reports",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-003",
+      "title": "shared custody counted twice across markets",
+      "group": "lending market accounting",
+      "source": "Sherlock public audits",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-004",
+      "title": "credit and debt unit conversion ordering",
+      "group": "lending market accounting",
+      "source": "Cantina competitions",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-005",
+      "title": "withdrawal after partial debt repayment",
+      "group": "lending market accounting",
+      "source": "Immunefi blog",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-006",
+      "title": "liquidator-selected collateral order socializes avoidable loss",
+      "group": "liquidation and bad debt",
+      "source": "DeFiHackLabs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-007",
+      "title": "partial liquidation leaves worse basket",
+      "group": "liquidation and bad debt",
+      "source": "SWC Registry",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-008",
+      "title": "recoverability checked before final collateral seizure",
+      "group": "liquidation and bad debt",
+      "source": "SmartBugs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-009",
+      "title": "close-factor threshold changes incentive",
+      "group": "liquidation and bad debt",
+      "source": "SmartBugs Curated",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-010",
+      "title": "self-liquidation extracts socialized value",
+      "group": "liquidation and bad debt",
+      "source": "DAppSCAN",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-011",
+      "title": "quote survives lifecycle transition",
+      "group": "fixed-rate / maturity / epoch systems",
+      "source": "AutoMESC",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-012",
+      "title": "exact-boundary action uses inconsistent rule",
+      "group": "fixed-rate / maturity / epoch systems",
+      "source": "ScrawlD",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-013",
+      "title": "late updater bears accrued state",
+      "group": "fixed-rate / maturity / epoch systems",
+      "source": "ReEVMBench",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-014",
+      "title": "maturity disables protective action before settlement",
+      "group": "fixed-rate / maturity / epoch systems",
+      "source": "Trail of Bits Building Secure Contracts",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-015",
+      "title": "epoch rollover reuses stale accounting context",
+      "group": "fixed-rate / maturity / epoch systems",
+      "source": "Local Cyfrin-derived skills",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-016",
+      "title": "non-escrowed maker liquidity disappears after route planning",
+      "group": "offer / order-book systems",
+      "source": "Local Slither output",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-017",
+      "title": "partial fill consumes a broader group than intended",
+      "group": "offer / order-book systems",
+      "source": "Solodit",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-018",
+      "title": "root replacement changes order-family meaning",
+      "group": "offer / order-book systems",
+      "source": "Code4rena reports",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-019",
+      "title": "failed order leg changes fallback economics",
+      "group": "offer / order-book systems",
+      "source": "Sherlock public audits",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-020",
+      "title": "maker callback alters later order execution",
+      "group": "offer / order-book systems",
+      "source": "Cantina competitions",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-021",
+      "title": "partial-success poison leg",
+      "group": "router / aggregator systems",
+      "source": "Immunefi blog",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-022",
+      "title": "final balance used instead of route delta",
+      "group": "router / aggregator systems",
+      "source": "DeFiHackLabs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-023",
+      "title": "approval residue changes later route",
+      "group": "router / aggregator systems",
+      "source": "SWC Registry",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-024",
+      "title": "mixed-market route crosses consent boundary",
+      "group": "router / aggregator systems",
+      "source": "SmartBugs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-025",
+      "title": "multicall combines individually safe state transitions",
+      "group": "router / aggregator systems",
+      "source": "SmartBugs Curated",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-026",
+      "title": "signed grant survives mental-model revocation",
+      "group": "permits and delegated authorization",
+      "source": "DAppSCAN",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-027",
+      "title": "signature reused in a different operation context",
+      "group": "permits and delegated authorization",
+      "source": "AutoMESC",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-028",
+      "title": "relayer substitutes receiver or referral",
+      "group": "permits and delegated authorization",
+      "source": "ScrawlD",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-029",
+      "title": "delegate combines harmless powers",
+      "group": "permits and delegated authorization",
+      "source": "ReEVMBench",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-030",
+      "title": "permit front-run changes route context",
+      "group": "permits and delegated authorization",
+      "source": "Trail of Bits Building Secure Contracts",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-031",
+      "title": "liveness fault blocks time-sensitive exit",
+      "group": "oracle / gate systems",
+      "source": "Local Cyfrin-derived skills",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-032",
+      "title": "multi-collateral price asymmetry changes seizure order",
+      "group": "oracle / gate systems",
+      "source": "Local Slither output",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-033",
+      "title": "bad market oracle contaminates indirect route",
+      "group": "oracle / gate systems",
+      "source": "Solodit",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-034",
+      "title": "gate changes after debt entry",
+      "group": "oracle / gate systems",
+      "source": "Code4rena reports",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-035",
+      "title": "oracle callback observes intermediate state",
+      "group": "oracle / gate systems",
+      "source": "Sherlock public audits",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-036",
+      "title": "cross-function observation of transient state",
+      "group": "callbacks and hooks",
+      "source": "Cantina competitions",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-037",
+      "title": "duplicate callback settlement obligation",
+      "group": "callbacks and hooks",
+      "source": "Immunefi blog",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-038",
+      "title": "callback alters later route leg",
+      "group": "callbacks and hooks",
+      "source": "DeFiHackLabs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-039",
+      "title": "gas or return-data grief after earlier effect",
+      "group": "callbacks and hooks",
+      "source": "SWC Registry",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-040",
+      "title": "hook composes with maturity transition",
+      "group": "callbacks and hooks",
+      "source": "SmartBugs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-041",
+      "title": "claim before lazy positions settle",
+      "group": "fee / reward accounting",
+      "source": "SmartBugs Curated",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-042",
+      "title": "fee claim context changes after socialized loss",
+      "group": "fee / reward accounting",
+      "source": "DAppSCAN",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-043",
+      "title": "settlement fee custody overlaps another market",
+      "group": "fee / reward accounting",
+      "source": "AutoMESC",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-044",
+      "title": "rounding remainder crosses later threshold",
+      "group": "fee / reward accounting",
+      "source": "ScrawlD",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-045",
+      "title": "fee update invalidates route economics",
+      "group": "fee / reward accounting",
+      "source": "ReEVMBench",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-046",
+      "title": "rounding direction differs across inverse operation",
+      "group": "share / unit conversions",
+      "source": "Trail of Bits Building Secure Contracts",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-047",
+      "title": "one-wei value flips health branch",
+      "group": "share / unit conversions",
+      "source": "Local Cyfrin-derived skills",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-048",
+      "title": "division-before-multiplication compounds loss",
+      "group": "share / unit conversions",
+      "source": "Local Slither output",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-049",
+      "title": "zero-to-nonzero supply changes conversion",
+      "group": "share / unit conversions",
+      "source": "Solodit",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-050",
+      "title": "narrow representation aliases economic state",
+      "group": "share / unit conversions",
+      "source": "Code4rena reports",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-051",
+      "title": "bitmap and balance transition disagree",
+      "group": "multi-collateral systems",
+      "source": "Sherlock public audits",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-052",
+      "title": "collateral-index boundary selects wrong asset",
+      "group": "multi-collateral systems",
+      "source": "Cantina competitions",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-053",
+      "title": "seizure order preserves toxic basket",
+      "group": "multi-collateral systems",
+      "source": "Immunefi blog",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-054",
+      "title": "zero withdrawal mutates activation state",
+      "group": "multi-collateral systems",
+      "source": "DeFiHackLabs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-055",
+      "title": "one collateral liveness fault blocks basket recovery",
+      "group": "multi-collateral systems",
+      "source": "SWC Registry",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-056",
+      "title": "formal alias writes one market and proves another",
+      "group": "invariant / model mismatch",
+      "source": "SmartBugs",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-057",
+      "title": "external call summary excludes callback effect",
+      "group": "invariant / model mismatch",
+      "source": "SmartBugs Curated",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-058",
+      "title": "filtered method omits periphery composition",
+      "group": "invariant / model mismatch",
+      "source": "DAppSCAN",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-059",
+      "title": "revert pruning hides rollback-dependent property",
+      "group": "invariant / model mismatch",
+      "source": "AutoMESC",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PATTERN-060",
+      "title": "event reconstruction diverges from storage",
+      "group": "invariant / model mismatch",
+      "source": "ScrawlD",
+      "status": "hypothesis_only"
+    }
+  ],
+  "midnight_surface_map": [
+    {
+      "surface": "Midnight.take",
+      "patterns": "order-book, callback, maturity, consumed cap",
+      "already_tested": "direct callback and cap paths",
+      "untested_equivalent": "maker callback changes a later periphery leg after a valid fill"
+    },
+    {
+      "surface": "Midnight.liquidate",
+      "patterns": "liquidation, bad debt, collateral ordering, fee/loss",
+      "already_tested": "direct over-seize, bad debt, post-maturity",
+      "untested_equivalent": "compare private gain and social loss across collateral-order permutations"
+    },
+    {
+      "surface": "Midnight.repay",
+      "patterns": "lazy accounting, same-token custody, maturity",
+      "already_tested": "same-token self-loop and partial repay compositions",
+      "untested_equivalent": "fragmented-lender lazy-touch control comparison"
+    },
+    {
+      "surface": "Midnight.withdraw",
+      "patterns": "withdrawable backing, fee/loss ordering",
+      "already_tested": "direct overstatement and ordering permutations",
+      "untested_equivalent": "aggregate continuous-fee claim context switch"
+    },
+    {
+      "surface": "Midnight.supplyCollateral",
+      "patterns": "bitmap, route pre-action, consent",
+      "already_tested": "basic bitmap and bundle balance paths",
+      "untested_equivalent": "pre-route collateral action combined with a poison leg"
+    },
+    {
+      "surface": "Midnight.withdrawCollateral",
+      "patterns": "health, bitmap, oracle/gate",
+      "already_tested": "direct bitmap and chosen-market oracle paths",
+      "untested_equivalent": "nonconsenting route exposure plus liveness escalation"
+    },
+    {
+      "surface": "Midnight.flashLoan",
+      "patterns": "temporary liquidity, callbacks, duplicate arrays",
+      "already_tested": "direct repayment bypass and callback reentry",
+      "untested_equivalent": "duplicate-token array settlement with standard ERC20s"
+    },
+    {
+      "surface": "Midnight.multicall",
+      "patterns": "delegatecall batching and sender preservation",
+      "already_tested": "native role-setter batching only",
+      "untested_equivalent": "permissionless state-transition composition"
+    },
+    {
+      "surface": "Midnight.setIsAuthorized",
+      "patterns": "delegation and relayer context",
+      "already_tested": "restore-after-revoke accepted semantics",
+      "untested_equivalent": "capability composition beyond the signed intent"
+    },
+    {
+      "surface": "Midnight.setConsumed",
+      "patterns": "offer-family grouping",
+      "already_tested": "direct cap bypass and root reuse",
+      "untested_equivalent": "ratified family semantic collision beyond known group overfill"
+    },
+    {
+      "surface": "EcrecoverAuthorizer",
+      "patterns": "signature domain and semantic reuse",
+      "already_tested": "malleability and restore-after-revoke",
+      "untested_equivalent": "receiver, referral, or operation-context split"
+    },
+    {
+      "surface": "EcrecoverRatifier",
+      "patterns": "root activation and signed intent",
+      "already_tested": "canceled root and delegate activation",
+      "untested_equivalent": "leaf meaning differs across route context"
+    },
+    {
+      "surface": "SetterRatifier",
+      "patterns": "root lifecycle and privilege",
+      "already_tested": "basic root lifecycle",
+      "untested_equivalent": "route execution after root semantics change"
+    },
+    {
+      "surface": "HashLib",
+      "patterns": "typehash completeness and collision resistance",
+      "already_tested": "known obligation-ID concerns",
+      "untested_equivalent": "cross-intent leaf equivalence audit"
+    },
+    {
+      "surface": "MidnightBundles",
+      "patterns": "router custody, exact target, permits, fallback",
+      "already_tested": "temporary balance, helper skip, quote fallback",
+      "untested_equivalent": "partial-success poison route and involuntary market mixing"
+    },
+    {
+      "surface": "TakeAmountsLib",
+      "patterns": "rounding and helper/core agreement",
+      "already_tested": "direct helper mismatch",
+      "untested_equivalent": "threshold flip only when it enables a later material branch"
+    },
+    {
+      "surface": "ConsumableUnitsLib",
+      "patterns": "cap consumption and grouped units",
+      "already_tested": "direct cap overfill",
+      "untested_equivalent": "semantic grouping collision across ratified families"
+    },
+    {
+      "surface": "TickLib",
+      "patterns": "price conversion threshold",
+      "already_tested": "zero price and rounding corpus",
+      "untested_equivalent": "one-wei health or liquidation decision flip"
+    },
+    {
+      "surface": "UtilsLib",
+      "patterns": "unit conversion and arithmetic",
+      "already_tested": "prior precision review",
+      "untested_equivalent": "zero-to-nonzero conversion discontinuity"
+    },
+    {
+      "surface": "IdLib",
+      "patterns": "market identity",
+      "already_tested": "formal aliasing and hardfork replay",
+      "untested_equivalent": "runtime executable alias only"
+    },
+    {
+      "surface": "SafeTransferLib",
+      "patterns": "transfer return semantics",
+      "already_tested": "token assumptions documented",
+      "untested_equivalent": "standard-token aggregate custody only"
+    },
+    {
+      "surface": "ConstantsLib",
+      "patterns": "threshold constants",
+      "already_tested": "basic review",
+      "untested_equivalent": "boundary fuzz prompts"
+    },
+    {
+      "surface": "ICallbacks",
+      "patterns": "external control and gas behavior",
+      "already_tested": "direct callback actor-binding",
+      "untested_equivalent": "later-leg or aggregate route interaction"
+    },
+    {
+      "surface": "IOracle",
+      "patterns": "price and liveness trust",
+      "already_tested": "chosen-market risk documented",
+      "untested_equivalent": "indirect nonconsenting exposure only"
+    },
+    {
+      "surface": "IGate",
+      "patterns": "entry and liquidation liveness",
+      "already_tested": "chosen-market risk documented",
+      "untested_equivalent": "indirect exposure plus time-sensitive loss only"
+    }
+  ],
+  "unexplored_equivalents": [
+    {
+      "id": "MUE-001",
+      "title": "Duplicate-token flash-array settlement",
+      "surface": "Midnight.flashLoan",
+      "sequence": "Repeat one standard ERC20 in tokens[] with split amounts, overlap held custody, repay callback, and compare aggregate backing.",
+      "invariant": "Each token leaves the call with custody unchanged after the sum of obligations.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-002",
+      "title": "Multicall state-transition composition",
+      "surface": "Midnight.multicall",
+      "sequence": "Batch permissionless or legitimately authorized actions that are normally separated by an observation boundary.",
+      "invariant": "Batching cannot escape debt, collateral health, cap, or custody checks.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-003",
+      "title": "Liquidation-order private-gain divergence",
+      "surface": "Midnight.liquidate",
+      "sequence": "Liquidate equivalent multi-collateral positions in alternate order and compare proceeds plus social loss.",
+      "invariant": "Collateral ordering cannot create avoidable lender loss beyond documented incentives.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-004",
+      "title": "Lazy fee-claim context switch",
+      "surface": "claimContinuousFee / withdraw",
+      "sequence": "Touch only a subset of lenders around accrued fees, bounded bad debt, claim, repay, and withdrawal.",
+      "invariant": "Claim plus lender withdrawals remains backed and order-independent.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-005",
+      "title": "Partial-success poison route",
+      "surface": "MidnightBundles take loops",
+      "sequence": "Execute a valid route leg, then a bounded failing or gas-heavy ratifier leg, then inspect rollback or continuation.",
+      "invariant": "Route failure cannot strand collateral or preserve partial unintended economics.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-006",
+      "title": "Ratified Merkle leaf economic-family collision",
+      "surface": "HashLib / EcrecoverRatifier / setConsumed",
+      "sequence": "Compare signed leaves whose local fields are valid but whose group meaning crosses order families.",
+      "invariant": "One maker-signed economic family cannot consume or unlock another without equivalent intent.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-007",
+      "title": "Involuntary oracle-liveness route contamination",
+      "surface": "MidnightBundles / IOracle",
+      "sequence": "Route an actor through a market whose oracle liveness later blocks a time-sensitive exit.",
+      "invariant": "A victim cannot acquire unsafe-market exposure without explicit consent.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-008",
+      "title": "RCF one-wei flip after collateral-order choice",
+      "surface": "Midnight.liquidate",
+      "sequence": "Place state around the RCF boundary and compare selected collateral order.",
+      "invariant": "A tiny threshold change cannot enable non-dust private extraction.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-009",
+      "title": "Permit receiver-referral semantic split",
+      "surface": "MidnightBundles / Permit2 / ERC2612",
+      "sequence": "Use valid pull authority while varying receiver and referral in an economically distinct route.",
+      "invariant": "Token-pull consent cannot authorize an unbound economic beneficiary.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-010",
+      "title": "Read-only intermediate-state route influence",
+      "surface": "ICallbacks / IOracle / MidnightBundles",
+      "sequence": "Observe intermediate state during one leg and use it to select or affect a later leg.",
+      "invariant": "Intermediate observations cannot create an unbacked later settlement.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-011",
+      "title": "Flash empty-array callback as route primitive",
+      "surface": "Midnight.flashLoan / ICallbacks",
+      "sequence": "Invoke callback with empty arrays only as a component of a later state transition.",
+      "invariant": "Empty temporary-liquidity calls cannot bypass an unrelated invariant.",
+      "status": "dedup_only"
+    },
+    {
+      "id": "MUE-012",
+      "title": "Force-approve residue under standard token",
+      "surface": "MidnightBundles.forceApproveMax",
+      "sequence": "Execute repeated standard-token routes and inspect allowances plus token custody.",
+      "invariant": "Residual allowance cannot move caller funds outside caller-authorized pulls.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-013",
+      "title": "ERC2612 tolerate-front-run semantic change",
+      "surface": "MidnightBundles.pullToken",
+      "sequence": "Front-run permit consumption, retain allowance, and execute a different route context.",
+      "invariant": "Tolerance cannot widen the economic intent beyond the allowance owner decision.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-014",
+      "title": "Gate liveness plus maturity exit loss",
+      "surface": "IGate / liquidate / withdrawCollateral",
+      "sequence": "Combine a route-acquired market position, gate liveness change, and maturity boundary.",
+      "invariant": "A third party cannot force time-sensitive loss through indirect gate exposure.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-015",
+      "title": "Multi-market aggregate custody after nested callback",
+      "surface": "take / callback / shared loan token",
+      "sequence": "Use standard shared token markets and a later callback state action, then reconcile aggregate custody.",
+      "invariant": "Per-market local settlement composes into aggregate token backing.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-016",
+      "title": "Settlement fee claim around shared custody",
+      "surface": "claimSettlementFee / shared token markets",
+      "sequence": "Accrue and claim fees while another market uses the same standard token and compare custody.",
+      "invariant": "Claims cannot spend backing attributable to another market.",
+      "status": "dedup_only"
+    },
+    {
+      "id": "MUE-017",
+      "title": "Maker liquidity disappearance after partial route",
+      "surface": "MidnightBundles / take",
+      "sequence": "Build multiple-leg route where non-escrowed maker balance vanishes after an earlier valid leg.",
+      "invariant": "User aggregate bounds and atomicity hold despite disappearing maker liquidity.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-018",
+      "title": "Root replacement changes fallback economics",
+      "surface": "EcrecoverRatifier / MidnightBundles",
+      "sequence": "Consume partially, cancel root, activate a semantically different root, execute prepared route.",
+      "invariant": "Prepared route cannot violate explicit user bounds after root lifecycle change.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-019",
+      "title": "Repeated collateral index activation order",
+      "surface": "supplyCollateral / withdrawCollateral / liquidate",
+      "sequence": "Activate and zero multiple indexes in differing orders before liquidation.",
+      "invariant": "Bitmap and balances select the same collateral set.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-020",
+      "title": "Index boundary at maximum collateral length",
+      "surface": "createMarket / liquidate",
+      "sequence": "Exercise highest valid collateral index with alternate activation order.",
+      "invariant": "Collateral index arithmetic cannot address the wrong asset.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-021",
+      "title": "Zero-withdraw bitmap transition as composition component",
+      "surface": "withdrawCollateral",
+      "sequence": "Issue zero withdrawal before later oracle/gate and liquidation actions.",
+      "invariant": "Zero-value calls cannot alter later non-dust decisions.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-022",
+      "title": "Continuous-fee threshold flips health decision",
+      "surface": "_updatePosition / withdrawCollateral",
+      "sequence": "Accrue exactly around fee rounding boundary before health-sensitive action.",
+      "invariant": "Dust cannot trigger material collateral retention or escape.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-023",
+      "title": "Tick conversion one-wei liquidation branch",
+      "surface": "TickLib / take / liquidate",
+      "sequence": "Set prices around tick conversion and follow through liquidation.",
+      "invariant": "Precision remainder cannot create non-dust social loss.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-024",
+      "title": "Route quote survives maturity transition",
+      "surface": "MidnightBundles / take / maturity",
+      "sequence": "Build route before maturity and execute at boundary with fallback offers.",
+      "invariant": "Lifecycle change cannot silently widen user economics.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-025",
+      "title": "Relayer combines signed authorization and referral",
+      "surface": "EcrecoverAuthorizer / MidnightBundles",
+      "sequence": "Use an authorized relayer with a valid grant and substitute route beneficiary fields.",
+      "invariant": "Grant semantics remain bounded to user-authorized economic effects.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-026",
+      "title": "Ratifier return-data grief after earlier route effect",
+      "surface": "ratifier / MidnightBundles",
+      "sequence": "Use bounded oversized return or revert data in a later route leg.",
+      "invariant": "A hostile leg cannot preserve earlier unintended state or force third-party loss.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-027",
+      "title": "Oracle return-data grief during protective action",
+      "surface": "IOracle / withdrawCollateral / liquidate",
+      "sequence": "Use bounded oracle failure only after indirect route exposure.",
+      "invariant": "Liveness fault cannot become involuntary solvency loss.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-028",
+      "title": "Callback later-leg gas grief",
+      "surface": "take callback / MidnightBundles",
+      "sequence": "Spend bounded gas after one successful route leg and inspect transaction atomicity.",
+      "invariant": "Callback grief cannot strand route-owned value.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-029",
+      "title": "Consumed semantic collision across market IDs",
+      "surface": "setConsumed / HashLib / MidnightBundles",
+      "sequence": "Reuse group identifier across markets with distinct economic meaning.",
+      "invariant": "Consumed accounting cannot cross maker intent boundaries unexpectedly.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-030",
+      "title": "Formal external-call summary excludes route state",
+      "surface": "certora/** / MidnightBundles",
+      "sequence": "Map unresolved calls and unmodelled periphery into an executable harness plan.",
+      "invariant": "Formal assurance gaps require runtime reproduction before severity promotion.",
+      "status": "methodology_only"
+    },
+    {
+      "id": "MUE-031",
+      "title": "Event reconstruction misses lazy position settlement",
+      "surface": "events / _updatePosition",
+      "sequence": "Replay emitted events around lazy fee and loss updates and compare storage.",
+      "invariant": "Indexers can reconstruct economically relevant state or docs identify limitation.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-032",
+      "title": "Claimable fee zero-to-nonzero discontinuity",
+      "surface": "claimContinuousFee",
+      "sequence": "Cross minimum claim threshold then continue into lender withdrawal.",
+      "invariant": "Claim threshold cannot shift a material liability.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-033",
+      "title": "Withdrawal equality branch after loss update",
+      "surface": "withdraw / _updatePosition",
+      "sequence": "Place lender claim one wei around withdrawable equality after bounded social loss.",
+      "invariant": "Equality boundary cannot externalize another lender's backing.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-034",
+      "title": "Non-escrowed maker balance race plus exact route",
+      "surface": "MidnightBundles buyExact / sellExact",
+      "sequence": "Remove maker balance between quote and route while preserving alternate offers.",
+      "invariant": "Exact-route bounds remain enforced under liquidity race.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-035",
+      "title": "Market creator plus route-builder consent mismatch",
+      "surface": "createMarket / MidnightBundles",
+      "sequence": "Place a malicious quality market into mixed route and prove whether user consent is explicit.",
+      "invariant": "Permissionless creation cannot contaminate an unrelated user position.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-036",
+      "title": "Multi-collateral oracle asymmetry after partial repay",
+      "surface": "repay / liquidate / IOracle",
+      "sequence": "Partially repay before asymmetric oracle liveness and order-selective liquidation.",
+      "invariant": "Repay cannot worsen recoverability through order-dependent accounting.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-037",
+      "title": "Flash duplicate array plus multicall nesting",
+      "surface": "flashLoan / multicall",
+      "sequence": "Use repeated tokens and callback multicall without direct repayment bypass assumptions.",
+      "invariant": "Nested standard-token settlement remains aggregate-backed.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-038",
+      "title": "Ratified root same-leaf duplicate proof",
+      "surface": "HashLib / ratifier",
+      "sequence": "Test duplicated proof elements and repeated leaf consumption as economic-family component.",
+      "invariant": "Proof structure cannot widen fill authority.",
+      "status": "dedup_only"
+    },
+    {
+      "id": "MUE-039",
+      "title": "Maturity quote plus authorization revocation ordering",
+      "surface": "take / setIsAuthorized / MidnightBundles",
+      "sequence": "Prepare route, change delegation, cross maturity, and execute.",
+      "invariant": "Authorization and lifecycle checks bind at settlement.",
+      "status": "new_poc_queue"
+    },
+    {
+      "id": "MUE-040",
+      "title": "LossFactor control execution with all positions touched",
+      "surface": "_updatePosition / liquidate / withdraw",
+      "sequence": "Compare adversarial touch order with eager-touch control.",
+      "invariant": "Lazy updates cannot change aggregate redemption value.",
+      "status": "new_poc_queue"
+    }
+  ],
+  "business_logic_patterns": [
+    {
+      "id": "BLP-001",
+      "title": "aggregate user spend bound differs from local leg bounds",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-002",
+      "title": "maker offer family means more than its locally checked leaf",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-003",
+      "title": "lender claim changes economic context before peers settle",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-004",
+      "title": "borrower exit expectation diverges from lazy health update",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-005",
+      "title": "liquidator choice changes social loss rather than only incentive",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-006",
+      "title": "fee schedule context changes between route construction and settlement",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-007",
+      "title": "authorization capability is valid locally but broader economically",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-008",
+      "title": "permissionless market quality leaks into another actor route",
+      "surface": "createMarket",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-009",
+      "title": "off-chain route assumes escrow that core does not provide",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-010",
+      "title": "maturity settlement expectation differs across entrypoints",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-011",
+      "title": "aggregate user spend bound differs from local leg bounds",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-012",
+      "title": "maker offer family means more than its locally checked leaf",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-013",
+      "title": "lender claim changes economic context before peers settle",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-014",
+      "title": "borrower exit expectation diverges from lazy health update",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-015",
+      "title": "liquidator choice changes social loss rather than only incentive",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-016",
+      "title": "fee schedule context changes between route construction and settlement",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-017",
+      "title": "authorization capability is valid locally but broader economically",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-018",
+      "title": "permissionless market quality leaks into another actor route",
+      "surface": "createMarket",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-019",
+      "title": "off-chain route assumes escrow that core does not provide",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-020",
+      "title": "maturity settlement expectation differs across entrypoints",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-021",
+      "title": "aggregate user spend bound differs from local leg bounds",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-022",
+      "title": "maker offer family means more than its locally checked leaf",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-023",
+      "title": "lender claim changes economic context before peers settle",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-024",
+      "title": "borrower exit expectation diverges from lazy health update",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-025",
+      "title": "liquidator choice changes social loss rather than only incentive",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-026",
+      "title": "fee schedule context changes between route construction and settlement",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-027",
+      "title": "authorization capability is valid locally but broader economically",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-028",
+      "title": "permissionless market quality leaks into another actor route",
+      "surface": "createMarket",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-029",
+      "title": "off-chain route assumes escrow that core does not provide",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "BLP-030",
+      "title": "maturity settlement expectation differs across entrypoints",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    }
+  ],
+  "economic_exploit_patterns": [
+    {
+      "id": "EEP-001",
+      "title": "free option from non-escrowed maker liquidity",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-002",
+      "title": "stale route quote after lifecycle change",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-003",
+      "title": "private liquidation gain with avoidable social loss",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-004",
+      "title": "lender loss without exhausted collateral recovery",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-005",
+      "title": "borrower collateral escape after deferred update",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-006",
+      "title": "fee claim before loss allocation",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-007",
+      "title": "dust remainder flips later material branch",
+      "surface": "TickLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-008",
+      "title": "maturity-boundary arbitrage across route legs",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-009",
+      "title": "cheap grief forces time-sensitive loss",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-010",
+      "title": "shared-token aggregate accounting drift",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-011",
+      "title": "cap exhaustion changes fallback economics",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-012",
+      "title": "socialized loss with privately selected collateral order",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-013",
+      "title": "temporary liquidity satisfies aggregate check twice",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-014",
+      "title": "zero-to-nonzero conversion changes redemption",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-015",
+      "title": "partial repay changes liquidation incentive",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-016",
+      "title": "free option from non-escrowed maker liquidity",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-017",
+      "title": "stale route quote after lifecycle change",
+      "surface": "TickLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-018",
+      "title": "private liquidation gain with avoidable social loss",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-019",
+      "title": "lender loss without exhausted collateral recovery",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-020",
+      "title": "borrower collateral escape after deferred update",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-021",
+      "title": "fee claim before loss allocation",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-022",
+      "title": "dust remainder flips later material branch",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-023",
+      "title": "maturity-boundary arbitrage across route legs",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-024",
+      "title": "cheap grief forces time-sensitive loss",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-025",
+      "title": "shared-token aggregate accounting drift",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-026",
+      "title": "cap exhaustion changes fallback economics",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-027",
+      "title": "socialized loss with privately selected collateral order",
+      "surface": "TickLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-028",
+      "title": "temporary liquidity satisfies aggregate check twice",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-029",
+      "title": "zero-to-nonzero conversion changes redemption",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "EEP-030",
+      "title": "partial repay changes liquidation incentive",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    }
+  ],
+  "state_machine_accounting_patterns": [
+    {
+      "id": "SAP-001",
+      "title": "state changed before transfer",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-002",
+      "title": "transfer before state changed",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-003",
+      "title": "external call between coupled updates",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-004",
+      "title": "view uses lazy position",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-005",
+      "title": "position touch skipped in one path",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-006",
+      "title": "lossFactor applied twice or omitted",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-007",
+      "title": "pendingFee direction differs by order",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-008",
+      "title": "withdrawable updated on one branch only",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-009",
+      "title": "bitmap and collateral amount diverge",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-010",
+      "title": "consumed updates before economic settlement",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-011",
+      "title": "fee claim executes after loss context change",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-012",
+      "title": "badDebt and totalUnits ordering diverge",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-013",
+      "title": "duplicate array entry reuses obligation",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-014",
+      "title": "multicall compresses expected observation boundary",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-015",
+      "title": "event reconstruction lags storage",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-016",
+      "title": "state changed before transfer",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-017",
+      "title": "transfer before state changed",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-018",
+      "title": "external call between coupled updates",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-019",
+      "title": "view uses lazy position",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-020",
+      "title": "position touch skipped in one path",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-021",
+      "title": "lossFactor applied twice or omitted",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-022",
+      "title": "pendingFee direction differs by order",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-023",
+      "title": "withdrawable updated on one branch only",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-024",
+      "title": "bitmap and collateral amount diverge",
+      "surface": "withdraw",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-025",
+      "title": "consumed updates before economic settlement",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-026",
+      "title": "fee claim executes after loss context change",
+      "surface": "flashLoan",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-027",
+      "title": "badDebt and totalUnits ordering diverge",
+      "surface": "multicall",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-028",
+      "title": "duplicate array entry reuses obligation",
+      "surface": "claimContinuousFee",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-029",
+      "title": "multicall compresses expected observation boundary",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "SAP-030",
+      "title": "event reconstruction lags storage",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    }
+  ],
+  "auth_signature_intent_patterns": [
+    {
+      "id": "ASI-001",
+      "title": "signed grant survives user mental-model revoke",
+      "surface": "setIsAuthorized",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-002",
+      "title": "signature authorizes a wider economic route",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-003",
+      "title": "delegate combines harmless capabilities",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-004",
+      "title": "root and consumed family meanings diverge",
+      "surface": "HashLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-005",
+      "title": "nonce domain excludes economic context",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-006",
+      "title": "same signature feeds a distinct operation context",
+      "surface": "MidnightBundles.pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-007",
+      "title": "authorized signer and maker roles become confused",
+      "surface": "Permit2",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-008",
+      "title": "periphery caller and onBehalf meanings diverge",
+      "surface": "ERC2612",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-009",
+      "title": "permit amount funds a different beneficiary",
+      "surface": "setIsAuthorized",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-010",
+      "title": "semantic replay remains after technical replay prevention",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-011",
+      "title": "referral recipient is unbound from pulled-token intent",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-012",
+      "title": "receiver changes after route preparation",
+      "surface": "HashLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-013",
+      "title": "root cancellation does not cancel equivalent family",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-014",
+      "title": "relayer reorders valid signed operations",
+      "surface": "MidnightBundles.pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-015",
+      "title": "signed grant survives user mental-model revoke",
+      "surface": "Permit2",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-016",
+      "title": "signature authorizes a wider economic route",
+      "surface": "ERC2612",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-017",
+      "title": "delegate combines harmless capabilities",
+      "surface": "setIsAuthorized",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-018",
+      "title": "root and consumed family meanings diverge",
+      "surface": "EcrecoverAuthorizer",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-019",
+      "title": "nonce domain excludes economic context",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-020",
+      "title": "same signature feeds a distinct operation context",
+      "surface": "HashLib",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-021",
+      "title": "authorized signer and maker roles become confused",
+      "surface": "setConsumed",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-022",
+      "title": "periphery caller and onBehalf meanings diverge",
+      "surface": "MidnightBundles.pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-023",
+      "title": "permit amount funds a different beneficiary",
+      "surface": "Permit2",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-024",
+      "title": "semantic replay remains after technical replay prevention",
+      "surface": "ERC2612",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "ASI-025",
+      "title": "referral recipient is unbound from pulled-token intent",
+      "surface": "setIsAuthorized",
+      "status": "hypothesis_only"
+    }
+  ],
+  "oracle_liquidation_bad_debt_patterns": [
+    {
+      "id": "OLB-001",
+      "title": "route exposes victim to unchosen oracle",
+      "surface": "IOracle",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-002",
+      "title": "gate liveness blocks time-sensitive protective exit",
+      "surface": "IGate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-003",
+      "title": "collateral order changes recovery under asymmetric prices",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-004",
+      "title": "maturity changes liquidation mode after quote",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-005",
+      "title": "bad debt realizes before all recoverability paths",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-006",
+      "title": "lender loss allocates before lazy update",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-007",
+      "title": "oracle liveness freezes withdrawal into liquidation",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-008",
+      "title": "gate liveness plus maturity escalates loss",
+      "surface": "IOracle",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-009",
+      "title": "multi-collateral price asymmetry favors toxic basket",
+      "surface": "IGate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-010",
+      "title": "maxLif boundary changes private gain",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-011",
+      "title": "LLTV one-wei boundary changes solvency",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-012",
+      "title": "RCF threshold combines with collateral order",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-013",
+      "title": "zero collateral branch changes bitmap",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-014",
+      "title": "zero repay branch alters later recovery",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-015",
+      "title": "liquidation callback observes intermediate state",
+      "surface": "IOracle",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-016",
+      "title": "route exposes victim to unchosen oracle",
+      "surface": "IGate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-017",
+      "title": "gate liveness blocks time-sensitive protective exit",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-018",
+      "title": "collateral order changes recovery under asymmetric prices",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-019",
+      "title": "maturity changes liquidation mode after quote",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-020",
+      "title": "bad debt realizes before all recoverability paths",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-021",
+      "title": "lender loss allocates before lazy update",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-022",
+      "title": "oracle liveness freezes withdrawal into liquidation",
+      "surface": "IOracle",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-023",
+      "title": "gate liveness plus maturity escalates loss",
+      "surface": "IGate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-024",
+      "title": "multi-collateral price asymmetry favors toxic basket",
+      "surface": "liquidate",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-025",
+      "title": "maxLif boundary changes private gain",
+      "surface": "withdrawCollateral",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-026",
+      "title": "LLTV one-wei boundary changes solvency",
+      "surface": "repay",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-027",
+      "title": "RCF threshold combines with collateral order",
+      "surface": "_updatePosition",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-028",
+      "title": "zero collateral branch changes bitmap",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-029",
+      "title": "zero repay branch alters later recovery",
+      "surface": "IOracle",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "OLB-030",
+      "title": "liquidation callback observes intermediate state",
+      "surface": "IGate",
+      "status": "hypothesis_only"
+    }
+  ],
+  "periphery_router_patterns": [
+    {
+      "id": "PRA-001",
+      "title": "partial-success poison leg",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-002",
+      "title": "final transfer balance versus delta",
+      "surface": "pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-003",
+      "title": "approval residue across routes",
+      "surface": "forceApproveMax",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-004",
+      "title": "mixed-market consent ambiguity",
+      "surface": "buy",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-005",
+      "title": "same maker group across fallback offers",
+      "surface": "buyExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-006",
+      "title": "multiple roots in one route",
+      "surface": "sell",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-007",
+      "title": "permit owner and economic beneficiary differ",
+      "surface": "sellExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-008",
+      "title": "pull from caller but execute for another actor",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-009",
+      "title": "exact-target equality after skipped leg",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-010",
+      "title": "stale quote after fee change",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-011",
+      "title": "stale quote after maturity change",
+      "surface": "pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-012",
+      "title": "non-escrowed maker balance disappears",
+      "surface": "forceApproveMax",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-013",
+      "title": "bounded gas grief after valid leg",
+      "surface": "buy",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-014",
+      "title": "ratifier revert data after valid leg",
+      "surface": "buyExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-015",
+      "title": "callback changes later route observation",
+      "surface": "sell",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-016",
+      "title": "partial-success poison leg",
+      "surface": "sellExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-017",
+      "title": "final transfer balance versus delta",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-018",
+      "title": "approval residue across routes",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-019",
+      "title": "mixed-market consent ambiguity",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-020",
+      "title": "same maker group across fallback offers",
+      "surface": "pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-021",
+      "title": "multiple roots in one route",
+      "surface": "forceApproveMax",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-022",
+      "title": "permit owner and economic beneficiary differ",
+      "surface": "buy",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-023",
+      "title": "pull from caller but execute for another actor",
+      "surface": "buyExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-024",
+      "title": "exact-target equality after skipped leg",
+      "surface": "sell",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-025",
+      "title": "stale quote after fee change",
+      "surface": "sellExact",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-026",
+      "title": "stale quote after maturity change",
+      "surface": "take",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-027",
+      "title": "non-escrowed maker balance disappears",
+      "surface": "EcrecoverRatifier",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-028",
+      "title": "bounded gas grief after valid leg",
+      "surface": "MidnightBundles",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-029",
+      "title": "ratifier revert data after valid leg",
+      "surface": "pullToken",
+      "status": "hypothesis_only"
+    },
+    {
+      "id": "PRA-030",
+      "title": "callback changes later route observation",
+      "surface": "forceApproveMax",
+      "status": "hypothesis_only"
+    }
+  ],
+  "poc_backlog": [
+    {
+      "id": "PT-POC-001",
+      "title": "Duplicate-token flash-array settlement",
+      "source_pattern": "duplicate batch-asset entries",
+      "functions": "flashLoan",
+      "actors": "permissionless caller and local repayment callback",
+      "sequence": "Repeat one standard token in `tokens[]`, vary split amounts and order, overlap protocol-held custody, and compare against one aggregated loan.",
+      "assertion": "Custody after callback equals custody before callback for each token and liabilities remain backed.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_DuplicateTokenFlashArray.t.sol",
+      "priority": "P0"
+    },
+    {
+      "id": "PT-POC-002",
+      "title": "Multicall state-transition composition",
+      "source_pattern": "multicall semantic reuse",
+      "functions": "multicall plus public or legitimately authorized core methods",
+      "actors": "permissionless actor or valid delegate",
+      "sequence": "Batch state transitions that normally occur across transactions and compare with sequential execution.",
+      "assertion": "No batching-only debt escape, collateral escape, cap bypass, or third-party transfer.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_MulticallStateTransition.t.sol",
+      "priority": "P0"
+    },
+    {
+      "id": "PT-POC-003",
+      "title": "Liquidation-order social-loss divergence",
+      "source_pattern": "liquidator-selected basket ordering",
+      "functions": "liquidate",
+      "actors": "borrower, lender, and liquidator",
+      "sequence": "Create equivalent multi-collateral positions, liquidate collateral indexes in alternate orders, and reconcile private proceeds plus social loss.",
+      "assertion": "Equivalent initial positions cannot create avoidable lender loss solely from attacker-selected order.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_LiquidationOrderSocialLoss.t.sol",
+      "priority": "P0"
+    },
+    {
+      "id": "PT-POC-004",
+      "title": "Continuous-fee claim context switch",
+      "source_pattern": "lazy claim context change",
+      "functions": "claimContinuousFee / _updatePosition / withdraw / liquidate",
+      "actors": "fragmented lenders, borrower, fee claimer",
+      "sequence": "Accrue fees, touch lender subsets, create bounded loss, claim, withdraw, and compare eager-touch control.",
+      "assertion": "Aggregate lender payouts plus fee claim remain backed and control-equivalent.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_ClaimContextSwitch.t.sol",
+      "priority": "P0"
+    },
+    {
+      "id": "PT-POC-005",
+      "title": "Partial-success poison route",
+      "source_pattern": "aggregator earlier-effect plus hostile later leg",
+      "functions": "MidnightBundles loops / take / ratifier",
+      "actors": "route caller and local hostile ratifier",
+      "sequence": "Execute a valid leg before a bounded failing or gas-heavy leg and inspect atomicity or continuation.",
+      "assertion": "No stranded collateral or preserved unintended partial economics.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_PartialSuccessPoisonRoute.t.sol",
+      "priority": "P0"
+    },
+    {
+      "id": "PT-POC-006",
+      "title": "Ratified family semantic collision",
+      "source_pattern": "Merkle leaf family mismatch",
+      "functions": "HashLib / EcrecoverRatifier / setConsumed",
+      "actors": "maker, relayer, taker",
+      "sequence": "Construct signed roots and groups with distinct economic family expectations.",
+      "assertion": "One family cannot consume or unlock another without equivalent maker intent.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_RatifierFamilySemantic.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-007",
+      "title": "Involuntary oracle-route contamination",
+      "source_pattern": "permissionless bad-market consent leak",
+      "functions": "MidnightBundles / IOracle / withdrawCollateral",
+      "actors": "route builder and victim",
+      "sequence": "Mix a bad-liveness market into route execution and prove whether victim consent is explicit.",
+      "assertion": "No unchosen market exposure can force a later loss.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_OracleRouteConsent.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-008",
+      "title": "RCF threshold collateral-order flip",
+      "source_pattern": "dust-to-material liquidation threshold",
+      "functions": "liquidate",
+      "actors": "borrower, lender, liquidator",
+      "sequence": "Place state around RCF and compare collateral order with a one-wei perturbation.",
+      "assertion": "One wei cannot trigger non-dust avoidable lender loss.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_RcfCollateralOrderFlip.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-009",
+      "title": "Permit receiver-referral split",
+      "source_pattern": "signed pull versus economic beneficiary",
+      "functions": "MidnightBundles / Permit2 / ERC2612",
+      "actors": "token owner, relayer, receiver, referral recipient",
+      "sequence": "Hold pull authority constant while changing route beneficiary fields.",
+      "assertion": "Signed token pull cannot fund an unbound economic beneficiary.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_PermitBeneficiarySplit.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-010",
+      "title": "Read-only intermediate-state route influence",
+      "source_pattern": "transient observation",
+      "functions": "callback / oracle / MidnightBundles",
+      "actors": "maker callback and route caller",
+      "sequence": "Observe intermediate state in one leg and use it to alter a later leg.",
+      "assertion": "Later settlement remains backed and within user bounds.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_IntermediateObservation.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-011",
+      "title": "Standard-token approval residue sequence",
+      "source_pattern": "approval lifecycle mismatch",
+      "functions": "forceApproveMax / pullToken",
+      "actors": "bundle caller",
+      "sequence": "Run repeated standard-token routes and inspect allowances plus custody.",
+      "assertion": "No later route can move funds beyond fresh caller-authorized pull.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_ApprovalResidue.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-012",
+      "title": "ERC2612 tolerate-front-run context switch",
+      "source_pattern": "permit front-run semantic change",
+      "functions": "pullToken",
+      "actors": "owner, relayer",
+      "sequence": "Consume permit first, leave allowance, then execute changed route.",
+      "assertion": "Fallback allowance cannot widen economic intent.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_Erc2612ContextSwitch.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-013",
+      "title": "Gate liveness maturity escalation",
+      "source_pattern": "liveness-to-loss",
+      "functions": "IGate / maturity / withdrawCollateral / liquidate",
+      "actors": "route victim and market adversary",
+      "sequence": "Acquire position indirectly, change gate behavior, cross maturity, attempt exit and liquidation.",
+      "assertion": "Indirect exposure cannot force avoidable non-dust loss.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_GateMaturityEscalation.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-014",
+      "title": "Shared-token nested callback aggregate custody",
+      "source_pattern": "per-market versus aggregate backing",
+      "functions": "take / callback / multiple markets",
+      "actors": "maker callback and taker",
+      "sequence": "Use shared loan token markets and a nested backed state action.",
+      "assertion": "Aggregate custody covers aggregate liabilities.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_SharedTokenNestedCustody.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-015",
+      "title": "Maker-liquidity disappearance exact route",
+      "source_pattern": "non-escrowed liquidity race",
+      "functions": "buyExact / sellExact",
+      "actors": "maker and route caller",
+      "sequence": "Remove maker liquidity after route planning and rely on fallback legs.",
+      "assertion": "Exact bounds hold or transaction reverts atomically.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_NonEscrowedLiquidityRace.t.sol",
+      "priority": "P1"
+    },
+    {
+      "id": "PT-POC-016",
+      "title": "Root replacement fallback economics",
+      "source_pattern": "root lifecycle versus prepared route",
+      "functions": "ratifier / MidnightBundles",
+      "actors": "maker, delegate, relayer",
+      "sequence": "Partially consume, cancel, re-ratify different root, and execute prepared route.",
+      "assertion": "Prepared route cannot exceed explicit user bounds.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_RootReplacementFallback.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-017",
+      "title": "Collateral index activation permutation",
+      "source_pattern": "bitmap ordering",
+      "functions": "supplyCollateral / withdrawCollateral / liquidate",
+      "actors": "borrower and liquidator",
+      "sequence": "Activate and zero collateral indexes in permutations before liquidation.",
+      "assertion": "Bitmap-selected set equals nonzero balance set.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_CollateralActivationOrder.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-018",
+      "title": "Maximum collateral index boundary",
+      "source_pattern": "array index boundary",
+      "functions": "createMarket / liquidate",
+      "actors": "market creator, borrower, liquidator",
+      "sequence": "Exercise the highest valid collateral index and liquidation.",
+      "assertion": "Selected collateral is the intended array member.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_MaxCollateralIndex.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-019",
+      "title": "Continuous-fee threshold health flip",
+      "source_pattern": "dust-to-material branch",
+      "functions": "_updatePosition / withdrawCollateral",
+      "actors": "borrower and lender",
+      "sequence": "Accrue one wei around fee threshold before health-sensitive exit.",
+      "assertion": "Dust cannot enable material collateral escape or forced retention.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_FeeHealthThreshold.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-020",
+      "title": "Tick threshold liquidation branch",
+      "source_pattern": "price precision branch",
+      "functions": "TickLib / take / liquidate",
+      "actors": "maker, borrower, liquidator",
+      "sequence": "Exercise adjacent ticks then follow lifecycle into liquidation.",
+      "assertion": "Precision difference cannot externalize non-dust loss.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_TickLiquidationThreshold.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-021",
+      "title": "Maturity quote route lifecycle",
+      "source_pattern": "time-of-quote versus settlement",
+      "functions": "MidnightBundles / take",
+      "actors": "route caller and makers",
+      "sequence": "Build fallback route before maturity and execute at the exact boundary.",
+      "assertion": "Bounds hold or route reverts atomically.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_MaturityRouteQuote.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-022",
+      "title": "Relayer authorization referral composition",
+      "source_pattern": "valid grant with beneficiary substitution",
+      "functions": "EcrecoverAuthorizer / MidnightBundles",
+      "actors": "user, relayer, referral recipient",
+      "sequence": "Use valid authorization while varying referral and receiver.",
+      "assertion": "No unbound beneficiary receives user-funded value.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_RelayerReferralIntent.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-023",
+      "title": "Ratifier return-data grief after valid leg",
+      "source_pattern": "external-call grief to value loss",
+      "functions": "ratifier / MidnightBundles",
+      "actors": "route caller and hostile ratifier",
+      "sequence": "Use bounded large return or revert data after an earlier valid leg.",
+      "assertion": "Failure rolls back or cannot force third-party economic loss.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_RatifierReturnDataGrief.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-024",
+      "title": "Event-storage reconstruction mismatch",
+      "source_pattern": "monitoring blindspot",
+      "functions": "events / _updatePosition",
+      "actors": "indexer and lenders",
+      "sequence": "Replay events around lazy loss and fee settlement and compare storage.",
+      "assertion": "Any reconstruction gap is documented; promote only with concrete economic escalation.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_EventStorageMismatch.t.sol",
+      "priority": "P2"
+    },
+    {
+      "id": "PT-POC-025",
+      "title": "Lazy-loss eager-touch control",
+      "source_pattern": "deferred update order",
+      "functions": "_updatePosition / liquidate / withdraw",
+      "actors": "multiple lenders and borrower",
+      "sequence": "Compare eager-touch control with adversarial subset-touch ordering.",
+      "assertion": "Aggregate redemption value is ordering-independent.",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_LazyLossControl.t.sol",
+      "priority": "P2"
+    }
+  ],
+  "top_5_plan": [
+    {
+      "id": "PT-POC-001",
+      "title": "Duplicate-token flash-array settlement",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_DuplicateTokenFlashArray.t.sol"
+    },
+    {
+      "id": "PT-POC-002",
+      "title": "Multicall state-transition composition",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_MulticallStateTransition.t.sol"
+    },
+    {
+      "id": "PT-POC-003",
+      "title": "Liquidation-order social-loss divergence",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_LiquidationOrderSocialLoss.t.sol"
+    },
+    {
+      "id": "PT-POC-004",
+      "title": "Continuous-fee claim context switch",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_ClaimContextSwitch.t.sol"
+    },
+    {
+      "id": "PT-POC-005",
+      "title": "Partial-success poison route",
+      "test_path": "test/asyam/poc/pattern/PoC_Pattern_PartialSuccessPoisonRoute.t.sol"
+    }
+  ],
+  "false_positive_filter": [
+    {
+      "id": "PT-POC-001",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-002",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-003",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-004",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-005",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-006",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-007",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-008",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-009",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-010",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-011",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-012",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-013",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-014",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-015",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-016",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-017",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-018",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-019",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-020",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-021",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-022",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-023",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-024",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    },
+    {
+      "id": "PT-POC-025",
+      "invalid_if": "no non-consenting standard-token impact",
+      "duplicate_if": "root cause is closed or previously audited",
+      "valid_hm_if": "compiling PoC proves realistic non-dust harm"
+    }
+  ]
+}

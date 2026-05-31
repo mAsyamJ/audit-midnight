@@ -4,37 +4,47 @@
 
 Validated finding index only — not a candidate backlog.
 
-Date: 2026-05-30
+Date: 2026-05-31
 
 ## PoC Validation
 
-Last validated: 2026-05-30
+Last validated: 2026-05-31
 
-### Legacy path (`test/asyamFindings/`)
-
-```bash
-forge test --match-path 'test/asyamFindings/*.sol' -vvv
-```
-
-Result: **13/13 tests passed**.
-
-### Audit harness (`test/asyam/`)
+### Full repository
 
 ```bash
-forge test --match-path 'test/asyam/**/*.sol' -vvv
+forge test -vvv
 ```
 
-Result: **19/19 tests passed** (exploratory PoCs + invariants).
+Result: **485/485 tests passed**.
+
+### Exploratory PoCs (`test/asyam/poc/`)
+
+```bash
+forge test --match-path 'test/asyam/poc/**/*.sol' -vvvv
+```
+
+Result: **91/91 tests passed**.
 
 See [../workflow/POC_RESULTS.md](../workflow/POC_RESULTS.md) and [../candidates/CANDIDATES.md](../candidates/CANDIDATES.md).
 
-## Cantina Submissions
+## Submit-Ready Low/Gas/Informational
 
 | ID | Submission file | Likelihood | Impact | Severity |
 |---|---|---|---|---|
 | L-01 | [cantina-L01-signature-malleability.md](cantina-L01-signature-malleability.md) | Medium | Low | Low |
-| P3-01 | [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md) | Low | Low | Low |
 | P3-02 | [cantina-P3-02-solvency-spec-market-id-aliasing.md](cantina-P3-02-solvency-spec-market-id-aliasing.md) | Medium | Low | Informational / P3 |
+
+## Hold / Do Not Submit
+
+| ID | Packet | Decision | Severity ceiling |
+|---|---|---|---|
+| P3-01 | [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md) | Hold for manual admin-only scope review | Low at most |
+| L-02 | [cantina-L02-tiny-repay-liquidation-gas-grief.md](cantina-L02-tiny-repay-liquidation-gas-grief.md) | Hold for manual duplicate review | Gas / Informational, Low at most |
+| L-03 | [cantina-L03-rcf-topup-liquidation-gas-grief.md](cantina-L03-rcf-topup-liquidation-gas-grief.md) | Do not submit: intended RCF branch behavior | Informational |
+
+See [../submissionReview/README.md](../submissionReview/README.md) for the final
+decision matrix and archive.
 
 Competition: [Cantina Midnight overview](https://cantina.xyz/code/4679e0fa-85f7-4ea5-8827-ee6c70bdee6b/overview)
 
@@ -50,6 +60,32 @@ No new H/M findings. Priority candidates tested and closed:
 | C-12 reduce-only rounding | disproven | exploratory probe + promoted regression |
 | C-29 referral exact-fill boundary | invalid total-budget hypothesis | exploratory probe + promoted fuzz regression |
 | C-31 same loan/collateral token | scoped disproval under standard-token assumptions | exploratory probe + promoted repay/leverage/liquidation regressions |
+
+## Disproven H/M Candidates
+
+The attack-plan, composition, blackbox, and historical escalation queues did not
+produce a new deduplicated High or Medium issue. In particular:
+
+- adaptive liquidation closes the L-02 and L-03 escalation theories;
+- callback accounting closes self-liquidation incentive capture;
+- cross-market, fee/loss-factor, bundle, Permit2, oracle/gate, and same-token
+  compositions did not demonstrate material loss.
+
+Full archive:
+[../submissionReview/05_DO_NOT_SUBMIT_ARCHIVE.md](../submissionReview/05_DO_NOT_SUBMIT_ARCHIVE.md).
+
+## Commands to Reproduce
+
+```bash
+forge build
+forge test -vvv
+forge test --match-path 'test/asyam/poc/**/*.sol' -vvvv
+forge test --match-path test/asyamFindings/PoC_SignatureMalleability.t.sol -vvv
+forge test --match-path test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol -vvvv
+```
+
+Detailed packet commands:
+[../submissionReview/07_PROOF_COMMANDS_AND_TEST_STATUS.md](../submissionReview/07_PROOF_COMMANDS_AND_TEST_STATUS.md).
 
 ---
 
@@ -114,11 +150,11 @@ Reject `address(0)` in `setRoleSetter`, or use a two-step ownership transfer pat
 
 Full report: [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md)
 
-## P3-02: `Solvency.spec` aliases production-distinct market IDs
+## P3-02: CVL summaries alias production-distinct market IDs
 
 ### Summary
 
-The solvency CVL summary derives market IDs from only loan token, maturity, chain ID, and Midnight address. Production IDs include the complete encoded market configuration. Distinct supported markets can therefore collapse into one modeled ID.
+The solvency CVL summary derives market IDs from only loan token, maturity, chain ID, and Midnight address. `NoDivisionByZero.spec` compares only the first three collateral entries when identifying its global market. Production IDs include the complete encoded market configuration. Distinct supported markets can therefore collapse into one modeled identity.
 
 ### Impact
 
@@ -132,11 +168,11 @@ Validation test:
 test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol
 ```
 
-The PoC creates two supported production markets with the same loan token and maturity but different collateral tokens. Production IDs differ and both markets are created; the reduced CVL summary tuple aliases them.
+The PoC validates both mismatches: two supported single-collateral markets alias under the solvency tuple, and two supported four-collateral markets that differ at index `3` alias under the `NoDivisionByZero.spec` predicate. Production IDs remain distinct and all markets are created.
 
 ### Recommendation
 
-Key `CVL_toId` by the complete encoded market configuration. The existing `certora/helpers/Utils.sol::hashMarket` helper can provide the full market hash.
+Key the affected summaries by the complete encoded market configuration. The existing `certora/helpers/Utils.sol::hashMarket` helper can provide the full market hash.
 
 ### Cantina submission
 

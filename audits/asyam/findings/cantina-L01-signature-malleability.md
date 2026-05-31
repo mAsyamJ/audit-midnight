@@ -11,6 +11,7 @@
 | **Checklist anchor** | SOL-Signature-1 (malleability) |
 | **PoC location** | `test/asyamFindings/PoC_SignatureMalleability.t.sol` |
 | **PoC type** | Local Foundry (no fork required) |
+| **Submission status** | Recommended for manual submission |
 
 ---
 
@@ -69,6 +70,17 @@ However, the issue still has concrete security-relevant effects:
 - The contracts deviate from EIP-2 canonical signature expectations, which is a known source of cross-system inconsistency in DeFi signature pipelines.
 
 This does **not** constitute signature replay that bypasses nonce or root protections. Impact is limited to broken uniqueness assumptions and related operational/integration risk.
+
+### Why this is not High or Medium
+
+The nonce and root protections still prevent replay-based fund loss. The
+demonstrated defect is signature canonicality, not an authorization bypass.
+
+### Why this is still useful
+
+Canonical ECDSA handling removes avoidable ambiguity for indexers, relayers, and
+monitoring systems and aligns both signature-verification paths with standard
+low-s expectations.
 
 ## Likelihood Explanation
 
@@ -156,3 +168,9 @@ require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46
 require(v == 27 || v == 28, "Invalid v value");
 address signer = ecrecover(digest, v, r, s);
 ```
+
+## Duplicate Risk
+
+Hashlock material described this as a hypothesis. The local PoC independently
+proves both current-code paths. No matching accepted Spearbit or Blackthorn item
+was found in the local audited corpus.

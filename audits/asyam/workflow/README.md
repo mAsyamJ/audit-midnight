@@ -23,6 +23,9 @@ Start every session with the bootstrap order in `.AGENTROLE.md`, then use this d
 |---|---|
 | [BASELINE_LOG.md](BASELINE_LOG.md) | Build/test gate and baseline log pointers |
 | [00_CONTEXT_MAP.md](00_CONTEXT_MAP.md) | Protocol scope, trust boundaries, entry points |
+| [protocolIntent/README.md](protocolIntent/README.md) | **Economic model + invariants — read before PoC hunting** |
+| [attackPlan/README.md](attackPlan/README.md) | **Exploit plan + AP-XXX PoC queue — read before new PoCs** |
+| [compositionHunt/README.md](compositionHunt/README.md) | **Net-new cross-domain composition queue and executed probes** |
 | [01_TEST_COVERAGE_GAP_MAP.md](01_TEST_COVERAGE_GAP_MAP.md) | Untested or weakly tested surfaces |
 | [02_HASHLOCK_VALIDATION.md](02_HASHLOCK_VALIDATION.md) | Hashlock AI hypothesis triage |
 | [03_DEDUP_MAP.md](03_DEDUP_MAP.md) | Spearbit/Blackthorn dedup — check before filing |

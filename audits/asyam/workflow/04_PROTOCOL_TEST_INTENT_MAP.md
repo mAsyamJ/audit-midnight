@@ -29,3 +29,15 @@ Protocol-authored tests establish intended behavior, but do not prove adversaria
 - Mark `disproven` only for the tested attack class and state the assumptions.
 - Keep residual scenarios explicit when token hooks, malicious oracles, or multi-collateral composition are outside the test.
 - Do not edit protocol-authored tests to close an audit candidate.
+
+## Residual Runtime Review
+
+The residual source pass closed the remaining live runtime queues without changing protocol-authored tests:
+
+| Surface | Source and native-test evidence | Result |
+|---|---|---|
+| Router payer composition | `Midnight.take` chooses `msg.sender` as payer when a taker buys a sell offer without a callback. `MidnightBundles` is therefore the intended payer after its exact pre-pull. Native bundle tests assert zero router residual across buy, sell, referral, repay, permit, and collateral routes. | No cross-call balance leak under the documented standard-token assumptions. |
+| Permit context | Every `MidnightBundles.pullToken` call fixes `from = msg.sender`. ERC2612 permits authorize the router and are followed by a transfer from that same caller. Permit2 additionally binds token, amount, router spender, nonce, deadline, and router recipient. | The Hashlock third-party Permit2/ERC2612 context-drain hypotheses are invalid for the implemented routes. |
+| Exact-fill helpers | `TakeAmountsLib` and `ConsumableUnitsLib` run before the caught core call. A helper failure reverts the entire transaction atomically. Native tests cover common exact-fill and partially-consumed routes; Blackthorn L-6/L-7/L-8 already cover the known helper boundary class. | No novel third-party loss path found. |
+| Ratifiers | Native ratifier tests cover maker/delegate controls, cancellation, leaf index use, and root toggling. `SetterRatifier` accepts longer proofs than `EcrecoverRatifier`, but the transaction submitter supplies and pays for the proof. | No novel fund-loss or victim-DoS path found beyond broad delegated-authority semantics already in the corpus. |
+| Persistent-state events | `MarketCreated` emits the full market; collateral tokens are unique within each market; all position, fee, loss-factor, role, authorization, and consumed mutations emit replayable deltas or latest values. Ordered block timestamps reconstruct lazy-accrual timestamps. | Persistent Midnight state is reconstructible from events. |

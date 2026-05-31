@@ -303,7 +303,7 @@ Status values: `untested` | `testing` | `proven` | `disproven` | `duplicate` | `
 
 - **Status:** invalid
 - **Source:** Hashlock
-- **Current result:** Likely false positive (Permit2 nonces).
+- **Current result:** **invalid** — Permit2 nonces prevent replay after first use. Before first use, every bundle path still fixes `from = msg.sender`, while Permit2 binds the token, amount, bundler spender, nonce, deadline, and router recipient. A third party cannot consume a victim's signature through an attacker-owned bundle call. An already-authorized operator can choose an operation for the victim only when acting as the bundle caller and token owner, so the claimed victim-token cross-function drain is not reachable through this router.
 
 ---
 
@@ -331,16 +331,16 @@ Status values: `untested` | `testing` | `proven` | `disproven` | `duplicate` | `
 
 ---
 
-### MIDNIGHT-CAND-036 — Solvency CVL summary aliases production-distinct markets
+### MIDNIGHT-CAND-036 — CVL summaries alias production-distinct markets
 
 - **Status:** proven
 - **Source:** Certora model review
-- **Files:** `certora/specs/Solvency.spec`, `src/libraries/IdLib.sol`
-- **Functions:** `CVL_toId`, `IdLib.toId`
-- **Hypothesis:** The solvency proof collapses distinct supported markets because its summarized ID omits most immutable market fields.
-- **Invariant possibly broken:** The formal proof does not establish token solvency across all supported multi-market configurations.
+- **Files:** `certora/specs/Solvency.spec`, `certora/specs/NoDivisionByZero.spec`, `src/libraries/IdLib.sol`
+- **Functions:** `CVL_toId`, `equalsGlobalMarket`, `IdLib.toId`
+- **Hypothesis:** Formal proofs collapse distinct supported markets because their summarized identities omit immutable market fields.
+- **Invariant possibly broken:** The formal proofs do not establish their properties across all supported market configurations.
 - **PoC plan:** `test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol`, `test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol`
-- **Current result:** **proven P3 formal-assurance gap** — production creates two distinct markets with the same loan token and maturity but different collateral tokens, while the `Solvency.spec` summary aliases them. This can prune valid multi-market traces through contradictory collateral-token requirements. No production fund-loss exploit is claimed.
+- **Current result:** **proven P3 formal-assurance gap** — production creates distinct markets while `Solvency.spec` aliases markets with the same loan token and maturity, and `NoDivisionByZero.spec` aliases four-collateral markets that differ after index `2`. Valid traces can be collapsed or pruned. No production fund-loss exploit is claimed.
 
 ---
 

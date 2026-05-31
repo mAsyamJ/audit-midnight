@@ -31,7 +31,7 @@ Hashlock material is treated as AI-generated hypothesis input only. None of the 
 | Low-02 empty `takes[]` out-of-bounds | Real revert surface, no value loss by itself. | Low/test gap |
 | Low-04 reverting referral recipient DoS | User-supplied recipient; mainly self-DoS unless a third party controls the value path. | Low |
 | Low-05 settlement fee staleness during execution | Fee changes require fee setter and are already in audited slippage/stale fee documentation. | Duplicate-risk |
-| Low-07 Permit2 replay across functions | Permit2 signature transfer has nonce/deadline semantics. Need PoC before crediting. | Likely false positive |
+| Low-07 Permit2 replay across functions | Permit2 signature transfer has nonce/deadline semantics. Every router pull also fixes `from = msg.sender`, while Permit2 binds token, amount, bundler spender, nonce, deadline, and router recipient. A third party cannot consume a victim's signature through an attacker-owned bundle call. | Invalid for implemented routes |
 
 ## Interfaces / Core Scan
 

@@ -4,15 +4,19 @@ Date: 2026-05-30
 
 ## Proven Gap
 
-### `Solvency.spec` aliases production-distinct markets
+### CVL summaries alias production-distinct markets
 
-Production `src/libraries/IdLib.sol` hashes the complete encoded `Market`. The `certora/specs/Solvency.spec` summary hashes only:
+Production `src/libraries/IdLib.sol` hashes the complete encoded `Market`. Two CVL summaries do not preserve that identity.
+
+`certora/specs/Solvency.spec` hashes only:
 
 ```text
 (market.loanToken, market.maturity, chainId, midnight)
 ```
 
 This aliases supported markets that differ in collateral configuration, `rcfThreshold`, or gates. If two aliased markets use different collateral tokens, the summary's `collateralToken[id][index]` requirements contradict each other and prune a valid production composition. If the omitted fields differ without changing collateral tokens, liabilities can still collapse into one modeled bucket.
+
+`certora/specs/NoDivisionByZero.spec::equalsGlobalMarket` compares the collateral array length but inspects only entries `0..2`. Its generic and liquidation rules do not bound the market to three collaterals. Production supports up to 128, so two supported four-collateral markets that differ at entry `3` can satisfy the same summary predicate while receiving distinct production IDs.
 
 Audit-only validation:
 
@@ -37,6 +41,7 @@ These limits are not production vulnerabilities by themselves. They define where
 | Health callback post-state is assumed healthy | `Healthiness.spec::genericCallback` requires health after havoc | The health proof documents preservation under that callback assumption; it does not prove arbitrary callback composition |
 | `take` is excluded from the general health rule | `Healthiness.spec::stayHealthy` filters out `take` and has no replacement `take` rule | Read the README's broad health-preservation statement as incomplete; Foundry `take` regressions remain required |
 | Health and bitmap specs bound collateral lengths in selected rules | `Healthiness.spec`, `CollateralBitmap.spec` | Treat broad README claims with the rule-level bounds in mind |
+| `NoDivisionByZero.spec` compares only collateral indexes `0..2` without a matching length bound | `NoDivisionByZero.spec::equalsGlobalMarket` | Its proof does not cover production identity for supported markets with more than three collaterals |
 
 ## Review Rule
 

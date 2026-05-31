@@ -1,0 +1,123 @@
+{
+  "protocol": "Morpho Midnight",
+  "version": "2026-05-30",
+  "components": [
+    {"id": "Midnight", "role": "core", "files": ["src/Midnight.sol"]},
+    {"id": "MidnightBundles", "role": "periphery", "files": ["src/periphery/MidnightBundles.sol"]},
+    {"id": "EcrecoverRatifier", "role": "ratifier", "files": ["src/ratifiers/EcrecoverRatifier.sol"]},
+    {"id": "SetterRatifier", "role": "ratifier", "files": ["src/ratifiers/SetterRatifier.sol"]},
+    {"id": "TakeAmountsLib", "role": "math", "files": ["src/periphery/TakeAmountsLib.sol"]},
+    {"id": "ConsumableUnitsLib", "role": "math", "files": ["src/periphery/ConsumableUnitsLib.sol"]},
+    {"id": "IdLib", "role": "library", "files": ["src/libraries/IdLib.sol"]},
+    {"id": "TickLib", "role": "library", "files": ["src/libraries/TickLib.sol"]}
+  ],
+  "actors": [
+    {"id": "lender", "goals": ["earn fixed rate", "withdraw credit"]},
+    {"id": "borrower", "goals": ["borrow against collateral", "repay or get liquidated"]},
+    {"id": "maker", "goals": ["quote without escrow"]},
+    {"id": "taker", "goals": ["execute offers"]},
+    {"id": "liquidator", "goals": ["seize collateral profitably"]},
+    {"id": "market_creator", "goals": ["define oracle gates collateral"]},
+    {"id": "delegate", "goals": ["operate on behalf of maker"]},
+    {"id": "callback", "goals": ["provide liquidity at settlement"], "trusted": false}
+  ],
+  "assets": [
+    {"id": "loan_token", "flows": ["take", "repay", "withdraw", "liquidate", "flashLoan"]},
+    {"id": "collateral_token", "flows": ["supplyCollateral", "withdrawCollateral", "liquidate"]},
+    {"id": "credit_units", "flows": ["take", "withdraw", "updatePosition"]},
+    {"id": "debt_units", "flows": ["take", "repay", "liquidate"]}
+  ],
+  "economic_flows": [
+    {"id": "flow_take", "from": "payer", "to": ["midnight", "receiver"], "function": "take"},
+    {"id": "flow_repay", "from": "payer", "to": "midnight", "function": "repay"},
+    {"id": "flow_withdraw", "from": "midnight", "to": "receiver", "function": "withdraw"},
+    {"id": "flow_liquidate_collateral", "from": "midnight", "to": "receiver", "function": "liquidate"},
+    {"id": "flow_liquidate_repay", "from": "payer", "to": "midnight", "function": "liquidate"},
+    {"id": "flow_bundle_buy", "from": "router_user", "to": "midnight_via_take", "function": "MidnightBundles.buy"}
+  ],
+  "trust_boundaries": [
+    {"id": "TB-001", "boundary": "core_to_callback", "trusted": "protocol", "untrusted": "callback_code"},
+    {"id": "TB-002", "boundary": "core_to_token", "trusted": "protocol", "untrusted": "erc20_behavior", "assumption": "exact_non_reentrant"},
+    {"id": "TB-003", "boundary": "core_to_oracle", "trusted": "market_creator", "untrusted": "price"},
+    {"id": "TB-004", "boundary": "periphery_to_midnight", "trusted": "router", "untrusted": "calldata"}
+  ],
+  "invariants": [
+    {
+      "id": "INV-001",
+      "category": "accounting",
+      "statement": "totalUnits equals debt plus withdrawable at market level",
+      "files": ["src/Midnight.sol", "certora/specs/Midnight.spec"],
+      "functions": ["take", "repay", "withdraw", "liquidate"],
+      "why_it_matters": "Lender pool solvency",
+      "severity_if_broken": "High",
+      "poc_target_ids": ["POC-INTENT-009", "POC-INTENT-019"]
+    },
+    {
+      "id": "INV-011",
+      "category": "offer_execution",
+      "statement": "consumed cap cannot exceed maxAssets or maxUnits",
+      "files": ["src/Midnight.sol"],
+      "functions": ["take"],
+      "why_it_matters": "Maker liquidity limits",
+      "severity_if_broken": "Medium",
+      "poc_target_ids": ["POC-INTENT-002"],
+      "status": "closed_disproven"
+    },
+    {
+      "id": "INV-012",
+      "category": "offer_execution",
+      "statement": "reduceOnly cannot increase maker credit or debt",
+      "files": ["src/Midnight.sol"],
+      "functions": ["take"],
+      "why_it_matters": "Risk reduction offers",
+      "severity_if_broken": "Medium",
+      "poc_target_ids": ["POC-INTENT-003"],
+      "status": "closed_disproven"
+    },
+    {
+      "id": "INV-019",
+      "category": "periphery",
+      "statement": "bundle uses computed per-leg amounts not balance sweep",
+      "files": ["src/periphery/MidnightBundles.sol"],
+      "functions": ["buyWithUnitsTargetAndWithdrawCollateral", "supplyCollateralAndSellWithUnitsTarget"],
+      "why_it_matters": "Prevent router drainage",
+      "severity_if_broken": "High",
+      "poc_target_ids": ["POC-INTENT-014"],
+      "status": "closed_disproven"
+    },
+    {
+      "id": "INV-023",
+      "category": "callback",
+      "statement": "callback reentrancy cannot monetize temporary state",
+      "files": ["src/Midnight.sol"],
+      "functions": ["take", "repay"],
+      "why_it_matters": "Reentrancy safety",
+      "severity_if_broken": "High",
+      "poc_target_ids": ["POC-INTENT-001", "POC-INTENT-021"]
+    }
+  ],
+  "intended_behaviors": [
+    {"id": "INT-001", "behavior": "permissionless_market_creation", "classification": "INTENDED"},
+    {"id": "INT-002", "behavior": "market_creator_oracle_gate_risk", "classification": "INTENDED"},
+    {"id": "INT-003", "behavior": "broad_delegated_authorization", "classification": "INTENDED"},
+    {"id": "INT-004", "behavior": "exact_erc20_assumption", "classification": "INTENDED"},
+    {"id": "INT-005", "behavior": "maxBuyerAssets_total_budget_includes_referral", "classification": "INTENDED"},
+    {"id": "INT-006", "behavior": "cvl_market_id_summary_aliasing_formal_only", "classification": "INTENDED", "note": "P3-02"}
+  ],
+  "attack_surfaces": [
+    {"id": "AS-021", "title": "collateral_bitmap_desync", "category": "collateral", "actors": ["borrower"], "files": ["src/Midnight.sol"], "functions": ["supplyCollateral", "withdrawCollateral", "liquidate"], "target_invariant": "INV-010", "expected_severity_if_proven": "High", "false_positive_risk": "medium", "status": "open"},
+    {"id": "AS-043", "title": "router_balance_theft", "category": "periphery", "actors": ["attacker"], "files": ["src/periphery/MidnightBundles.sol"], "functions": ["supplyCollateralAndSellWithUnitsTarget"], "target_invariant": "INV-019", "expected_severity_if_proven": "High", "false_positive_risk": "low", "status": "closed_disproven"},
+    {"id": "AS-048", "title": "take_callback_reentrancy", "category": "callbacks", "actors": ["taker", "callback"], "files": ["src/Midnight.sol"], "functions": ["take"], "target_invariant": "INV-023", "expected_severity_if_proven": "High", "false_positive_risk": "medium", "status": "closed_disproven"},
+    {"id": "AS-049", "title": "repay_callback_reentrancy", "category": "callbacks", "actors": ["borrower"], "files": ["src/Midnight.sol"], "functions": ["repay"], "target_invariant": "INV-023", "expected_severity_if_proven": "High", "false_positive_risk": "medium", "status": "open"},
+    {"id": "AS-055", "title": "maturity_boundary_fee_debt", "category": "maturity", "actors": ["taker"], "files": ["src/Midnight.sol"], "functions": ["take"], "target_invariant": "INV-014", "expected_severity_if_proven": "Medium", "false_positive_risk": "medium", "status": "open"}
+  ],
+  "poc_targets": [
+    {"id": "POC-INTENT-001", "title": "take_callback_monetize_temp_state", "status": "closed_disproven", "candidate": "MIDNIGHT-CAND-014", "test_file": "test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol"},
+    {"id": "POC-INTENT-002", "title": "consumed_cap_mismatch", "status": "closed_disproven", "candidate": "MIDNIGHT-CAND-005", "test_file": "test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol"},
+    {"id": "POC-INTENT-003", "title": "reduceOnly_exposure_increase", "status": "closed_disproven", "candidate": "MIDNIGHT-CAND-012", "test_file": "test/asyam/poc/PoC_DeepValidationQueues.t.sol"},
+    {"id": "POC-INTENT-007", "title": "multi_collateral_bitmap_desync", "status": "open", "candidate": "MIDNIGHT-CAND-033", "test_file": "test/asyam/poc/PoC_CollateralBitmapDesync.t.sol"},
+    {"id": "POC-INTENT-014", "title": "periphery_balance_leakage", "status": "closed_disproven", "candidate": "MIDNIGHT-CAND-026", "test_file": "test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol"},
+    {"id": "POC-INTENT-021", "title": "repay_callback_reentrancy", "status": "open", "candidate": "MIDNIGHT-CAND-022", "test_file": "test/asyam/poc/PoC_RepayCallbackReentrancy.t.sol"},
+    {"id": "POC-INTENT-022", "title": "cvl_market_id_aliasing", "status": "closed_proven_formal", "candidate": "MIDNIGHT-CAND-036", "test_file": "test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol"}
+  ]
+}

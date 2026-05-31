@@ -103,23 +103,34 @@ contract ReentrantBuyCallback is IBuyCallback {
     }
 }
 
-/// @notice Sell callback that attempts reentrancy after seller proceeds land on receiver.
+/// @notice Sell callback that probes liquidation / flash reentrancy while seller lock is held.
 contract ReentrantSellCallback is ISellCallback {
     Midnight public midnight;
+    address public seller;
     bool public reentered;
+    bool public attemptedLiquidate;
+    bool public attemptedFlash;
 
-    function configure(Midnight _midnight) external {
+    function configure(Midnight _midnight, address _seller) external {
         midnight = _midnight;
+        seller = _seller;
     }
 
-    function onSell(bytes32 id, Market memory market, uint256, uint256, uint256, address, address, bytes memory)
+    function onSell(bytes32 id, Market memory market, uint256, uint256 repaidUnits, uint256, address, address, bytes memory)
         external
         returns (bytes32)
     {
         require(id == IdLib.toId(market, block.chainid, msg.sender), "wrong id");
         if (!reentered) {
             reentered = true;
-            try midnight.flashLoan(new address[](0), new uint256[](0), address(this), "") {} catch {}
+            attemptedLiquidate = true;
+            try midnight.liquidate(market, 0, 0, repaidUnits, seller, false, address(this), address(0), hex"") {} catch {}
+            attemptedFlash = true;
+            address[] memory tokens = new address[](1);
+            tokens[0] = market.loanToken;
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = 1;
+            try midnight.flashLoan(tokens, amounts, address(this), hex"") {} catch {}
         }
         return CALLBACK_SUCCESS;
     }

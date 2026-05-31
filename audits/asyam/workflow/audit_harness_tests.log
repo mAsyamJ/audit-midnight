@@ -1,55 +1,56 @@
 No files changed, compilation skipped
 
-Ran 1 test for test/asyam/poc/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
-[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22615)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 3.97ms (202.94µs CPU time)
-
-Ran 2 tests for test/asyam/invariant/Invariant_BundleNoCrossCallBalanceLeak.t.sol:InvariantBundleNoCrossCallBalanceLeakTest
-[PASS] testInvariant_BundlerLoanBalanceZeroAfterBuyBundle() (gas: 493248)
-[PASS] testInvariant_BundlerLoanBalanceZeroAfterSellBundle() (gas: 469130)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 6.75ms (2.58ms CPU time)
-
-Ran 1 test for test/asyam/invariant/Invariant_MarketAccounting.t.sol:InvariantMarketAccountingTest
-[PASS] testInvariant_TotalUnitsCoversWithdrawableAfterTakeRepay() (gas: 470511)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.09ms (1.86ms CPU time)
+Ran 2 tests for test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol:PoCOfferConsumedCapRoundingTest
+[PASS] testPoC_GroupedMaxAssetsCapNotExceededAcrossTwoOffers() (gas: 423975)
+[PASS] testPoC_GroupedMaxUnitsCapNotExceeded() (gas: 435686)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 5.01ms (1.71ms CPU time)
 
 Ran 2 tests for test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol:PoCTakeCallbackReentrancyTest
 [PASS] testPoC_DoubleTakeSameGroupRevertsAfterPartialFill() (gas: 430402)
 [PASS] testPoC_NestedTakeDuringBuyCallbackDoesNotCorruptConsumedOrProfitAttacker() (gas: 2760642)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.34ms (5.33ms CPU time)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 5.46ms (2.02ms CPU time)
+
+Ran 1 test for test/asyam/poc/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
+[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22615)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 5.49ms (212.36µs CPU time)
 
 Ran 2 tests for test/asyam/poc/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
 [PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 107840)
 [PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 42712)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.87ms (4.14ms CPU time)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 5.97ms (4.45ms CPU time)
 
-Ran 2 tests for test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol:PoCOfferConsumedCapRoundingTest
-[PASS] testPoC_GroupedMaxAssetsCapNotExceededAcrossTwoOffers() (gas: 423975)
-[PASS] testPoC_GroupedMaxUnitsCapNotExceeded() (gas: 435686)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.94ms (4.22ms CPU time)
+Ran 2 tests for test/asyam/invariant/Invariant_BundleNoCrossCallBalanceLeak.t.sol:InvariantBundleNoCrossCallBalanceLeakTest
+[PASS] testInvariant_BundlerLoanBalanceZeroAfterBuyBundle() (gas: 493248)
+[PASS] testInvariant_BundlerLoanBalanceZeroAfterSellBundle() (gas: 469130)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.96ms (2.57ms CPU time)
+
+Ran 1 test for test/asyam/invariant/Invariant_MarketAccounting.t.sol:InvariantMarketAccountingTest
+[PASS] testInvariant_TotalUnitsCoversWithdrawableAfterTakeRepay() (gas: 470511)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 9.20ms (1.41ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testPoC_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral() (gas: 497854)
+[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184389)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.99ms (6.92ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol:PoCBundleTemporaryBalanceReentrancyTest
+[PASS] testPoC_BundlerBalanceNotStealableViaMaliciousBuyCallback() (gas: 1025617)
+[PASS] testPoC_BundlerDoesNotRetainLoanTokensAfterSellBundle() (gas: 469334)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 17.71ms (3.64ms CPU time)
+
+Ran 1 test for test/asyam/invariant/Invariant_ConsumedCaps.t.sol:InvariantConsumedCapsTest
+[PASS] testInvariant_ConsumedMonotonicAndWithinCap() (gas: 469474)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 20.49ms (1.36ms CPU time)
+
+Ran 2 tests for test/asyam/invariant/Invariant_LiquidationHealth.t.sol:InvariantLiquidationHealthTest
+[PASS] testInvariant_HealthyBorrowerLiquidationReverts() (gas: 431988)
+[PASS] testInvariant_UnhealthyBorrowerCanBeLiquidated() (gas: 661783)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 21.34ms (9.80ms CPU time)
 
 Ran 3 tests for test/asyam/poc/PoC_DeepValidationQueues.t.sol:PoCDeepValidationQueuesTest
 [PASS] testPoC_BuyUnitsReferralBudgetBoundaryRevertsAtomically() (gas: 781789)
 [PASS] testPoC_ReduceOnlyBuyCannotCrossDebtIntoOneWeiCredit() (gas: 882320)
 [PASS] testPoC_SameTokenRepayCallbackKeepsLenderClaimFunded() (gas: 938324)
-Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 8.62ms (6.02ms CPU time)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 21.55ms (11.02ms CPU time)
 
-Ran 1 test for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
-[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184201)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 8.68ms (660.94µs CPU time)
-
-Ran 2 tests for test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol:PoCBundleTemporaryBalanceReentrancyTest
-[PASS] testPoC_BundlerBalanceNotStealableViaMaliciousBuyCallback() (gas: 1025617)
-[PASS] testPoC_BundlerDoesNotRetainLoanTokensAfterSellBundle() (gas: 469334)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 12.61ms (3.24ms CPU time)
-
-Ran 2 tests for test/asyam/invariant/Invariant_LiquidationHealth.t.sol:InvariantLiquidationHealthTest
-[PASS] testInvariant_HealthyBorrowerLiquidationReverts() (gas: 431988)
-[PASS] testInvariant_UnhealthyBorrowerCanBeLiquidated() (gas: 661783)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 13.49ms (3.93ms CPU time)
-
-Ran 1 test for test/asyam/invariant/Invariant_ConsumedCaps.t.sol:InvariantConsumedCapsTest
-[PASS] testInvariant_ConsumedMonotonicAndWithinCap() (gas: 469474)
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 13.36ms (2.33ms CPU time)
-
-Ran 11 test suites in 29.53ms (97.73ms CPU time): 19 tests passed, 0 failed, 0 skipped (19 total tests)
+Ran 11 test suites in 39.83ms (130.18ms CPU time): 20 tests passed, 0 failed, 0 skipped (20 total tests)

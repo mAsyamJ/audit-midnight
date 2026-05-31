@@ -1,0 +1,110 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/asyam/poc/PoC_OfferConsumedCapRounding.t.sol:PoCOfferConsumedCapRoundingTest
+[PASS] testPoC_GroupedMaxAssetsCapNotExceededAcrossTwoOffers() (gas: 423975)
+[PASS] testPoC_GroupedMaxUnitsCapNotExceeded() (gas: 435686)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 7.18ms (4.03ms CPU time)
+
+Ran 3 tests for test/asyam/poc/PoC_LiquidationSolventBadDebt.t.sol:PoCLiquidationSolventBadDebtTest
+[PASS] testPoC_BadDebtRealizationMatchesCollateralShortfall() (gas: 458337)
+[PASS] testPoC_HealthyBorrowerZeroLiquidationReverts() (gas: 431228)
+[PASS] testPoC_LiquidatorCannotExtractLoanTokensViaBadDebtOnly() (gas: 448447)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 12.80ms (2.82ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_SellCallbackComposition.t.sol:PoCSellCallbackCompositionTest
+[PASS] testPoC_LiquidationBlockedDuringSellCallback() (gas: 1012378)
+[PASS] testPoC_PostMaturitySellCannotIncreaseDebt() (gas: 451679)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 25.76ms (2.17ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_EnterGateForcedDebt.t.sol:PoCEnterGateForcedDebtTest
+[PASS] testPoC_EnterGateAllowsDebtWhenConfigured() (gas: 631556)
+[PASS] testPoC_EnterGateBlocksSellerDebtIncrease() (gas: 572434)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 6.60ms (3.58ms CPU time)
+
+Ran 4 tests for test/asyam/poc/PoC_LossFactorOverslash.t.sol:PoCLossFactorOverslashTest
+[PASS] testPoC_LenderCannotWithdrawMoreThanSlashedCredit() (gas: 473847)
+[PASS] testPoC_LenderSlashMatchesBadDebtSocialization() (gas: 473914)
+[PASS] testPoC_RepeatedBadDebtDoesNotOvershootTotalUnits() (gas: 466975)
+[PASS] testPoC_UpdatePositionWithoutBadDebtDoesNotSlashLender() (gas: 432476)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 24.93ms (24.47ms CPU time)
+
+Ran 1 test for test/asyam/poc/PoC_LiquidateCallbackReentrancy.t.sol:PoCLiquidateCallbackReentrancyTest
+[PASS] testPoC_LiquidateCallbackNestedLiquidateDoesNotProfitAttacker() (gas: 1610365)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 34.20ms (30.84ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testPoC_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral() (gas: 497854)
+[PASS] testPoC_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 184389)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 39.11ms (31.89ms CPU time)
+
+Ran 1 test for test/asyam/poc/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
+[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22615)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 32.13ms (119.45µs CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_BundleExactFillAlignment.t.sol:PoCBundleExactFillAlignmentTest
+[PASS] testPoC_BundleRejectsInconsistentMarketInBatch() (gas: 529280)
+[PASS] testPoC_UnitsFromLibMatchesBundleFill() (gas: 587530)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 48.37ms (2.35ms CPU time)
+
+Ran 3 tests for test/asyam/poc/PoC_DeepValidationQueues.t.sol:PoCDeepValidationQueuesTest
+[PASS] testPoC_BuyUnitsReferralBudgetBoundaryRevertsAtomically() (gas: 781789)
+[PASS] testPoC_ReduceOnlyBuyCannotCrossDebtIntoOneWeiCredit() (gas: 882320)
+[PASS] testPoC_SameTokenRepayCallbackKeepsLenderClaimFunded() (gas: 938324)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 36.10ms (16.69ms CPU time)
+
+Ran 4 tests for test/asyam/poc/PoC_CanceledRootReuse.t.sol:PoCCanceledRootReuseTest
+[PASS] testPoC_AttackerCannotCancelForeignRoot() (gas: 20550)
+[PASS] testPoC_CanceledRootCannotBeUnratifiedByNewSignature() (gas: 76314)
+[PASS] testPoC_TakeRevertsAfterAuthorizedDelegateCancelRoot() (gas: 124374)
+[PASS] testPoC_TakeRevertsAfterMakerCancelRoot() (gas: 97128)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 21.64ms (1.32ms CPU time)
+
+Ran 4 tests for test/asyam/poc/PoC_BundleHelperRevertSemantics.t.sol:PoCBundleHelperRevertSemanticsTest
+[PASS] testPoC_BundleSkipsFailingTakeAndFillsSecondOffer() (gas: 596954)
+[PASS] testPoC_ConsumableUnitsLibRevertAbortsWholeBundle() (gas: 459718)
+[PASS] testPoC_DocumentedHelperRevertIsNotTakeSkip() (gas: 459584)
+[PASS] testPoC_OutOfOffersWhenSkipsCannotReachTarget() (gas: 457176)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 52.26ms (70.51ms CPU time)
+
+Ran 4 tests for test/asyam/poc/PoC_PendingFeeLossFactorSync.t.sol:PoCPendingFeeLossFactorSyncTest
+[PASS] testPoC_DoubleUpdatePositionIdempotentAfterSlash() (gas: 706650)
+[PASS] testPoC_StaleLastLossFactorSyncedOnTakeWithCredit() (gas: 973533)
+[PASS] testPoC_TakeRevertsWhenLossFactorMaxed() (gas: 690188)
+[PASS] testPoC_UpdatePositionMatchesViewAfterSlash() (gas: 701582)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 52.89ms (30.06ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_TakeCallbackReentrancy.t.sol:PoCTakeCallbackReentrancyTest
+[PASS] testPoC_DoubleTakeSameGroupRevertsAfterPartialFill() (gas: 430402)
+[PASS] testPoC_NestedTakeDuringBuyCallbackDoesNotCorruptConsumedOrProfitAttacker() (gas: 2760642)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 58.48ms (2.04ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_BundleTemporaryBalanceReentrancy.t.sol:PoCBundleTemporaryBalanceReentrancyTest
+[PASS] testPoC_BundlerBalanceNotStealableViaMaliciousBuyCallback() (gas: 1025617)
+[PASS] testPoC_BundlerDoesNotRetainLoanTokensAfterSellBundle() (gas: 469334)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 45.57ms (44.69ms CPU time)
+
+Ran 3 tests for test/asyam/poc/PoC_FlashLoanReentrancy.t.sol:PoCFlashLoanReentrancyTest
+[PASS] testPoC_FlashLoanNotReimbursedReverts() (gas: 201852)
+[PASS] testPoC_FlashLoanReentrancyIntoTakeDoesNotProfitAttacker() (gas: 2015349)
+[PASS] testPoC_FlashLoanRepayCallbackWithdrawDoesNotProfitAttacker() (gas: 2429418)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 56.57ms (11.89ms CPU time)
+
+Ran 2 tests for test/asyam/poc/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
+[PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 107840)
+[PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 42712)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 52.50ms (50.14ms CPU time)
+
+Ran 3 tests for test/asyam/poc/PoC_PostMaturityLiquidation.t.sol:PoCPostMaturityLiquidationTest
+[PASS] testPoC_HealthyBorrowerPostMaturityNormalModeReverts() (gas: 426692)
+[PASS] testPoC_PostMaturityLifBoundedByMaxLif(uint256) (runs: 256, μ: 693204, ~: 693220)
+[PASS] testPoC_PostMaturitySeizeRespectsCollateral() (gas: 694804)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 525.25ms (550.79ms CPU time)
+
+Ran 4 tests for test/asyam/poc/PoC_LiquidationOverSeize.t.sol:PoCLiquidationOverSeizeTest
+[PASS] testPoC_CannotSeizeMoreThanCollateral(uint256,uint256) (runs: 256, μ: 632423, ~: 632441)
+[PASS] testPoC_LiquidationSeizedNeverExceedsCollateral() (gas: 695234)
+[PASS] testPoC_MultiLiquidationCannotDrainExtraCollateral() (gas: 740185)
+[PASS] testPoC_RecoveryCloseFactorCapsRepaidUnits() (gas: 634196)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 607.08ms (624.52ms CPU time)
+
+Ran 19 test suites in 634.87ms (1.74s CPU time): 50 tests passed, 0 failed, 0 skipped (50 total tests)

@@ -87,11 +87,56 @@ Spend some time on P2 and P3 issues too.
 Try to be as concise as possible in your output.
 When relevant, include in your comment directly the fix you would apply (as a suggestion markdown block).
 
+## Learned User Preferences
+
+- Do not edit attached plan files under `.cursor/plans/` when implementing a plan; use existing todos only and mark them in progress or completed.
+- Prefer coded Foundry PoCs with demonstrated impact over summaries; write Cantina markdown only after a PoC proves the issue.
+- Read `audits/asyam/workflow/protocolIntent/` before deeper PoC hunting, then `audits/asyam/workflow/attackPlan/` before new `test/asyam/poc/` tests.
+- Treat `audits/asyam/hashlock/` as hypothesis sources only, not submission-ready findings without a local PoC and dedup check.
+- Prefer fewer stronger findings over volume; document disproven paths in `audits/asyam/workflow/POC_RESULTS.md`.
+
+## Learned Workspace Facts
+
+- Morpho Midnight Cantina audit workspace; session bootstrap starts at `audits/asyam/.AGENTROLE.md`.
+- Confirmed findings: L-01 (signature malleability) and P3-01 (`roleSetter` zero brick); P3-02 is a CVL formal-assurance gap, not a production fund-loss claim.
+- Exploratory PoCs: `test/asyam/`; promoted regressions: `test/asyamFindings/`; avoid modifying `src/` unless the harness requires it.
+- Dedup before filing: `audits/asyam/workflow/03_DEDUP_MAP.md`, `audits/asyam/audited/*.json`, and `workflow/POC_RESULTS.md`.
+- Attack-plan PoC queue is largely closed (disproven/invalid/documented). Proven Cantina findings remain L-01 and P3-01 only; P3-02 is formal-only.
 
 <claude-mem-context>
 # Memory Context
 
-# [midnight-audit] recent context, 2026-05-30 12:51pm GMT+7
+# [midnight-audit] recent context, 2026-05-31 1:22pm GMT+7
 
-No previous sessions found.
+Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
+Format: ID TIME TYPE TITLE
+Fetch details: get_observations([IDs]) | Search: mem-search skill
+
+Stats: 20 obs (11,230t read) | 2,122,360t work | 99% savings
+
+### May 30, 2026
+6 2:08p 🟣 Morpho Midnight Composition Hunt Workspace Initiated
+S1 User asked if Claude is using hivemind shared memory and whether it's sharing context with Codex (resume ID: 019e7578-4f64-7d70-b396-041e7685aadc) and Cursor (May 30, 2:16 PM)
+1 2:18p 🔵 Claude Config Directory Structure at /home/asyam/.claude/
+2 " 🔵 Hivemind Shared Memory Architecture Exists in agent-harness
+3 " 🔵 agent-harness Multi-Agent Plugin System: codex, kiro, claude, hermes Plugins
+4 2:19p 🔵 Hivemind Verification: Deeplake Cloud Fetch Fails Due to Zero Balance (api_402)
+5 " 🔵 Claude Code Uses cavemem (Not Hivemind) — Codex Is Fully Wired to Hivemind
+7 7:12p 🔵 User Identity: White Hat Smart Contract Security Researcher
+9 11:52p 🔵 Midnight Protocol Core Architecture: Source Code Read of Key Surfaces
+14 " 🟣 BlackboxLogicHunt Framework Completed: Files 09–12 Add PoC Backlog, Invariant Designs, Validation Rules, and Execution Plan
+### May 31, 2026
+15 12:11a 🟣 BlackboxLogicHunt Graph JSON Index Created — Machine-Readable Framework Summary
+8 12:14a 🟣 BlackboxLogicHunt Audit Workflow: 3-Document Attack Hypothesis Framework Created
+10 12:16a 🔵 Liquidation Implementation: Bad Debt, LossFactor, and RCF Source Details
+11 " 🔵 Certora Formal Verification Landscape: 34 Specs with Key Gaps
+12 " 🔵 PoC Baseline Test Results: 50/50 Pass Confirming Closed-Class Invariants Hold
+13 " 🟣 BlackboxLogicHunt Workspace: 9 Additional Framework Files Created (05–08 + README + 00–01)
+16 12:18a 🔵 BlackboxLogicHunt Workspace Validation: All 212 Hypotheses and 19 Files Confirmed Intact
+17 12:19a 🔵 EcrecoverAuthorizer Signer Check Allows Second-Order Authorization: Delegate Can Submit Signed Authorizations
+18 " 🟣 5 Blackbox PoC Solidity Files Implemented: BB-POC-001, 002, 003, 004, 006
+19 12:21a 🔵 All 6 Blackbox PoC Tests Pass: BB-POC-001..004, BB-POC-006 — Invariants Hold, No New Vulnerabilities Found
+20 12:22a 🟣 BB-POC-005 Created and BB-POC-004 Refined: QuoteSettlementMismatch and Authorization Sequence Fix
+
+Access 2122k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

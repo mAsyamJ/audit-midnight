@@ -18,6 +18,6 @@ Date: 2026-05-30
 | C-31 | Same loan/collateral token | scoped disproval — exploratory probe + promoted regressions |
 | C-41 | Signature malleability | proven — Cantina L-01 |
 | C-40 | roleSetter zero brick | proven — Cantina P3-01 |
-| C-36 | Solvency CVL market-ID aliasing | proven — P3 formal-assurance gap |
+| C-36 | CVL market-ID summary aliasing | proven — P3 formal-assurance gap |
 
 See full candidate table (36 entries) in `audits/asyam/candidates/CANDIDATES.md`.

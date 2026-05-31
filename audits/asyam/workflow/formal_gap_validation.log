@@ -1,29 +1,358 @@
 No files changed, compilation skipped
 
-Ran 1 test for test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
-[PASS] testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 319497)
+Ran 2 tests for test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testValidation_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral() (gas: 504941)
+Logs:
+
+  ======================================================================
+  PoC: NoDivisionByZero.spec aliases four-collateral markets
+  ======================================================================
+  Production ID A:
+  0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f
+  Production ID B:
+  0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969
+  Different collateral token[3]: true
+  NoDivisionByZero.spec compares collateral indexes 0..2 only
+  OK: model predicate aliases production-distinct markets
+  ======================================================================
+
+
 Traces:
-  [319497] PoCSolvencySpecMarketIdAliasingTest::testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets()
+  [504941] PoCSolvencySpecMarketIdAliasingTest::testValidation_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral()
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("PoC: NoDivisionByZero.spec aliases four-collateral markets") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [233986] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001004, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [153766] → new <unknown>@0xe92842c9F9E8c344301078D3b0C3c6B6C4c34e6f
+    │   │   └─ ← [Return] 768 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001004, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f)
+    │   └─ ← [Return] 0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f
+    ├─ [229986] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001005, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
+    │   ├─ [153766] → new <unknown>@0xADFa02815d735Bf3bEcD22cB322C42016E20f969
+    │   │   └─ ← [Return] 768 bytes of code
+    │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x0000000000000000000000000000000000001001, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001002, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001003, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c }), CollateralParams({ token: 0x0000000000000000000000000000000000001005, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969)
+    │   └─ ← [Return] 0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969
+    ├─ [0] console::log("Production ID A:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("Production ID B:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("Different collateral token[3]:", true) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [1385] Midnight::tickSpacing(0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [1385] Midnight::tickSpacing(0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [0] console::log("NoDivisionByZero.spec compares collateral indexes 0..2 only") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("OK: model predicate aliases production-distinct markets") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
+    └─ ← [Return]
+
+[PASS] testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 382845)
+Logs:
+
+  ======================================================================
+  PoC: Solvency.spec aliases distinct production markets
+  ======================================================================
+  [1] Creating Market A from default single-collateral helper
+      Market A loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market A maturity: 2592001
+      Market A rcfThreshold: 0
+      Market A enterGate: 0x0000000000000000000000000000000000000000
+      Market A liquidatorGate: 0x0000000000000000000000000000000000000000
+      Market A collateral token[0]: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      Market A collateral oracle[0]: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+      Market A collateral lltv[0]: 770000000000000000
+      Market A collateral maxLif[0]: 1061007957559681697
+  [2] Creating Market B from same helper
+      Before mutation:
+      Market B loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market B maturity: 2592001
+      Market B collateral token[0]: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      Market B collateral oracle[0]: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+  [3] Mutating Market B collateral configuration
+      Market B keeps same loanToken and maturity
+      Market B changes collateral token and oracle
+      After mutation:
+      Market B loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market B maturity: 2592001
+      Market B rcfThreshold: 0
+      Market B enterGate: 0x0000000000000000000000000000000000000000
+      Market B liquidatorGate: 0x0000000000000000000000000000000000000000
+      Market B collateral token[0]: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211
+      Market B collateral oracle[0]: 0x03A6a84cD762D9707A21605b548aaaB891562aAb
+      Market B collateral lltv[0]: 770000000000000000
+      Market B collateral maxLif[0]: 1061007957559681697
+  [4] Sanity check: markets share the reduced Solvency.spec key fields
+      Same loanToken: true
+      Same maturity: true
+      Same chainId used by Midnight: 31337
+      Same Midnight address: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  [5] Sanity check: markets differ in full production configuration
+      Different collateral token[0]: true
+      Different collateral oracle[0]: true
+  [6] Creating / touching Market A in production Midnight
+      productionIdA:
+  0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd
+      tickSpacing(productionIdA): 4
+  [7] Creating / touching Market B in production Midnight
+      productionIdB:
+  0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812
+      tickSpacing(productionIdB): 4
+  [8] Validating production behavior
+      Production IdLib.toId includes full Market configuration
+      Therefore Market A and Market B should have different IDs
+      OK: productionIdA != productionIdB
+      OK: first production market is valid
+      OK: second production market is valid
+  [9] Computing Solvency.spec modeled summary keys
+      Solvency.spec key fields:
+        - loanToken
+        - maturity
+        - chainId
+        - Midnight address
+      Omitted production fields include:
+        - collateral token
+        - collateral oracle
+        - collateral LLTV
+        - collateral maxLif
+        - gates
+        - rcfThreshold
+      solvencyKeyA:
+  0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d
+      solvencyKeyB:
+  0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d
+  [10] Validating CVL model aliasing
+      Because the reduced input tuple is identical, the modeled key aliases
+      OK: solvencyKeyA == solvencyKeyB
+
+  [11] RESULT
+      Production separates the two markets:
+        productionIdA != productionIdB
+      Solvency.spec summary aliases the two markets:
+        solvencyKeyA == solvencyKeyB
+
+      This proves a formal-assurance model mismatch:
+      valid multi-market production traces can be collapsed or pruned
+      by the reduced CVL market-ID summary.
+  ======================================================================
+
+
+Traces:
+  [382845] PoCSolvencySpecMarketIdAliasingTest::testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets()
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("PoC: Solvency.spec aliases distinct production markets") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[1] Creating Market A from default single-collateral helper") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A loanToken:", ERC20Permit: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A maturity:", 2592001 [2.592e6]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A rcfThreshold:", 0) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A enterGate:", 0x0000000000000000000000000000000000000000) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A liquidatorGate:", 0x0000000000000000000000000000000000000000) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A collateral token[0]:", ERC20Permit: [0xa0Cb889707d426A7A386870A03bc70d1b0697598]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A collateral oracle[0]:", Oracle: [0xA4AD4f68d0b91CFD19687c881e50f3A00242828c]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A collateral lltv[0]:", 770000000000000000 [7.7e17]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market A collateral maxLif[0]:", 1061007957559681697 [1.061e18]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[2] Creating Market B from same helper") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Before mutation:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B loanToken:", ERC20Permit: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B maturity:", 2592001 [2.592e6]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral token[0]:", ERC20Permit: [0xa0Cb889707d426A7A386870A03bc70d1b0697598]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral oracle[0]:", Oracle: [0xA4AD4f68d0b91CFD19687c881e50f3A00242828c]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[3] Mutating Market B collateral configuration") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B keeps same loanToken and maturity") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B changes collateral token and oracle") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    After mutation:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B loanToken:", ERC20Permit: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B maturity:", 2592001 [2.592e6]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B rcfThreshold:", 0) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B enterGate:", 0x0000000000000000000000000000000000000000) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B liquidatorGate:", 0x0000000000000000000000000000000000000000) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral token[0]:", ERC20Permit: [0x1d1499e622D69689cdf9004d05Ec547d650Ff211]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral oracle[0]:", Oracle: [0x03A6a84cD762D9707A21605b548aaaB891562aAb]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral lltv[0]:", 770000000000000000 [7.7e17]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Market B collateral maxLif[0]:", 1061007957559681697 [1.061e18]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[4] Sanity check: markets share the reduced Solvency.spec key fields") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Same loanToken:", true) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Same maturity:", true) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [575] Midnight::INITIAL_CHAIN_ID() [staticcall]
+    │   └─ ← [Return] 31337 [3.133e4]
+    ├─ [0] console::log("    Same chainId used by Midnight:", 31337 [3.133e4]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Same Midnight address:", Midnight: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f]) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[5] Sanity check: markets differ in full production configuration") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Different collateral token[0]:", true) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Different collateral oracle[0]:", true) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[6] Creating / touching Market A in production Midnight") [staticcall]
+    │   └─ ← [Stop]
     ├─ [148101] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
     │   ├─ [76893] → new <unknown>@0x354542A516f528A1f9ba3103199885A2b4e82DCD
     │   │   └─ ← [Return] 384 bytes of code
     │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd)
     │   └─ ← [Return] 0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd
+    ├─ [0] console::log("    productionIdA:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [1385] Midnight::tickSpacing(0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [0] console::log("    tickSpacing(productionIdA):", 4) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[7] Creating / touching Market B in production Midnight") [staticcall]
+    │   └─ ← [Stop]
     ├─ [144101] Midnight::touchMarket(Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0x03A6a84cD762D9707A21605b548aaaB891562aAb })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }))
     │   ├─ [76893] → new <unknown>@0x8B634b5B94cC11e7c9CC032Da26a88Beb5612812
     │   │   └─ ← [Return] 384 bytes of code
     │   ├─ emit MarketCreated(market: Market({ loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1, collateralParams: [CollateralParams({ token: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211, lltv: 770000000000000000 [7.7e17], maxLif: 1061007957559681697 [1.061e18], oracle: 0x03A6a84cD762D9707A21605b548aaaB891562aAb })], maturity: 2592001 [2.592e6], rcfThreshold: 0, enterGate: 0x0000000000000000000000000000000000000000, liquidatorGate: 0x0000000000000000000000000000000000000000 }), id_: 0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812)
     │   └─ ← [Return] 0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812
-    ├─ [1385] Midnight::tickSpacing(0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd) [staticcall]
-    │   └─ ← [Return] 4
+    ├─ [0] console::log("    productionIdB:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812) [staticcall]
+    │   └─ ← [Stop]
     ├─ [1385] Midnight::tickSpacing(0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812) [staticcall]
     │   └─ ← [Return] 4
+    ├─ [0] console::log("    tickSpacing(productionIdB):", 4) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[8] Validating production behavior") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Production IdLib.toId includes full Market configuration") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Therefore Market A and Market B should have different IDs") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    OK: productionIdA != productionIdB") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [1385] Midnight::tickSpacing(0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [0] console::log("    OK: first production market is valid") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [1385] Midnight::tickSpacing(0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812) [staticcall]
+    │   └─ ← [Return] 4
+    ├─ [0] console::log("    OK: second production market is valid") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[9] Computing Solvency.spec modeled summary keys") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Solvency.spec key fields:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - loanToken") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - maturity") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - chainId") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - Midnight address") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Omitted production fields include:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - collateral token") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - collateral oracle") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - collateral LLTV") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - collateral maxLif") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - gates") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      - rcfThreshold") [staticcall]
+    │   └─ ← [Stop]
     ├─ [575] Midnight::INITIAL_CHAIN_ID() [staticcall]
     │   └─ ← [Return] 31337 [3.133e4]
     ├─ [575] Midnight::INITIAL_CHAIN_ID() [staticcall]
     │   └─ ← [Return] 31337 [3.133e4]
+    ├─ [0] console::log("    solvencyKeyA:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    solvencyKeyB:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log(0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d) [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[10] Validating CVL model aliasing") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Because the reduced input tuple is identical, the modeled key aliases") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    OK: solvencyKeyA == solvencyKeyB") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("[11] RESULT") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Production separates the two markets:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      productionIdA != productionIdB") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    Solvency.spec summary aliases the two markets:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("      solvencyKeyA == solvencyKeyB") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    This proves a formal-assurance model mismatch:") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    valid multi-market production traces can be collapsed or pruned") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("    by the reduced CVL market-ID summary.") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("======================================================================") [staticcall]
+    │   └─ ← [Stop]
+    ├─ [0] console::log("") [staticcall]
+    │   └─ ← [Stop]
     └─ ← [Return]
 
-Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 3.18ms (347.89µs CPU time)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 6.77ms (2.51ms CPU time)
 
-Ran 1 test suite in 14.57ms (3.18ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)
+Ran 1 test suite in 17.36ms (6.77ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)

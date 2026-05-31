@@ -1,0 +1,33 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/asyam/poc/blackbox/PoC_Blackbox_BadDebtRecoverability.sol:PoCBlackboxBadDebtRecoverabilityTest
+[PASS] testBlackbox_NonZeroPriceSocializesOnlyFormulaBoundedUnrecoverableDebt() (gas: 477579)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 4.07ms (1.04ms CPU time)
+
+Ran 1 test for test/asyam/poc/blackbox/PoC_Blackbox_QuoteSettlementMismatch.sol:PoCBlackboxQuoteSettlementMismatchTest
+[PASS] testBlackbox_FeeChangeSkipsStalePreferredLegAndKeepsFallbackInsideBounds() (gas: 731176)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 4.73ms (1.73ms CPU time)
+
+Ran 1 test for test/asyam/poc/blackbox/PoC_Blackbox_AuthorizationIntentSplit.sol:PoCBlackboxAuthorizationIntentSplitTest
+[PASS] testBlackbox_UnusedSignedGrantCanRestoreOperatorAfterDirectRevocation() (gas: 402804)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 5.52ms (2.34ms CPU time)
+
+Ran 1 test for test/asyam/poc/blackbox/PoC_Blackbox_DeferredPositionUpdate.sol:PoCBlackboxDeferredPositionUpdateTest
+[PASS] testBlackbox_StoredCreditCannotBeWithdrawnBeforeLazyLossIsApplied() (gas: 1055740)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 7.50ms (4.56ms CPU time)
+
+Ran 2 tests for test/asyam/poc/blackbox/PoC_Blackbox_TokenAsCollateralAggregate.sol:PoCBlackboxTokenAsCollateralAggregateTest
+[PASS] testBlackbox_ClaimFeeThenExitSameTokenCollateralMarketRemainsBacked() (gas: 1267036)
+[PASS] testBlackbox_ExitSameTokenCollateralMarketThenClaimFeeRemainsBacked() (gas: 1266984)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.49ms (4.57ms CPU time)
+
+Ran 2 tests for test/asyam/poc/blackbox/PoC_Blackbox_CrossMarketAggregateAccounting.sol:PoCBlackboxCrossMarketAggregateAccountingTest
+[PASS] testBlackbox_ClaimSettlementFeeThenWithdrawOtherMarketRemainsBacked() (gas: 1249835)
+[PASS] testBlackbox_WithdrawOtherMarketThenClaimSettlementFeeRemainsBacked() (gas: 1245565)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 8.62ms (6.67ms CPU time)
+
+Ran 1 test for test/asyam/poc/blackbox/PoC_Blackbox_UserIntentBundle.sol:PoCBlackboxUserIntentBundleTest
+[PASS] testBlackbox_SkippedPreferredSellLegFallsBackWithinExplicitDebtAndProceedsBounds() (gas: 679771)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 9.52ms (1.07ms CPU time)
+
+Ran 7 test suites in 14.54ms (48.45ms CPU time): 9 tests passed, 0 failed, 0 skipped (9 total tests)

@@ -1,0 +1,111 @@
+{
+  "protocol": "Morpho Midnight",
+  "mode": "authorized whitehat adversarial logic hunt",
+  "excluded_prior_classes": [
+    "direct callback reentrancy",
+    "direct flash-loan repayment bypass",
+    "direct cap rounding bypass",
+    "direct reduceOnly bypass",
+    "direct bad-debt over-realization",
+    "direct liquidation over-seize",
+    "direct post-maturity liquidation bug",
+    "direct bitmap desync",
+    "direct withdrawable overstatement",
+    "direct pendingFee/lossFactor desync",
+    "direct canceled root reuse",
+    "direct delegate root grief",
+    "direct temporary bundle balance leakage",
+    "direct exact-fill rounding false impossibility",
+    "direct helper revert skip semantics",
+    "direct Permit2 unintended operation",
+    "direct oracle/gate forced victim",
+    "direct maturity-second accounting",
+    "direct same-token self-loop",
+    "direct roleSetter zero brick",
+    "direct signature malleability",
+    "direct formal market-ID aliasing"
+  ],
+  "different_angle_threat_model": [
+    "user-intent mismatch",
+    "economic-model mismatch",
+    "time-of-quote vs time-of-settlement mismatch",
+    "local invariant vs global invariant mismatch",
+    "per-market invariant vs cross-market invariant mismatch",
+    "per-position invariant vs aggregate market invariant mismatch",
+    "authorization intent vs authorization effect mismatch",
+    "permissionless market assumption relied on by periphery",
+    "off-chain route assumptions not enforced on-chain",
+    "formal spec abstraction mismatch",
+    "event/indexer/monitoring mismatch causing delayed reaction",
+    "incentive-compatible griefing that escalates to loss",
+    "liveness failure that becomes solvency failure",
+    "dust drift that accumulates into non-dust state",
+    "partial state update safe alone but unsafe across sequence"
+  ],
+  "business_logic_attacks": [
+    "BL-001", "BL-002", "BL-003", "BL-004", "BL-005", "BL-006", "BL-007", "BL-008", "BL-009", "BL-010",
+    "BL-011", "BL-012", "BL-013", "BL-014", "BL-015", "BL-016", "BL-017", "BL-018", "BL-019", "BL-020",
+    "BL-021", "BL-022", "BL-023", "BL-024", "BL-025", "BL-026", "BL-027", "BL-028", "BL-029", "BL-030"
+  ],
+  "state_machine_desync_attacks": [
+    "SD-001", "SD-002", "SD-003", "SD-004", "SD-005", "SD-006", "SD-007", "SD-008", "SD-009", "SD-010",
+    "SD-011", "SD-012", "SD-013", "SD-014", "SD-015", "SD-016", "SD-017", "SD-018", "SD-019", "SD-020",
+    "SD-021", "SD-022", "SD-023", "SD-024", "SD-025"
+  ],
+  "accounting_discontinuities": [
+    "AD-001", "AD-002", "AD-003", "AD-004", "AD-005", "AD-006", "AD-007", "AD-008", "AD-009", "AD-010",
+    "AD-011", "AD-012", "AD-013", "AD-014", "AD-015", "AD-016", "AD-017", "AD-018", "AD-019", "AD-020",
+    "AD-021", "AD-022", "AD-023", "AD-024", "AD-025"
+  ],
+  "incentive_market_manipulations": [
+    "IM-001", "IM-002", "IM-003", "IM-004", "IM-005", "IM-006", "IM-007", "IM-008", "IM-009", "IM-010",
+    "IM-011", "IM-012", "IM-013", "IM-014", "IM-015", "IM-016", "IM-017", "IM-018", "IM-019", "IM-020"
+  ],
+  "permissionless_market_assumption_breaks": [
+    "PM-001", "PM-002", "PM-003", "PM-004", "PM-005", "PM-006", "PM-007", "PM-008", "PM-009", "PM-010",
+    "PM-011", "PM-012", "PM-013", "PM-014", "PM-015", "PM-016", "PM-017", "PM-018", "PM-019", "PM-020"
+  ],
+  "multi_tx_strategies": [
+    "MTX-001", "MTX-002", "MTX-003", "MTX-004", "MTX-005", "MTX-006", "MTX-007", "MTX-008", "MTX-009", "MTX-010",
+    "MTX-011", "MTX-012", "MTX-013", "MTX-014", "MTX-015", "MTX-016", "MTX-017", "MTX-018", "MTX-019", "MTX-020",
+    "MTX-021", "MTX-022", "MTX-023", "MTX-024", "MTX-025", "MTX-026", "MTX-027", "MTX-028", "MTX-029", "MTX-030"
+  ],
+  "assumption_inversions": [
+    "AI-001", "AI-002", "AI-003", "AI-004", "AI-005", "AI-006", "AI-007", "AI-008", "AI-009", "AI-010",
+    "AI-011", "AI-012", "AI-013", "AI-014", "AI-015", "AI-016", "AI-017", "AI-018", "AI-019", "AI-020",
+    "AI-021", "AI-022", "AI-023", "AI-024", "AI-025", "AI-026", "AI-027", "AI-028", "AI-029", "AI-030"
+  ],
+  "composite_invariant_campaigns": [
+    "INV-BB-001", "INV-BB-002", "INV-BB-003", "INV-BB-004", "INV-BB-005", "INV-BB-006",
+    "INV-BB-007", "INV-BB-008", "INV-BB-009", "INV-BB-010", "INV-BB-011", "INV-BB-012"
+  ],
+  "blackbox_poc_backlog": [
+    {"id": "BB-POC-001", "title": "Deferred Position Update", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_DeferredPositionUpdate.sol"},
+    {"id": "BB-POC-002", "title": "Bad Debt Recoverability", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_BadDebtRecoverability.sol"},
+    {"id": "BB-POC-003", "title": "User Intent Bundle", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_UserIntentBundle.sol"},
+    {"id": "BB-POC-004", "title": "Authorization Intent Split", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_AuthorizationIntentSplit.sol"},
+    {"id": "BB-POC-005", "title": "Quote Settlement Mismatch", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_QuoteSettlementMismatch.sol"},
+    {"id": "BB-POC-006", "title": "Cross-Market Aggregate Accounting", "priority": "P0", "path": "test/asyam/poc/blackbox/PoC_Blackbox_CrossMarketAggregateAccounting.sol"},
+    {"id": "BB-POC-007", "title": "Permissionless Market Contamination", "priority": "P1"},
+    {"id": "BB-POC-008", "title": "Dust to Non-Dust State Flip", "priority": "P1"},
+    {"id": "BB-POC-009", "title": "Event Storage Mismatch", "priority": "P2"},
+    {"id": "BB-POC-010", "title": "Deferred Loss Factor Withdraw", "priority": "P1"},
+    {"id": "BB-POC-011", "title": "RCF Threshold State Flip", "priority": "P1"},
+    {"id": "BB-POC-012", "title": "Multi-Collateral Liquidation Order", "priority": "P1"},
+    {"id": "BB-POC-013", "title": "Bundle Repay Dust Lock", "priority": "P1"},
+    {"id": "BB-POC-014", "title": "Collateral Supply Atomicity", "priority": "P2"},
+    {"id": "BB-POC-015", "title": "Maturity Route Boundary", "priority": "P1"},
+    {"id": "BB-POC-016", "title": "Group Family Ambiguity", "priority": "P2"},
+    {"id": "BB-POC-017", "title": "Forced Position Touch", "priority": "P2"},
+    {"id": "BB-POC-018", "title": "Bitmap Zero Path", "priority": "P2"},
+    {"id": "BB-POC-019", "title": "Multi-Market Token-As-Collateral", "priority": "P1"},
+    {"id": "BB-POC-020", "title": "Full Event Replay", "priority": "P2"}
+  ],
+  "validation_rules": [
+    "High requires realistic meaningful fund loss, freeze, or systemic accounting corruption",
+    "Medium requires reliable non-dust harm or liveness-to-loss for a non-consenting user",
+    "Low includes admin-only, user-error-only, weird-token-only, chosen-market-only, dust-only, and self-DoS",
+    "Invalid includes intended behavior, duplicate root cause, and claims without a non-consenting affected party",
+    "No promotion without compiling Foundry PoC and dedup comparison"
+  ]
+}

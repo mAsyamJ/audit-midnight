@@ -11,6 +11,7 @@
 | **Checklist anchor** | SOL-Basics-AC-4 (one-step role transfer) |
 | **PoC location** | `test/asyamFindings/PoC_RoleSetterBricking.t.sol` |
 | **PoC type** | Local Foundry (no fork required) |
+| **Submission status** | Hold for manual scope review; not submit-ready |
 
 ---
 
@@ -65,6 +66,17 @@ The operational impact is permanent loss of role rotation capability:
 - A mistaken fee configuration cannot be corrected through the intended governance path.
 
 The protocol continues to operate with the roles frozen at their current values. This is an **irreversible admin footgun**, not a permissionless exploit. Judges may classify it as Informational if admin self-DoS is treated as out of scope, but the on-chain bricking is real and permanent.
+
+### Why this is not High or Medium
+
+Only the current privileged `roleSetter`, or an actor controlling that key, can
+trigger the issue. The protocol continues operating with frozen roles and no
+direct user-fund loss is demonstrated.
+
+### Why this is still useful
+
+The hold packet records a cheap hardening improvement. A zero-address guard or
+two-step role transfer prevents an irreversible operational mistake.
 
 ## Likelihood Explanation
 

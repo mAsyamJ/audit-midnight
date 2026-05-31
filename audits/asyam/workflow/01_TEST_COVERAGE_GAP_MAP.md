@@ -9,7 +9,7 @@ Date: 2026-05-30
 `forge test -vvv` passes:
 
 ```text
-405 tests passed, 0 failed, 0 skipped
+407 tests passed, 0 failed, 0 skipped
 ```
 
 ## Strong Existing Foundry Coverage
@@ -44,13 +44,13 @@ Bundle functions hold loan/collateral tokens temporarily and then call Midnight.
 
 `TakeAmountsLib` and `ConsumableUnitsLib` are tested over common fuzz ranges. The audited corpus already includes helper/core mismatch issues. Any new PoC must show a current-code divergence not covered by Blackthorn L-6/L-7 and not just a revert/rounding dust edge.
 
-4. Permit2/ERC2612 composition is not adversarially fuzzed.
+4. Permit2/ERC2612 composition is source-closed for the claimed third-party drain, but not adversarially fuzzed.
 
-Current tests prove happy-path Permit2 and ERC2612 bundle usage. Missing tests include reused signatures across function contexts, third-party front-run consumption, and zero/different recipient edge cases. Preliminary read suggests Permit2 nonce semantics and ERC2612 transfer-after-permit make some Hashlock claims weak, but this remains a bounded queue.
+Current tests prove happy-path Permit2 and ERC2612 bundle usage. Every router pull fixes `from = msg.sender`; ERC2612 is followed by `transferFrom` from that same caller, and Permit2 also binds token, amount, bundler spender, nonce, deadline, and router recipient. The Hashlock third-party victim-token drain is not reachable through implemented routes. Adversarial fuzzing remains useful as regression coverage for nonce reuse, zero amounts, and permit-consumption ordering.
 
 5. Event reconstructibility is not tested.
 
-There are tests for event emission in selected paths, but no indexer-style test that replays events and reconstructs all state, including lazy `UpdatePosition`, continuous-fee credit, collateral bitmap, market fee defaults at creation, and per-collateral balances. This is mainly P3/Low unless a real off-chain safety guarantee depends on event completeness.
+There are tests for event emission in selected paths, but no indexer-style test that replays events and reconstructs all state, including lazy `UpdatePosition`, continuous-fee credit, collateral bitmap, market fee defaults at creation, and per-collateral balances. Source review found replayable persistent-state deltas or latest values for each mutation; ordered block timestamps recover lazy-accrual timestamps and unique per-market collateral tokens recover collateral indexes. An automated replay test remains useful P3 regression coverage.
 
 6. Same token as loan and collateral has scoped standard-token coverage.
 
@@ -62,7 +62,7 @@ Tests include reverting and zero oracle paths, plus gate allows/blocks. Missing 
 
 8. Formal verification does not cover periphery and has explicit external-call assumptions.
 
-The Solvency CVL review found a concrete summary mismatch: `CVL_toId` hashes only loan token, maturity, chain ID, and Midnight address, while production IDs include the entire market configuration. Audit regressions demonstrate two supported production markets that remain distinct on-chain but alias under the CVL key. See [06_FORMAL_MODEL_GAP_REVIEW.md](06_FORMAL_MODEL_GAP_REVIEW.md).
+The CVL review found concrete identity-summary mismatches. `Solvency.spec::CVL_toId` hashes only loan token, maturity, chain ID, and Midnight address. `NoDivisionByZero.spec::equalsGlobalMarket` compares only the first three collateral entries without bounding the market to three collaterals. Production IDs include the entire market configuration. Audit regressions demonstrate supported production markets that remain distinct on-chain but alias under the CVL summaries. See [06_FORMAL_MODEL_GAP_REVIEW.md](06_FORMAL_MODEL_GAP_REVIEW.md).
 
 The Healthiness CVL review also found an assurance boundary: `stayHealthy` filters `take` out and there is no replacement `take` rule. Treat the README's broad health-preservation sentence as incomplete and retain Foundry `take` regressions.
 
@@ -74,7 +74,7 @@ The Healthiness CVL review also found an assurance boundary: `stayHealthy` filte
 | `PoC_TakeCallbackReentrancy.t.sol` | C-14 | Extends `TakeTest` callback/reentrancy tests |
 | `PoC_OfferConsumedCapRounding.t.sol` | C-05, Blackthorn L-5 | Extends grouped cap tests in `TakeTest` |
 | `PoC_DeepValidationQueues.t.sol` | C-12, C-29, C-31 | Exploratory reduce-only, referral-budget, and same-token callback probes |
-| `PoC_SolvencySpecMarketIdAliasing.t.sol` | C-36 | Proves the solvency model aliases production-distinct supported markets |
+| `PoC_SolvencySpecMarketIdAliasing.t.sol` | C-36 | Proves the solvency and no-division-by-zero models alias production-distinct supported markets |
 | `test/asyamFindings/Validation_LiveQueues.t.sol` | C-12, C-26, C-29, C-31 | Promoted regressions: reduce-only overfill, temporary bundler balances, referral boundary fuzzing, same-token repay/leverage/liquidation |
 | `test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol` | C-36 | Stable model-mismatch validation regression |
 | `Invariant_BundleNoCrossCallBalanceLeak.t.sol` | bundler balance | New adversarial check |

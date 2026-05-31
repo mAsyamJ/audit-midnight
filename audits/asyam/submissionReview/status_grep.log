@@ -1,0 +1,344 @@
+audits/asyam/workflow/03_DEDUP_MAP.md:23:| Gas | Verification and potential optimisation of countBits implementation | countBits gas |
+audits/asyam/workflow/03_DEDUP_MAP.md:24:| Informational | Minor issues (typos, comments, ...) | docs, formatting, typos |
+audits/asyam/workflow/03_DEDUP_MAP.md:25:| Informational | A phantom collateral can block liquidations | phantom collateral, malicious collateral activation |
+audits/asyam/workflow/03_DEDUP_MAP.md:26:| Informational | In the presence of liquidity the lenders and the feeClaimer can avoid their credits getting slashed | loss avoidance, fee claimer slash timing |
+audits/asyam/workflow/03_DEDUP_MAP.md:27:| Informational | clz opcode is not supported on all almost EVM-compatible chains | CLZ, Osaka compatibility |
+audits/asyam/workflow/03_DEDUP_MAP.md:28:| Informational | Trust assumptions for buyerCallback | buyer callback trust |
+audits/asyam/workflow/03_DEDUP_MAP.md:29:| Informational | Loss index inflation | loss factor inflation |
+audits/asyam/workflow/historicalExploitPatternHunt/10_PERIPHERY_ROUTER_AGGREGATOR_HUNT.md:5:### PRA-001 — First-Touch Maximal Valid Market Leg Consumes Route Gas Variant 1
+audits/asyam/workflow/historicalExploitPatternHunt/10_PERIPHERY_ROUTER_AGGREGATOR_HUNT.md:89:### PRA-008 — First-Touch Maximal Valid Market Leg Consumes Route Gas Variant 8
+audits/asyam/workflow/historicalExploitPatternHunt/10_PERIPHERY_ROUTER_AGGREGATOR_HUNT.md:173:### PRA-015 — First-Touch Maximal Valid Market Leg Consumes Route Gas Variant 15
+audits/asyam/workflow/historicalExploitPatternHunt/10_PERIPHERY_ROUTER_AGGREGATOR_HUNT.md:257:### PRA-022 — First-Touch Maximal Valid Market Leg Consumes Route Gas Variant 22
+audits/asyam/workflow/historicalExploitPatternHunt/10_PERIPHERY_ROUTER_AGGREGATOR_HUNT.md:341:### PRA-029 — First-Touch Maximal Valid Market Leg Consumes Route Gas Variant 29
+audits/asyam/workflow/02_HASHLOCK_VALIDATION.md:14:| L-01 signature malleability | `ecrecover` is used without low-s normalization. `test/asyamFindings/PoC_SignatureMalleability.t.sol` proves both ratifier and authorizer accept high-s malleated signatures. | Validated Low/P3 |
+audits/asyam/workflow/02_HASHLOCK_VALIDATION.md:15:| L-02 setter proof length not capped | Setter roots can represent arbitrary proof heights, but caller pays gas and Ecrecover now uses `proof.length` in current code. | Low/gas only |
+audits/asyam/workflow/02_HASHLOCK_VALIDATION.md:16:| L-03 irreversible cancelRoot | Design/operational risk. | Park |
+audits/asyam/workflow/02_HASHLOCK_VALIDATION.md:17:| L-04 zero maker | `address(0)` cannot authorize a ratifier through normal `setIsAuthorized`, and Certora has a `addressZeroCantAuthorize` invariant. | Likely false positive |
+audits/asyam/workflow/historicalExploitPatternHunt/03_PATTERN_TO_MIDNIGHT_EQUIVALENCE_MAP.md:23:| `IdLib` | market identity | formal alias retained as P3-02 | runtime alias only with executable economic path |
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:486:[PASS] testGasBound(uint256) (runs: 256, μ: 749, ~: 843)
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:487:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6434, ~: 6175)
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:488:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 837, ~: 829)
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:755:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:757:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/blackboxLogicHunt/baseline_full_tests.log:758:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:10:| BL-001 | Lazy lender storage is safe until touched | `updatePositionView`, `withdraw`, `take` | Realize loss, leave lender stale, force a different state-sensitive action before lender touch | Lender | Effective claim and later action agree | Direct sync already covered; need material branch | `PoC_Blackbox_DeferredPositionUpdate.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:11:| BL-002 | Social loss equals unrecoverable debt | `liquidate` | Partial liquidation, collateral change, then zero-input realization | Lenders | `badDebt <= economically unrecoverable debt` | Duplicate if only zero oracle | `PoC_Blackbox_BadDebtRecoverability.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:12:| BL-003 | Bundle max spend bounds the whole economic action | `buyWithUnitsTargetAndWithdrawCollateral` | Use valid fallback legs and collateral withdrawal in one route | Delegated taker | Spend and collateral effects match intent | Invalid if taker explicitly authorized all effects | `PoC_Blackbox_UserIntentBundle.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:13:| BL-004 | Bundle min receive captures borrower outcome | `supplyCollateralAndSellWithAssetsTarget` | Choose fallback offers with materially different debt units while receive target holds | Borrower | Debt opened is bounded by `maxUnits` | Likely defended by `maxUnits` | Route permutation test |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:14:| BL-005 | Repay bundle fee is understood as separate from debt repayment | `repayAndWithdrawCollateral` | Relayer chooses referral pct and receiver while operating for authorized borrower | Borrower | Authorized repay cannot redirect unrelated value | Broad delegate may make intended | Authorization-scope PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:15:| BL-006 | A maker group represents one economic offer family | `consumed`, `setConsumed` | Reuse same group across opposite sides or loan tokens | Maker | Shared cap semantics match signed intent | Docs warn same direction/token; likely user error | Mixed-family group PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:16:| BL-007 | A lender can rely on withdrawable backing after repayment | `repay`, `withdraw`, `claimSettlementFee` | Accumulate token-global settlement fee elsewhere, claim fee first, then withdraw | Lender | Custody covers all liabilities | Formal solvency claims defense; runtime test still valuable | `PoC_Blackbox_CrossMarketAggregateAccounting.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:17:| BL-008 | Fee claims cannot borrow backing from another market | `claimSettlementFee`, `claimContinuousFee` | Same loan token markets, interleave claims and withdrawals | Lenders | Aggregate liabilities remain backed | May be formally proven | Aggregate claim ordering test |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:18:| BL-009 | Market creation is isolated to users selecting that market | `touchMarket`, bundles | Route a delegated user through attacker-selected market | Delegated user | Bad market requires explicit consent | Broad delegation likely intended | `PoC_Blackbox_PermissionlessMarketContamination.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:19:| BL-010 | Oracle/gate risk remains market-local | `isHealthy`, `liquidate`, bundles | Mix shared actor authorization with malicious gated market route | Lender or borrower | Chosen risk cannot contaminate unrelated position | Must prove missing consent | Consent-boundary PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:20:| BL-011 | Fee setter changes only stale quote fillability | `setMarketSettlementFee`, bundles | Quote route, change fee, force different valid fallback debt profile | Route user | Slippage arguments bound changed economics | Duplicate if only stale quote revert | `PoC_Blackbox_QuoteSettlementMismatch.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:21:| BL-012 | Maturity changes only allowed liquidation mode | `take`, `liquidate`, bundles | Prepare route before maturity, settle after maturity with debt-reducing and debt-increasing legs | Borrower | Post-maturity exposure cannot increase | Existing direct maturity tests narrow | Maturity route PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:22:| BL-013 | RCF threshold is only gas-policy relief | `liquidate` | Construct just-under/over threshold state and compare full liquidation | Borrower, lenders | Tiny threshold delta cannot create material avoidable loss | Could be intended parameter risk | RCF discontinuity PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:23:| BL-014 | Liquidators cannot rationally choose a path that increases lender loss beyond disclosed incentives | `liquidate` multi-collateral | Choose collateral order with different `maxLif` and leave bad-debt realization state | Lenders | Equivalent liquidation paths do not create avoidable social loss | Preference is documented; require material exploit | Multi-collateral order PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:24:| BL-015 | Active collateral can be safely added before debt | `supplyCollateral`, `take` | Activate liveness-hostile collateral while debtless, then route debt into account | Borrower | Debt entry requires consent to all active risks | Borrower may have consented | Route-forced debt PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:25:| BL-016 | Authorization revocation stops future economic effects | `setIsAuthorized`, `EcrecoverAuthorizer`, ratifiers | Combine pre-signed authorization and separate route after revocation ordering | Authorizer | Revocation effect matches signed intent | Broad delegated authority documented | `PoC_Blackbox_AuthorizationIntentSplit.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:26:| BL-017 | Signed authorization has one obvious action class | `EcrecoverAuthorizer.setIsAuthorized` | Use newly authorized actor across core, bundler, and ratifier reuse surfaces | Authorizer | Signature effect scope is explicit | Likely intended broad core auth | Scope-composition PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:27:| BL-018 | Ratifier signer authority reflects offer-maker intent at fill time | `EcrecoverRatifier.isRatified` | Revoke signer in one surface while another authorization chain remains valid | Maker | Revoked signer cannot indirectly validate offer | Duplicate if plain delegate grief | Chained-auth PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:28:| BL-019 | Route fallback is economically interchangeable | bundle loops | Make first offer fail for non-price reason so valid fallback opens different exposure | Taker | Explicit bounds capture fallback economics | Likely intended skip semantics | Route side-effect PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:29:| BL-020 | Route builder cannot collect a fee without delivering intended action | bundles referral | Use fallback and rounding threshold to satisfy token target with unexpected units | User | Referral paid only for bounded action | Existing referral tests narrow | Route-average-price PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:30:| BL-021 | Settlement fees are always cash-backed at claim time | `take`, `claimSettlementFee` | Compose same-token markets and same-transaction claims after fee accrual | Fee claimer, lenders | Claimable fees never use lender backing | Admin-only claimer, but solvency impact can affect lenders | Aggregate custody PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:31:| BL-022 | Continuous-fee claim cannot front-run lazy lender synchronization | `updatePosition`, `claimContinuousFee`, `withdraw` | Accrue lazy fee, repay, claim and withdraw in alternate orders | Lenders | Claimed fee is reserved once | Prior composition covers one market; test multi-market | Deferred fee PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:32:| BL-023 | A borrower with debt cannot escape oracle-dependent health checks | `withdrawCollateral`, `take` | Use repay-to-zero and collateral withdrawal in one bundle around quote transition | Lenders | Collateral exit only after debt is repaid | Likely correct | Bundle repay exit test |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:33:| BL-024 | Per-market IDs isolate all state but shared custody | `toId`, token balance | Alternate valid claims across same-token markets | Lenders | Sum of claims is backed | Distinct from formal aliasing | Aggregate accounting invariant |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:34:| BL-025 | Event stream lets monitoring reconstruct actionable solvency | `EventsLib`, lazy accrual | Replay events across repay, slash, touch, claim, withdraw | Lenders, monitors | Event mirror equals storage-relevant state | P3 unless delayed action creates loss | `PoC_Blackbox_EventStorageMismatch.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:35:| BL-026 | Loss-factor rounding remains dust-only | `liquidate`, `updatePosition` | Repeated small defaults until threshold flips claim or health branch | Lenders | Dust cannot trigger non-dust branch | Duplicate unless branch flip | `PoC_Blackbox_DustToNonDustStateFlip.sol` |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:36:| BL-027 | Zero-unit actions are harmless outside callbacks | `repay`, `withdraw`, bundles | Use zero amounts to trigger market creation, approval, or route-selected side effects | User | No-op cannot create third-party economic effect | Direct zero callback replay closed | Zero-path PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:37:| BL-028 | A market creator cannot influence unrelated indexer identity | `MarketCreated`, `toMarket` | Create similar markets differing only in peripheral risk params | UI user | Indexer displays full consent tuple | Runtime core likely safe; UI-dependent | Event identity replay |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:38:| BL-029 | Permissionless update calls help, not harm, stale lenders | `updatePosition` | Force touch before lender-planned withdrawal or rollover | Lender | Public touch cannot worsen exit beyond accrued economics | Likely intended crystallization | Forced-touch PoC |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:39:| BL-030 | Lender rollover race is disclosed and bounded | `take`, `withdrawable` | Resting sell offer rolls realized cash into new borrower risk before lender withdraws | Lender | Lender consent to rollover is explicit | Blackthorn L-15 duplicate-risk | Dedup-only unless new periphery path |
+audits/asyam/workflow/blackboxLogicHunt/02_BUSINESS_LOGIC_ATTACKS.md:43:Start with BL-001, BL-002, BL-003, BL-007, BL-016, BL-021, and BL-026. The others are filters and fallback queues.
+audits/asyam/workflow/historicalExploitPatternHunt/06_ECONOMIC_MANIPULATION_HUNT.md:53:### ECO-005 — First-Touch Valid Market Leg Consumes Route Gas Variant 5
+audits/asyam/workflow/historicalExploitPatternHunt/06_ECONOMIC_MANIPULATION_HUNT.md:137:### ECO-012 — First-Touch Valid Market Leg Consumes Route Gas Variant 12
+audits/asyam/workflow/historicalExploitPatternHunt/06_ECONOMIC_MANIPULATION_HUNT.md:221:### ECO-019 — First-Touch Valid Market Leg Consumes Route Gas Variant 19
+audits/asyam/workflow/historicalExploitPatternHunt/06_ECONOMIC_MANIPULATION_HUNT.md:305:### ECO-026 — First-Touch Valid Market Leg Consumes Route Gas Variant 26
+audits/asyam/workflow/historicalExploitPatternHunt/06_ECONOMIC_MANIPULATION_HUNT.md:389:### ECO-033 — First-Touch Valid Market Leg Consumes Route Gas Variant 33
+audits/asyam/workflow/historicalExploitPatternHunt/13_TOP_5_IMPLEMENTATION_PLAN.md:38:## 4. `PoC_Hist_CollateralFanoutLiquidationGas.t.sol`
+audits/asyam/workflow/historicalExploitPatternHunt/13_TOP_5_IMPLEMENTATION_PLAN.md:47:* Command: `forge test --match-path test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol -vvvv`
+audits/asyam/workflow/blackboxLogicHunt/blackbox_logic_hunt_graph.json:46:    "BL-001", "BL-002", "BL-003", "BL-004", "BL-005", "BL-006", "BL-007", "BL-008", "BL-009", "BL-010",
+audits/asyam/workflow/blackboxLogicHunt/blackbox_logic_hunt_graph.json:47:    "BL-011", "BL-012", "BL-013", "BL-014", "BL-015", "BL-016", "BL-017", "BL-018", "BL-019", "BL-020",
+audits/asyam/workflow/blackboxLogicHunt/blackbox_logic_hunt_graph.json:48:    "BL-021", "BL-022", "BL-023", "BL-024", "BL-025", "BL-026", "BL-027", "BL-028", "BL-029", "BL-030"
+audits/asyam/findings/cantina-P3-01-role-setter-bricking.md:1:# Cantina Submission — P3-01
+audits/asyam/findings/cantina-P3-01-role-setter-bricking.md:10:| **Severity** | Low (computed by Cantina from Likelihood × Impact; may be judged Informational as admin self-DoS) |
+audits/asyam/findings/cantina-P3-01-role-setter-bricking.md:14:| **Submission status** | Hold for manual scope review; not submit-ready |
+audits/asyam/findings/cantina-P3-01-role-setter-bricking.md:68:The protocol continues to operate with the roles frozen at their current values. This is an **irreversible admin footgun**, not a permissionless exploit. Judges may classify it as Informational if admin self-DoS is treated as out of scope, but the on-chain bricking is real and permanent.
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:587:[PASS] testGasBound(uint256) (runs: 256, μ: 729, ~: 615)
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:588:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6452, ~: 6190)
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:589:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 834, ~: 829)
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:788:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:790:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/blackboxLogicHunt/final_full_tests.log:791:  Gas 2nd seizure (warm): 60880
+audits/asyam/findings/INDEX.md:5:## Submit-Ready Low/Gas/Informational
+audits/asyam/findings/INDEX.md:9:| L-01 | [ECDSA signature malleability](cantina-L01-signature-malleability.md) | Submit-ready Low |
+audits/asyam/findings/INDEX.md:10:| P3-02 | [CVL market-ID aliasing](cantina-P3-02-solvency-spec-market-id-aliasing.md) | Submit-ready Informational / P3 |
+audits/asyam/findings/INDEX.md:19:| P3-01 | [`roleSetter` zero-address bricking](cantina-P3-01-role-setter-bricking.md) | Hold: admin-only scope judgment | Low at most |
+audits/asyam/findings/INDEX.md:20:| L-02 | [Tiny repayment liquidation gas grief](cantina-L02-tiny-repay-liquidation-gas-grief.md) | Hold: manual duplicate review | Gas / Informational, Low at most |
+audits/asyam/findings/INDEX.md:21:| L-03 | [RCF top-up liquidation gas grief](cantina-L03-rcf-topup-liquidation-gas-grief.md) | Do not submit: intended RCF policy | Informational |
+audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md:1:# Cantina Submission — L-02
+audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md:10:| **Severity** | Low / Gas / Informational |
+audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md:14:| **Submission status** | Hold for manual duplicate review; not submit-ready |
+audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md:23:debt escalation, reduced lender recovery, frozen funds, or attacker profit. This is therefore a Low/Gas/Informational
+audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md:64:demonstrated. Treat as Gas or Informational if the competition does not accept repairable transaction-invalidation
+audits/asyam/workflow/attackPlan/03_ECONOMIC_FAILURE_MODES.md:21:| Signature domain break | ratifiers | Fill with mutated offer fields | INV-017 | High | L-01 partial |
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:7:- **Source:** BL-001, SD-001..004, MTX-001.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:20:- **Source:** BL-002, SD-018, MTX-013.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:32:- **Source:** BL-003, BL-019, SD-024, MTX-017.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:44:- **Source:** BL-016..018, SD-014..015, MTX-007..008.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:56:- **Source:** BL-011, SD-016, MTX-005.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:68:- **Source:** BL-007..008, BL-021, SD-005..007, MTX-003.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:80:- **Source:** BL-009..010, PM-001..004.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:88:- **Source:** BL-026, AD-003, MTX-021.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:96:- **Source:** BL-025, SD-021..022, MTX-020.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:104:- **Source:** BL-022, SD-007..008, MTX-022.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:112:- **Source:** BL-013, AD-009, MTX-015.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:119:- **Source:** BL-014, AI-017, MTX-014.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:126:- **Source:** BL-023, AD-025, MTX-011..012.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:140:- **Source:** BL-012, AD-010, MTX-018, MTX-026.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:147:- **Source:** BL-006, SD-011, MTX-023..024.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:154:- **Source:** BL-029, AI-019.
+audits/asyam/workflow/blackboxLogicHunt/10_BLACKBOX_POC_BACKLOG.md:175:- **Source:** BL-028, AI-020..021.
+audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md:1:# Cantina Submission — L-03
+audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md:10:| **Severity** | Low / Gas / Informational |
+audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md:24:bad debt. This is therefore a Low/Gas/Informational finding, not a High/Medium finding.
+audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md:59:This may be judged Informational because RCF exists to limit normal-mode liquidation to the amount needed to restore
+audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md:83:This is adjacent to L-02 and generic liquidation-quote front-running. It is also closely tied to the documented RCF
+audits/asyam/workflow/blackboxLogicHunt/06_PERMISSIONLESS_MARKET_ASSUMPTION_BREAKS.md:26:| PM-017 | Similar market differing only in threshold | Attacker | Formal verification | CVL summary | P3-02 formal-only | Runtime isolate, document only |
+audits/asyam/findings/cantina-P3-02-solvency-spec-market-id-aliasing.md:1:# Cantina Submission - P3-02
+audits/asyam/findings/cantina-P3-02-solvency-spec-market-id-aliasing.md:10:| **Severity** | Informational / P3 formal-assurance gap |
+audits/asyam/findings/cantina-P3-02-solvency-spec-market-id-aliasing.md:13:| **Submission status** | Recommended for manual submission as Informational only |
+audits/asyam/workflow/attackPlan/01_FUNCTION_ATTACK_SURFACE_MAP.md:110:| `setRoleSetter` etc. | P3-01 footgun proven Low |
+audits/asyam/workflow/attackPlan/08_INVARIANT_BREAK_TARGETS.md:81:`Solvency.spec::CVL_toId` — formal only (AP-022 / P3-02). Do not confuse with production `IdLib.toId`.
+audits/asyam/findings/findings.md:31:## Submit-Ready Low/Gas/Informational
+audits/asyam/findings/findings.md:35:| L-01 | [cantina-L01-signature-malleability.md](cantina-L01-signature-malleability.md) | Medium | Low | Low |
+audits/asyam/findings/findings.md:36:| P3-02 | [cantina-P3-02-solvency-spec-market-id-aliasing.md](cantina-P3-02-solvency-spec-market-id-aliasing.md) | Medium | Low | Informational / P3 |
+audits/asyam/findings/findings.md:42:| P3-01 | [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md) | Hold for manual admin-only scope review | Low at most |
+audits/asyam/findings/findings.md:43:| L-02 | [cantina-L02-tiny-repay-liquidation-gas-grief.md](cantina-L02-tiny-repay-liquidation-gas-grief.md) | Hold for manual duplicate review | Gas / Informational, Low at most |
+audits/asyam/findings/findings.md:44:| L-03 | [cantina-L03-rcf-topup-liquidation-gas-grief.md](cantina-L03-rcf-topup-liquidation-gas-grief.md) | Do not submit: intended RCF branch behavior | Informational |
+audits/asyam/findings/findings.md:69:- adaptive liquidation closes the L-02 and L-03 escalation theories;
+audits/asyam/findings/findings.md:92:## L-01: ECDSA signatures are accepted in malleated high-s form
+audits/asyam/findings/findings.md:123:Full report: [cantina-L01-signature-malleability.md](cantina-L01-signature-malleability.md)
+audits/asyam/findings/findings.md:125:## P3-01: `roleSetter` can be irreversibly set to `address(0)`
+audits/asyam/findings/findings.md:151:Full report: [cantina-P3-01-role-setter-bricking.md](cantina-P3-01-role-setter-bricking.md)
+audits/asyam/findings/findings.md:153:## P3-02: CVL summaries alias production-distinct market IDs
+audits/asyam/findings/findings.md:179:Full report: [cantina-P3-02-solvency-spec-market-id-aliasing.md](cantina-P3-02-solvency-spec-market-id-aliasing.md)
+audits/asyam/workflow/attackPlan/00_SRC_TEST_DEEP_MAP.md:85:| `Solvency.spec` | solvency (CVL market ID summary — see P3-02) |
+audits/asyam/workflow/attackPlan/00_SRC_TEST_DEEP_MAP.md:121:| `PoC_SignatureMalleability.t.sol` | L-01 |
+audits/asyam/workflow/attackPlan/00_SRC_TEST_DEEP_MAP.md:122:| `PoC_RoleSetterBricking.t.sol` | P3-01 |
+audits/asyam/workflow/attackPlan/00_SRC_TEST_DEEP_MAP.md:123:| `PoC_SolvencySpecMarketIdAliasing.t.sol` | P3-02 / C-36 |
+audits/asyam/workflow/historicalExploitPatternHunt/14_FALSE_POSITIVE_SCOPE_FILTER.md:47:* Next proof step: Implement `test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol` only when it survives these filters.
+audits/asyam/workflow/historicalExploitPatternHunt/14_FALSE_POSITIVE_SCOPE_FILTER.md:146:* Next proof step: Implement `test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol` only when it survives these filters.
+audits/asyam/workflow/historicalExploitPatternHunt/14_FALSE_POSITIVE_SCOPE_FILTER.md:212:* Next proof step: Implement `test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol` only when it survives these filters.
+audits/asyam/workflow/historicalExploitPatternHunt/14_FALSE_POSITIVE_SCOPE_FILTER.md:234:* Next proof step: Implement `test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol` only when it survives these filters.
+audits/asyam/findings/cantina-L01-signature-malleability.md:1:# Cantina Submission — L-01
+audits/asyam/workflow/blackboxLogicHunt/03_STATE_MACHINE_DESYNC_ATTACKS.md:31:| SD-025 | CVL market summary | production market ID | Formal claims map to runtime identities | reduced tuple alias -> aggregate runtime path | P3-02 formal-only | Runtime IDs isolated; formal blindspot classification |
+audits/asyam/workflow/historicalExploitPatternHunt/00_SCOPE_DATASETS_AND_EXCLUSIONS.md:9:* `L-01`: signature malleability.
+audits/asyam/workflow/historicalExploitPatternHunt/00_SCOPE_DATASETS_AND_EXCLUSIONS.md:10:* `P3-01`: `roleSetter` zero-address bricking.
+audits/asyam/workflow/historicalExploitPatternHunt/00_SCOPE_DATASETS_AND_EXCLUSIONS.md:11:* `P3-02`: formal-only CVL market-ID aliasing; not a production loss claim.
+audits/asyam/workflow/historicalExploitPatternHunt/00_SCOPE_DATASETS_AND_EXCLUSIONS.md:39:* formal-only CVL market-ID aliasing: retained as P3-02, not an executable loss claim.
+audits/asyam/workflow/attackPlan/attack_plan_graph.json:46:    {"id": "AP-022", "status": "closed_proven_formal", "severity_if_proven": "Informational", "test_file": "test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol"}
+audits/asyam/workflow/CANDIDATES.md:19:| C-41 | Signature malleability | proven — Cantina L-01 |
+audits/asyam/workflow/CANDIDATES.md:20:| C-40 | roleSetter zero brick | proven — Cantina P3-01 |
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:5:### GTL-001 — Repeated Tiny Repay Front-Runs Postpone Liquidation Until Collateral Declines Variant 1
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:17:### GTL-002 — Minimal Collateral Top-Ups Waste Liquidator Gas And Delay Recovery Variant 2
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:29:### GTL-003 — Ordinary Collateral Fanout Freezes Liquidation Under Realistic Block Limits Variant 3
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:41:### GTL-004 — Valid First-Touch Market Legs Make Routes Fail After Construction Variant 4
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:53:### GTL-005 — Proof-Cost Asymmetry Prices Protective Execution Out Variant 5
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:65:### GTL-006 — Gate Liveness Delay Crosses Maturity Into Lender Loss Variant 6
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:77:### GTL-007 — Callback Gas Expansion Turns A Viable Liquidation Into A Failed Protective Action Variant 7
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:89:### GTL-008 — Repeated Tiny Repay Front-Runs Postpone Liquidation Until Collateral Declines Variant 8
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:101:### GTL-009 — Minimal Collateral Top-Ups Waste Liquidator Gas And Delay Recovery Variant 9
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:113:### GTL-010 — Ordinary Collateral Fanout Freezes Liquidation Under Realistic Block Limits Variant 10
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:125:### GTL-011 — Valid First-Touch Market Legs Make Routes Fail After Construction Variant 11
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:137:### GTL-012 — Proof-Cost Asymmetry Prices Protective Execution Out Variant 12
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:149:### GTL-013 — Gate Liveness Delay Crosses Maturity Into Lender Loss Variant 13
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:161:### GTL-014 — Callback Gas Expansion Turns A Viable Liquidation Into A Failed Protective Action Variant 14
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:173:### GTL-015 — Repeated Tiny Repay Front-Runs Postpone Liquidation Until Collateral Declines Variant 15
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:185:### GTL-016 — Minimal Collateral Top-Ups Waste Liquidator Gas And Delay Recovery Variant 16
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:197:### GTL-017 — Ordinary Collateral Fanout Freezes Liquidation Under Realistic Block Limits Variant 17
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:209:### GTL-018 — Valid First-Touch Market Legs Make Routes Fail After Construction Variant 18
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:221:### GTL-019 — Proof-Cost Asymmetry Prices Protective Execution Out Variant 19
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:233:### GTL-020 — Gate Liveness Delay Crosses Maturity Into Lender Loss Variant 20
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:245:### GTL-021 — Callback Gas Expansion Turns A Viable Liquidation Into A Failed Protective Action Variant 21
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:257:### GTL-022 — Repeated Tiny Repay Front-Runs Postpone Liquidation Until Collateral Declines Variant 22
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:269:### GTL-023 — Minimal Collateral Top-Ups Waste Liquidator Gas And Delay Recovery Variant 23
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:281:### GTL-024 — Ordinary Collateral Fanout Freezes Liquidation Under Realistic Block Limits Variant 24
+audits/asyam/workflow/historicalExploitPatternHunt/11_GRIEF_TO_LOSS_ESCALATION_HUNT.md:293:### GTL-025 — Valid First-Touch Market Legs Make Routes Fail After Construction Variant 25
+audits/asyam/workflow/attackPlan/09_DISPROOF_AND_FALSE_POSITIVE_FILTER.md:50:| P3-02 CVL market ID alias | proven formal only | not production exploit |
+audits/asyam/workflow/attackPlan/09_DISPROOF_AND_FALSE_POSITIVE_FILTER.md:51:| L-01 signature malleability | proven Low | do not re-file as new |
+audits/asyam/workflow/attackPlan/09_DISPROOF_AND_FALSE_POSITIVE_FILTER.md:52:| P3-01 roleSetter zero | proven Low | admin footgun |
+audits/asyam/workflow/attackPlan/02_MULTI_CONTRACT_ATTACK_VECTORS.md:70:- **Status:** **partial proven** (L-01 Low); not economic field replay
+audits/asyam/workflow/attackPlan/02_MULTI_CONTRACT_ATTACK_VECTORS.md:93:- **Status:** **proven footgun** P3-01 (admin)
+audits/asyam/workflow/POC_RESULTS.md:11:Result: **77/77 passed** (exploratory PoCs, composition probes, 4 invariant suites, migrated L-01/P3-01 PoCs).
+audits/asyam/workflow/POC_RESULTS.md:41:| L-01 | `test/asyam/poc/PoC_SignatureMalleability.t.sol` | **proven** | Cantina submission exists |
+audits/asyam/workflow/POC_RESULTS.md:42:| P3-01 | `test/asyam/poc/PoC_RoleSetterBricking.t.sol` | **proven** | Cantina submission exists |
+audits/asyam/workflow/POC_RESULTS.md:43:| P3-02 | `test/asyam/poc/PoC_SolvencySpecMarketIdAliasing.t.sol`, `test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol` | **proven** | Production creates distinct supported markets while the solvency tuple and no-division-by-zero three-collateral prefix summaries alias them; formal-assurance gap, not a production fund-loss claim |
+audits/asyam/workflow/POC_RESULTS.md:82:No new H/M Cantina findings written — priority live-queue items did not demonstrate novel fund loss or accounting corruption beyond prior audit coverage. P3-02 records distinct formal-assurance identity-summary gaps in `Solvency.spec` and `NoDivisionByZero.spec`.
+audits/asyam/workflow/POC_RESULTS.md:139:## Final Low / Gas / Informational Submission Review
+audits/asyam/workflow/POC_RESULTS.md:160:## Submit-Ready Low/Gas/Informational
+audits/asyam/workflow/POC_RESULTS.md:164:| L-01 | Submit | Low | Proven signature-canonicality defect without replay-based fund-loss claim |
+audits/asyam/workflow/POC_RESULTS.md:165:| P3-02 | Submit | Informational | Proven CVL model mismatch without runtime exploit claim |
+audits/asyam/workflow/POC_RESULTS.md:171:| P3-01 | Hold | Low at most | Admin-only operational footgun |
+audits/asyam/workflow/POC_RESULTS.md:172:| L-02 | Hold | Gas / Informational, Low at most | Liquidation-specific gas grief with acknowledged front-run invalidation overlap |
+audits/asyam/workflow/POC_RESULTS.md:173:| L-03 | Do not submit | Informational | Intended RCF branch transition; adaptive liquidation succeeds |
+audits/asyam/workflow/baseline_tests.log:385:[PASS] testGasBound(uint256) (runs: 256, μ: 740, ~: 843)
+audits/asyam/workflow/baseline_tests.log:386:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6514, ~: 6223)
+audits/asyam/workflow/baseline_tests.log:387:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 845, ~: 829)
+audits/asyam/workflow/baseline_tests.log:508:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/baseline_tests.log:510:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/baseline_tests.log:511:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/historicalExploitPatternHunt/02_DATASET_PATTERN_LIBRARY.md:174:### HPAT-014 — Multi-Collateral Gas Fanout
+audits/asyam/workflow/historicalExploitPatternHunt/02_DATASET_PATTERN_LIBRARY.md:434:### HPAT-034 — Valid Poison Leg Gas
+audits/asyam/workflow/historicalExploitPatternHunt/02_DATASET_PATTERN_LIBRARY.md:694:### HPAT-054 — Callback Gas Asymmetry
+audits/asyam/workflow/historicalExploitPatternHunt/02_DATASET_PATTERN_LIBRARY.md:902:### HPAT-070 — Duplicate Array Gas
+audits/asyam/workflow/historicalExploitPatternHunt/02_DATASET_PATTERN_LIBRARY.md:993:### HPAT-077 — Valid-Input Gas Grief
+audits/asyam/workflow/compositionHunt/10_DISPROOF_CRITERIA.md:16:| FormalAliasExecutable | runtime state crosses full IDs | runtime IDs isolate all effects | formal gap only | P3-02 | none | `idA != idB`, B state unchanged |
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:74:* Suggested test path: `test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:75:* Run command: `forge test --match-path test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol -vvvv`
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:236:* Suggested test path: `test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:237:* Run command: `forge test --match-path test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol -vvvv`
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:344:* Suggested test path: `test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:345:* Run command: `forge test --match-path test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol -vvvv`
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:380:* Suggested test path: `test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/12_PATTERN_BASED_POC_BACKLOG.md:381:* Run command: `forge test --match-path test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol -vvvv`
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:605:[PASS] testGasBound(uint256) (runs: 256, μ: 735, ~: 843)
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:606:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6450, ~: 6181)
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:607:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 833, ~: 829)
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:739:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:741:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/historicalExploitPatternHunt/baseline_tests.log:742:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/attackPlan/06_HIGH_VALUE_POC_QUEUE.md:144:- **Status:** partial-proven (L-01 malleability only)
+audits/asyam/workflow/attackPlan/06_HIGH_VALUE_POC_QUEUE.md:224:- **Status:** closed-proven-formal (P3-02)
+audits/asyam/workflow/attackPlan/06_HIGH_VALUE_POC_QUEUE.md:246:- **Status:** closed-proven (P3-01 Low)
+audits/asyam/workflow/compositionHunt/00_CLOSED_QUEUE_DIGEST.md:21:| AP-013 | Signature field replay | partial, L-01 only | `PoC_SignatureMalleability.t.sol` | only high-s uniqueness issue proven | `INV-017` | delegate revocation and signed-route timing | yes |
+audits/asyam/workflow/compositionHunt/05_ROLE_COLLUSION_AND_AUTHORIZATION_COMPOSITIONS.md:17:| R-09 | role setter + fee setter | can change fee authority | admin-only classification | P3-01 | no external escalation expected | park |
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:121:    "formal-only CVL market-ID aliasing: retained as P3-02, not an executable loss claim"
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:974:      "closed_equivalent": "formal alias retained as P3-02",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2355:      "id": "GTL-001",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2360:      "id": "GTL-002",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2365:      "id": "GTL-003",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2370:      "id": "GTL-004",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2375:      "id": "GTL-005",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2380:      "id": "GTL-006",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2385:      "id": "GTL-007",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2390:      "id": "GTL-008",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2395:      "id": "GTL-009",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2400:      "id": "GTL-010",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2405:      "id": "GTL-011",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2410:      "id": "GTL-012",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2415:      "id": "GTL-013",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2420:      "id": "GTL-014",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2425:      "id": "GTL-015",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2430:      "id": "GTL-016",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2435:      "id": "GTL-017",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2440:      "id": "GTL-018",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2445:      "id": "GTL-019",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2450:      "id": "GTL-020",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2455:      "id": "GTL-021",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2460:      "id": "GTL-022",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2465:      "id": "GTL-023",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2470:      "id": "GTL-024",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2475:      "id": "GTL-025",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2518:      "test_path": "test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2608:      "test_path": "test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2668:      "test_path": "test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2688:      "test_path": "test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol",
+audits/asyam/workflow/historicalExploitPatternHunt/historical_exploit_pattern_graph.json:2751:      "test_path": "test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol"
+audits/asyam/workflow/06_FORMAL_MODEL_GAP_REVIEW.md:28:Finding: [../findings/cantina-P3-02-solvency-spec-market-id-aliasing.md](../findings/cantina-P3-02-solvency-spec-market-id-aliasing.md)
+audits/asyam/workflow/patternTransplantHunt/00_SCOPE_AND_DATASETS.md:65:| roleSetter zero brick | `known` | Existing P3-01. |
+audits/asyam/workflow/patternTransplantHunt/00_SCOPE_AND_DATASETS.md:66:| signature malleability | `known` | Existing L-01. |
+audits/asyam/workflow/patternTransplantHunt/00_SCOPE_AND_DATASETS.md:67:| formal CVL market-ID aliasing | `known-formal-only` | Existing P3-02; runtime refiling requires an executable economic path. |
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:775:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:777:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:778:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:855:[PASS] testGasBound(uint256) (runs: 256, μ: 741, ~: 843)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:856:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6404, ~: 5988)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_rcf_topup.log:857:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 839, ~: 829)
+audits/asyam/workflow/historicalExploitPatternHunt/05_BUSINESS_LOGIC_CONTRADICTION_HUNT.md:29:### BLC-003 — Permissionless Market Validity Is Assumed Sufficient But Route Feasibility Also Needs Gas Bounds Variant 3
+audits/asyam/workflow/historicalExploitPatternHunt/05_BUSINESS_LOGIC_CONTRADICTION_HUNT.md:113:### BLC-010 — Permissionless Market Validity Is Assumed Sufficient But Route Feasibility Also Needs Gas Bounds Variant 10
+audits/asyam/workflow/historicalExploitPatternHunt/05_BUSINESS_LOGIC_CONTRADICTION_HUNT.md:197:### BLC-017 — Permissionless Market Validity Is Assumed Sufficient But Route Feasibility Also Needs Gas Bounds Variant 17
+audits/asyam/workflow/historicalExploitPatternHunt/05_BUSINESS_LOGIC_CONTRADICTION_HUNT.md:281:### BLC-024 — Permissionless Market Validity Is Assumed Sufficient But Route Feasibility Also Needs Gas Bounds Variant 24
+audits/asyam/workflow/historicalExploitPatternHunt/05_BUSINESS_LOGIC_CONTRADICTION_HUNT.md:365:### BLC-031 — Permissionless Market Validity Is Assumed Sufficient But Route Feasibility Also Needs Gas Bounds Variant 31
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:674:[PASS] testGasBound(uint256) (runs: 256, μ: 739, ~: 843)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:675:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6390, ~: 5988)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:676:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 840, ~: 829)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:716:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:718:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/full_repo_after_self_liquidation.log:719:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/patternTransplantHunt/02_HISTORICAL_DEFI_BUG_PATTERNS.md:477:### PATTERN-039 - Gas Or Return-Data Grief After Earlier Effect
+audits/asyam/workflow/protocolIntent/11_INTENDED_BEHAVIORS_NOT_BUGS.md:51:- **PoC:** P3-01 style — proven Low footgun only.
+audits/asyam/workflow/protocolIntent/11_INTENDED_BEHAVIORS_NOT_BUGS.md:83:## P3-02 CVL market-ID aliasing (formal assurance gap)
+audits/asyam/workflow/protocolIntent/11_INTENDED_BEHAVIORS_NOT_BUGS.md:91:- **L-01** signature malleability (Low)
+audits/asyam/workflow/protocolIntent/11_INTENDED_BEHAVIORS_NOT_BUGS.md:92:- **P3-01** roleSetter zero brick (Low)
+audits/asyam/workflow/protocolIntent/11_INTENDED_BEHAVIORS_NOT_BUGS.md:93:- **P3-02** CVL ID aliasing (formal/P3)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/PROMOTION_DECISIONS.md:7:Decision: **hold for manual duplicate review; not submit-ready**
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/PROMOTION_DECISIONS.md:16:audits/asyam/findings/cantina-L02-tiny-repay-liquidation-gas-grief.md
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/PROMOTION_DECISIONS.md:19:The packet is capped at Gas/Informational, Low at most, and records duplicate
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/PROMOTION_DECISIONS.md:38:audits/asyam/findings/cantina-L03-rcf-topup-liquidation-gas-grief.md
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/DISPROOF_LEDGER.md:7:| HPH-POC-001 | Tiny repayment liquidation grief | **low-only / disproven for H/M** | Adaptive liquidation retry restores equivalent lender recovery; identical-price one-wei repayment does not increase bad debt or reduce lender credit; unauthorized third parties cannot repay for the borrower. | Borrower can invalidate a stale exact debt-sized liquidation input and waste the stale transaction's gas. Final review holds L-02 for manual duplicate review because it overlaps the acknowledged front-run invalidation class. |
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/DISPROOF_LEDGER.md:8:| HPH-POC-002 | RCF top-up liquidation grief | **low-only / disproven for H/M** | A `2 wei` borrower collateral top-up crosses the RCF threshold and invalidates a stale full-close transaction, but adaptive `maxRepaid` liquidation restores health with no slash; unrelated third parties cannot top up the borrower. | Final review archives L-03 as intended RCF policy behavior. |
+audits/asyam/workflow/protocolIntent/14_PROTOCOL_INTENT_TO_POC_TARGETS.md:188:- **Status:** **Partial** — L-01 malleability only (Low)
+audits/asyam/workflow/protocolIntent/14_PROTOCOL_INTENT_TO_POC_TARGETS.md:304:- **Status:** **Closed-proven P3-02** — `PoC_SolvencySpecMarketIdAliasing.t.sol`
+audits/asyam/workflow/protocolIntent/14_PROTOCOL_INTENT_TO_POC_TARGETS.md:305:- **Severity if true:** Informational / formal
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:575:[PASS] testGasBound(uint256) (runs: 256, μ: 729, ~: 615)
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:576:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6483, ~: 6196)
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:577:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 845, ~: 829)
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:697:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:699:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/patternTransplantHunt/baseline_tests.log:700:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/patternTransplantHunt/10_PERIPHERY_ROUTER_AND_AGGREGATOR_PATTERNS.md:113:### PRA-013 - Bounded Gas Grief After Valid Leg Through buy
+audits/asyam/workflow/patternTransplantHunt/10_PERIPHERY_ROUTER_AND_AGGREGATOR_PATTERNS.md:248:### PRA-028 - Bounded Gas Grief After Valid Leg Through MidnightBundles
+audits/asyam/workflow/protocolIntent/04_MARKET_LIFECYCLE.md:11:**Formal model note:** CVL `Solvency.spec::CVL_toId` hashes only `(loanToken, maturity, chainId, midnight)` — **aliases** distinct production markets. See [../06_FORMAL_MODEL_GAP_REVIEW.md](../06_FORMAL_MODEL_GAP_REVIEW.md) (P3-02 formal gap, not production ID collision exploit).
+audits/asyam/workflow/protocolIntent/04_MARKET_LIFECYCLE.md:67:| CVL-aliased markets in proofs | Formal assurance only (P3-02) |
+audits/asyam/workflow/protocolIntent/05_OFFER_AND_RATIFICATION_MODEL.md:48:| Signature replay across economic fields | BREAK (nonce helps authorizer; malleability L-01 Low) |
+audits/asyam/workflow/protocolIntent/05_OFFER_AND_RATIFICATION_MODEL.md:60:| Signature domain / malleability | **Proven Low** L-01 |
+audits/asyam/workflow/protocolIntent/15_AGENTIC_AUDITOR_PLAYBOOK.md:80:| Ratifier/signature | offers, Merkle, EIP-712 | `ratifiers/*`, L-01 class |
+audits/asyam/workflow/protocolIntent/protocol_intent_graph.json:105:    {"id": "INT-006", "behavior": "cvl_market_id_summary_aliasing_formal_only", "classification": "INTENDED", "note": "P3-02"}
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:611:[PASS] testGasBound(uint256) (runs: 256, μ: 750, ~: 843)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:612:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6431, ~: 6087)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:613:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 832, ~: 829)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:998:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:1000:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/pre_self_liquidation_baseline.log:1001:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/protocolIntent/12_SECURITY_RELEVANT_INVARIANTS.md:132:- **Status:** Partial — L-01 malleability (Low), not field replay
+audits/asyam/workflow/protocolIntent/00_PROTOCOL_INTENTION_SUMMARY.md:62:| Permit / Permit2 | Gasless pull into router | `from = msg.sender` on pulls | Permit2 nonces | Escalate only with victim PoC |
+audits/asyam/workflow/protocolIntent/00_PROTOCOL_INTENTION_SUMMARY.md:68:- **CVL market-ID summaries** vs production `IdLib.toId`: formal assurance gap (P3-02), not production fund loss unless composition exploit found.
+audits/asyam/workflow/protocolIntent/13_ECONOMIC_ATTACK_SURFACES.md:14:| AS-002 | CVL vs prod ID alias | Auditor | `CVL_toId` | Formal | Info | Done | **Proven P3-02** | N/A |
+audits/asyam/workflow/protocolIntent/13_ECONOMIC_ATTACK_SURFACES.md:88:| AS-036 | High-s malleability | Relayer | `ecrecover` | Uniqueness | Low | Low | **Proven L-01** | — |
+audits/asyam/workflow/protocolIntent/13_ECONOMIC_ATTACK_SURFACES.md:90:| AS-038 | Merkle proof length gas | Maker | `SetterRatifier` | — | Gas | Low | Park | — |
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/IMPLEMENTATION_LOG.md:46:After the first stop-and-report checkpoint, the audit was explicitly continued with Low/Gas/Informational reporting
+audits/asyam/workflow/compositionHunt/baseline_tests.log:615:[PASS] testGasBound(uint256) (runs: 256, μ: 743, ~: 843)
+audits/asyam/workflow/compositionHunt/baseline_tests.log:616:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6495, ~: 6217)
+audits/asyam/workflow/compositionHunt/baseline_tests.log:617:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 844, ~: 829)
+audits/asyam/workflow/compositionHunt/baseline_tests.log:677:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/compositionHunt/baseline_tests.log:679:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/compositionHunt/baseline_tests.log:680:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/compositionHunt/02_NET_NEW_ATTACK_COMPOSITIONS.md:190:- **Why this is net-new:** P3-02 proves assurance loss only; this asks whether an executable economic path exists despite production IDs.
+audits/asyam/workflow/compositionHunt/02_NET_NEW_ATTACK_COMPOSITIONS.md:200:- **Existing tests that partially cover it:** P3-02 PoC, `IdLibTest`.
+audits/asyam/workflow/compositionHunt/final_full_tests.log:545:[PASS] testGasBound(uint256) (runs: 256, μ: 749, ~: 843)
+audits/asyam/workflow/compositionHunt/final_full_tests.log:546:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6569, ~: 6394)
+audits/asyam/workflow/compositionHunt/final_full_tests.log:547:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 839, ~: 829)
+audits/asyam/workflow/compositionHunt/final_full_tests.log:719:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/compositionHunt/final_full_tests.log:721:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/compositionHunt/final_full_tests.log:722:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:557:[PASS] testGasBound(uint256) (runs: 256, μ: 755, ~: 843)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:558:[PASS] testGasPriceToTick(uint256) (runs: 256, μ: 6507, ~: 6193)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:559:[PASS] testGasTickToPrice(uint256) (runs: 256, μ: 853, ~: 829)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:679:[PASS] testGasLiquidateMultipleCollaterals() (gas: 1864966)
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:681:  Gas 1st seizure (cold): 162556
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/baseline_tests.log:682:  Gas 2nd seizure (warm): 60880
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/POC_RESULTS.md:25:- Dedup status: Retained as a Low/Gas/Informational draft. Spearbit previously reported a `take()` front-run revert
+audits/asyam/workflow/historicalExploitPatternHunt/implementation/POC_RESULTS.md:54:- Dedup status: Retained as a Low/Gas/Informational draft. It is adjacent to L-02 and may be intended RCF policy.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:70:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:223:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:325:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:359:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:495:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_CollateralFanoutLiquidationGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:648:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_WithdrawalFanoutGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:750:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_CollateralIndexOrderingGas.t.sol`.
+audits/asyam/workflow/historicalExploitPatternHunt/04_UNEXPLORED_MIDNIGHT_EQUIVALENTS.md:784:* Suggested PoC: `test/asyam/poc/historical/PoC_Hist_DuplicateCollateralGas.t.sol`.
+audits/asyam/workflow/compositionHunt/08_FORMAL_SPEC_BLINDSPOT_COMPOSITIONS.md:9:| F-01 | `Solvency.spec` | `CVL_toId` | hashes loan token, maturity, chain ID, Midnight only | full `IdLib.toId` market hash | aliased model misses shared-token A/B ordering | P3-02 exists; runtime probe COMP-009 | formal Low unless runtime impact |
+audits/asyam/workflow/compositionHunt/08_FORMAL_SPEC_BLINDSPOT_COMPOSITIONS.md:10:| F-02 | `NoDivisionByZero.spec` | `equalsGlobalMarket` | compares collateral indexes `0..2` only | markets support up to 128 | index-3 difference prunes valid paths | P3-02 exists | formal Low |

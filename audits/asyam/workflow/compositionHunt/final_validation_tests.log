@@ -1,0 +1,232 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/asyamFindings/PoC_RoleSetterBricking.t.sol:PoCRoleSetterBrickingTest
+[PASS] testPoC_RoleSetterCanBeIrreversiblySetToZero() (gas: 22556)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.47ms (70.08µs CPU time)
+
+Ran 2 tests for test/asyamFindings/PoC_SignatureMalleability.t.sol:PoCSignatureMalleabilityTest
+[PASS] testPoC_AuthorizerAcceptsHighSMalleatedSignature() (gas: 143406)
+Logs:
+  
+  ==============================================================
+  PoC 2: EcrecoverAuthorizer accepts high-s malleated signature
+  ==============================================================
+  [1] Allowing EcrecoverAuthorizer to manage borrower authorization
+      borrower / authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      ecrecoverAuthorizer: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+      Midnight says authorizer is authorized: true
+  [2] Building Authorization struct
+      authorization.authorizer: 0x7d8A6b343f153D9d026466636ED35cA13C367fD2
+      authorization.authorized: 0xfe6F73da54CC24711cA1224AfA2814C9b630eD09
+      authorization.isAuthorized: true
+      authorization.nonce: 0
+      authorization.deadline: 86401
+      current block.timestamp: 1
+  [3] Computing EIP-712 struct hash
+  0xf3430e9190ed8aeca966e54b0ff910ddb7b0b7bd83dae9634c29cd28998543d3
+  [4] Computing EIP-712 domain separator
+      chainid: 31337
+      verifying contract: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+  0xabbf8451b4874b035baec90f10a3026bb60623e5ba5ee5a62ef42d549ee1a290
+  [5] Computing final digest
+  0x38190774115cfac003e0ae5c084f46061466b33f507be334b242c0b316adc786
+  [6] Creating canonical low-s signature from borrower private key
+      original.v: 27
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0x3e35f9c6dc88bd106eb3900d65aba21cc8336b75ed19174736156ea957b46f8a
+      original.s uint: 28138763402730516531293648934097593259886728748158788890074755960446007930762
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [7] Malleating authorization signature
+      malleated.v: 28
+  0x32281eb613d23373ff015036c35cf1fcdff7aa4dc8b9676558bc24021aba821a
+  0xc1ca0639237742ef914c6ff29a545de1f27b7170c22f88f489bcefe37881d1b7
+      malleated.s uint: 87653325834585678892277336074590314592950835530916115492530407181072153563575
+  [8] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [9] State before submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): false
+      authorizer nonce before: 0
+  [10] Calling EcrecoverAuthorizer.setIsAuthorized with high-s signature
+  [11] State after submitting malleated authorization
+      midnight.isAuthorized(authorizer, target): true
+      authorizer nonce after: 1
+      expected nonce after: 1
+  [12] SUCCESS: Authorizer accepted a high-s malleated signature
+  ==============================================================
+  
+
+[PASS] testPoC_RatifierAcceptsHighSMalleatedSignature() (gas: 71955)
+Logs:
+  
+  ============================================================
+  PoC 1: EcrecoverRatifier accepts high-s malleated signature
+  ============================================================
+  [1] Creating signed offer
+      lender / maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.buy: true
+      offer.maker: 0xb012341CA6E91C00A290F658fbaA5211F2559fB1
+      offer.ratifier: 0x2e234DAe75C793f67A35089C9d99245E1C58470b
+      offer.maxUnits: 1
+      offer.start: 1
+      offer.expiry: 86401
+      market.loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      market.maturity: 2592001
+      collateral token: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      collateral oracle: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+      collateral lltv: 915000000000000000
+      collateral maxLif: 1000000000000000000
+  [2] Hashing offer into ratifier root
+  0xebc986c3f15b3848e6e7503d5d6ef2f379aeb41dc3d73eacad90a01ab1fcbc08
+  [3] Creating canonical low-s signature from lender private key
+      original.v: 27
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0x287449b9327793d94002ea56d06876c69ee275e326f33a6b4398474d09f16bbc
+      original.s uint: 18297977023233203178790776205861945222158762035903146081925200542704012979132
+      secp256k1 half-n: 57896044618658097711785492504343953926418782139537452191302581570759080747168
+  [4] Malleating signature
+      Formula: s' = secp256k1n - s
+      Formula: v' = 27 <-> 28
+      malleated.v: 28
+  0x3b779cb11c80d4ed428fbf9ce87f0d245ef19e4f4a87eb0aa0d194f30a5115c7
+  0xd78bb646cd886c26bffd15a92f9789381bcc6703885565d07c3a173fc644d585
+      malleated.s uint: 97494112214082992244780208802825962630678802243171758300679962598814148515205
+  [5] Checking preconditions
+      OK: original signature is low-s
+      OK: malleated signature is high-s
+  [6] Encoding ratifierData with malleated signature
+      proof length: 0
+      ratifierData length: 224
+  [7] Calling EcrecoverRatifier.isRatified from Midnight address
+  [8] Ratifier result
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+      expected CALLBACK_SUCCESS:
+  0x7f87788ea698181ea4d28d1576d0ba4fc92c0dbe5bf75b43692af2ce91dbaea2
+  [9] SUCCESS: Ratifier accepted a high-s malleated signature
+  ============================================================
+  
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 2.74ms (1.65ms CPU time)
+
+Ran 2 tests for test/asyamFindings/PoC_SolvencySpecMarketIdAliasing.t.sol:PoCSolvencySpecMarketIdAliasingTest
+[PASS] testValidation_NoDivisionByZeroSpecSummaryAliasesMarketsDifferingAfterThirdCollateral() (gas: 504941)
+Logs:
+  
+  ======================================================================
+  PoC: NoDivisionByZero.spec aliases four-collateral markets
+  ======================================================================
+  Production ID A:
+  0x7e38d51c034e75d5c7ebe18ae92842c9f9e8c344301078d3b0c3c6b6c4c34e6f
+  Production ID B:
+  0x3304b05cde1f42820b5a2cd5adfa02815d735bf3becd22cb322c42016e20f969
+  Different collateral token[3]: true
+  NoDivisionByZero.spec compares collateral indexes 0..2 only
+  OK: model predicate aliases production-distinct markets
+  ======================================================================
+  
+
+[PASS] testValidation_SolvencySpecSummaryAliasesDistinctProductionMarkets() (gas: 382845)
+Logs:
+  
+  ======================================================================
+  PoC: Solvency.spec aliases distinct production markets
+  ======================================================================
+  [1] Creating Market A from default single-collateral helper
+      Market A loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market A maturity: 2592001
+      Market A rcfThreshold: 0
+      Market A enterGate: 0x0000000000000000000000000000000000000000
+      Market A liquidatorGate: 0x0000000000000000000000000000000000000000
+      Market A collateral token[0]: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      Market A collateral oracle[0]: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+      Market A collateral lltv[0]: 770000000000000000
+      Market A collateral maxLif[0]: 1061007957559681697
+  [2] Creating Market B from same helper
+      Before mutation:
+      Market B loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market B maturity: 2592001
+      Market B collateral token[0]: 0xa0Cb889707d426A7A386870A03bc70d1b0697598
+      Market B collateral oracle[0]: 0xA4AD4f68d0b91CFD19687c881e50f3A00242828c
+  [3] Mutating Market B collateral configuration
+      Market B keeps same loanToken and maturity
+      Market B changes collateral token and oracle
+      After mutation:
+      Market B loanToken: 0xc7183455a4C133Ae270771860664b6B7ec320bB1
+      Market B maturity: 2592001
+      Market B rcfThreshold: 0
+      Market B enterGate: 0x0000000000000000000000000000000000000000
+      Market B liquidatorGate: 0x0000000000000000000000000000000000000000
+      Market B collateral token[0]: 0x1d1499e622D69689cdf9004d05Ec547d650Ff211
+      Market B collateral oracle[0]: 0x03A6a84cD762D9707A21605b548aaaB891562aAb
+      Market B collateral lltv[0]: 770000000000000000
+      Market B collateral maxLif[0]: 1061007957559681697
+  [4] Sanity check: markets share the reduced Solvency.spec key fields
+      Same loanToken: true
+      Same maturity: true
+      Same chainId used by Midnight: 31337
+      Same Midnight address: 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+  [5] Sanity check: markets differ in full production configuration
+      Different collateral token[0]: true
+      Different collateral oracle[0]: true
+  [6] Creating / touching Market A in production Midnight
+      productionIdA:
+  0xaf5de5df441eec73b1f554c3354542a516f528a1f9ba3103199885a2b4e82dcd
+      tickSpacing(productionIdA): 4
+  [7] Creating / touching Market B in production Midnight
+      productionIdB:
+  0x6228cb31644d922c2be7194e8b634b5b94cc11e7c9cc032da26a88beb5612812
+      tickSpacing(productionIdB): 4
+  [8] Validating production behavior
+      Production IdLib.toId includes full Market configuration
+      Therefore Market A and Market B should have different IDs
+      OK: productionIdA != productionIdB
+      OK: first production market is valid
+      OK: second production market is valid
+  [9] Computing Solvency.spec modeled summary keys
+      Solvency.spec key fields:
+        - loanToken
+        - maturity
+        - chainId
+        - Midnight address
+      Omitted production fields include:
+        - collateral token
+        - collateral oracle
+        - collateral LLTV
+        - collateral maxLif
+        - gates
+        - rcfThreshold
+      solvencyKeyA:
+  0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d
+      solvencyKeyB:
+  0xff61bfc1e378287f31b8e39c4a1008618a9fb918e85bb0cf06f49a31cc00b63d
+  [10] Validating CVL model aliasing
+      Because the reduced input tuple is identical, the modeled key aliases
+      OK: solvencyKeyA == solvencyKeyB
+  
+  [11] RESULT
+      Production separates the two markets:
+        productionIdA != productionIdB
+      Solvency.spec summary aliases the two markets:
+        solvencyKeyA == solvencyKeyB
+  
+      This proves a formal-assurance model mismatch:
+      valid multi-market production traces can be collapsed or pruned
+      by the reduced CVL market-ID summary.
+  ======================================================================
+  
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 3.27ms (784.02µs CPU time)
+
+Ran 9 tests for test/asyamFindings/Validation_LiveQueues.t.sol:ValidationLiveQueuesTest
+[PASS] testFuzzValidation_BuyUnitsReferralFeeBudgetBoundary(uint96,uint64) (runs: 256, μ: 1028229, ~: 1028204)
+[PASS] testValidation_BuyBundleTemporaryBalanceCannotBeStolenBySellerCallback() (gas: 1103702)
+[PASS] testValidation_ExtremeReferralExactFillLeavesNoBundlerResidual() (gas: 804792)
+[PASS] testValidation_NestedSellBundleCannotSpendOuterAccumulatedProceeds() (gas: 2452440)
+[PASS] testValidation_NestedTakeDuringBuyCallbackDoesNotBypassSharedCap() (gas: 1918263)
+[PASS] testValidation_ReduceOnlyBuyOfferCannotIncreaseMakerCreditByOneWei() (gas: 1226428)
+[PASS] testValidation_SameLoanAndCollateralTokenLeverageLoopCanFullyUnwind() (gas: 1134568)
+[PASS] testValidation_SameLoanAndCollateralTokenLiquidationCanRepayFromSeizedCollateral() (gas: 994399)
+[PASS] testValidation_SameLoanAndCollateralTokenRepayFromCollateralIsSolvent() (gas: 1145718)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 356.61ms (373.37ms CPU time)
+
+Ran 4 test suites in 361.33ms (365.09ms CPU time): 14 tests passed, 0 failed, 0 skipped (14 total tests)

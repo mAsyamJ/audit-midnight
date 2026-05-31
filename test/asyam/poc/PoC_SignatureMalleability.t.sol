@@ -3,7 +3,7 @@ pragma solidity ^0.8.34;
 
 import {Config} from "../Config.t.sol";
 import {Offer, Market, CollateralParams} from "../../../src/interfaces/IMidnight.sol";
-import {CALLBACK_SUCCESS, LLTV_4, WAD} from "../../../src/libraries/ConstantsLib.sol";
+import {CALLBACK_SUCCESS, LLTV_4} from "../../../src/libraries/ConstantsLib.sol";
 import {HashLib} from "../../../src/ratifiers/libraries/HashLib.sol";
 import {Signature as RatifierSignature} from "../../../src/ratifiers/interfaces/IEcrecoverRatifier.sol";
 import {
